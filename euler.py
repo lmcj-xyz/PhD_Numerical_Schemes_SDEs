@@ -11,18 +11,24 @@ import numpy as np
 import matplotlib.pyplot as plt
 from numpy.random import default_rng
 rng = default_rng()
+from datetime import datetime
 
 class Euler:
     """
-    
+    Class used to solve a Stochastic Differential Equation (SDE) using the
+    Euler-Maruyama method.
+
     This will give us the solution to an SDE that satisfies the usual
     assumptions, refer to Kloeden & Platen, Numerical Solutions for Stochastic
     Differential Equations
-
     """
-    def __init__ (self, drift, diffusion, time_steps = None, time_start = None, time_end = None, y0 = None, paths = None):
-        """
 
+    def __init__ (
+            self, drift, diffusion, 
+            time_steps = None, time_start = None, time_end = None, y0 = None, 
+            paths = None
+            ):
+        """
         Parameters
         ----------
         drift:
@@ -51,8 +57,9 @@ class Euler:
             Time grid to compute the solution.
         y: float
             Placeholder for the solution of the SDE.
-
         """
+
+        # Initialize arguments
         self.drift = drift
         self.diffusion = diffusion
         self.time_steps = time_steps if time_steps is not None else 100
@@ -61,22 +68,14 @@ class Euler:
         self.y0 = y0 if y0 is not None else 1
         self.paths = paths if paths is not None else 100
 
-        """
-
-        Creation of the time grid
-
-        """
+        # Creation of the time grid
         self.time_grid = np.linspace(
                 start = self.time_start, 
                 stop = self.time_end,
                 num = self.time_steps
                 )
 
-        """
-
-        Creation of normal random variable
-
-        """
+        # Creation of normal random variable
         self.dt = self.time_grid[1]
         self.z = rng.normal(
                 loc = 0.0,
@@ -84,21 +83,13 @@ class Euler:
                 size = (self.paths, self.time_steps)
                 )
 
-        """
-
-        Creation of the placeholder for the solution.
-        And adding intial condition.
-
-        """
+        # Creation of the placeholder for the solution.
         self.y = np.zeros(shape = (self.paths, self.time_steps))
+        # And adding intial condition.
         self.y[:, 0] = self.y0
 
-    """
-
-    Solve the SDE
-
-    """
     def solve (self):
+        """ Solve the SDE """
         for i in range(self.time_steps - 1):
             self.y[:, i+1] = self.y[:, i] \
                     + self.drift(
@@ -111,45 +102,26 @@ class Euler:
                             )*self.z[:, i+1]
         return self.y
 
-    """
-
-    Plot the solutions
-
-    Here you can select the number of paths to plot with paths_plot
-
-    Remember that this method is not very useful in any other situation
-    besides testing
-
-    """
     def plot_solution (self, paths_plot, save_plot = False):
+        """
+        Plot the solutions
+
+        Here you can select the number of paths to plot with paths_plot
+
+        Remember that this method is not very useful in any other situation
+        besides testing
+        """
         solution = plt.figure()
         plt.plot(self.y[range(paths_plot)].T)
         plt.show()
         if save_plot == True:
-            solution.savefig(fname = 'solution')
-    
-
-
-"""
-
-Testing area
-
-"""
-def mu(x, t):
-    return 1
-
-def sigma(x, t):
-    return 0.1
-
-# Option to print only 3 decimal places
-np.set_printoptions(precision = 3)
-
-y = Euler(drift = mu, diffusion = sigma, time_steps = 100, paths = 10)#, paths_plot = 3)
-#print("time steps:\n", y.time_steps)
-#print("time grid:", y.time_grid)
-#print("dt:\n", y.dt)
-#print("random variable:\n", y.z)
-#print("solution y placeholder:\n", y.y)
-#print("drift:\n", y.drift(y.y, y.time_grid))
-print("solution:\n", y.solve())
-y.plot_solution(paths_plot = 5, save_plot = True)
+            # For organization reasons the figures are saved into the
+            # figures_solution/ directory with a time stamp
+            solution.savefig(
+                    fname = 
+                    'figures_solution/'
+                    +
+                    datetime.today().strftime('%Y-%m-%d_%H:%M:%S')
+                    +
+                    '_solution'
+                    )
