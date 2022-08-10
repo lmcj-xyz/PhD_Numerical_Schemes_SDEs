@@ -83,12 +83,11 @@ class Euler:
                 size = (self.paths, self.time_steps)
                 )
 
+    def solve (self):
         # Creation of the placeholder for the solution.
         self.y = np.zeros(shape = (self.paths, self.time_steps))
         # And adding intial condition.
         self.y[:, 0] = self.y0
-
-    def solve (self):
         """ Solve the SDE """
         for i in range(self.time_steps - 1):
             self.y[:, i+1] = self.y[:, i] \
@@ -116,7 +115,7 @@ class Euler:
         plt.show()
         if save_plot == True:
             # For organization reasons the figures are saved into the
-            # figures_solution/ directory with a time stamp
+            # ./figures_solution/ directory with a time stamp
             solution.savefig(
                     fname = 
                     'figures_solution/'
