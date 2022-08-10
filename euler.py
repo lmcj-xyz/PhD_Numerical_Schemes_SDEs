@@ -58,7 +58,7 @@ class Euler:
         self.time_steps = time_steps if time_steps is not None else 100
         self.time_start = time_start if time_start is not None else 0
         self.time_end = time_end if time_end is not None else 1
-        self.y0 = y0 if y0 is not None else 0
+        self.y0 = y0 if y0 is not None else 1
         self.paths = paths if paths is not None else 100
 
         """
@@ -87,6 +87,7 @@ class Euler:
         """
 
         Creation of the placeholder for the solution.
+        And adding intial condition.
 
         """
         self.y = np.zeros(shape = (self.paths, self.time_steps))
@@ -120,10 +121,13 @@ class Euler:
     besides testing
 
     """
-    def plot_solution (self, paths_plot):
-        plt.figure()
+    def plot_solution (self, paths_plot, save_plot = False):
+        solution = plt.figure()
         plt.plot(self.y[range(paths_plot)].T)
         plt.show()
+        if save_plot == True:
+            solution.savefig(fname = 'solution')
+    
 
 
 """
@@ -132,17 +136,20 @@ Testing area
 
 """
 def mu(x, t):
-    return 1*x
+    return 1
 
 def sigma(x, t):
-    return x
+    return 0.1
+
+# Option to print only 3 decimal places
+np.set_printoptions(precision = 3)
 
 y = Euler(drift = mu, diffusion = sigma, time_steps = 100, paths = 10)#, paths_plot = 3)
-print("time steps:\n", y.time_steps)
+#print("time steps:\n", y.time_steps)
 #print("time grid:", y.time_grid)
 #print("dt:\n", y.dt)
-print("random variable:\n", y.z)
+#print("random variable:\n", y.z)
 #print("solution y placeholder:\n", y.y)
 #print("drift:\n", y.drift(y.y, y.time_grid))
 print("solution:\n", y.solve())
-y.plot_solution(paths_plot = 3)
+y.plot_solution(paths_plot = 5, save_plot = True)
