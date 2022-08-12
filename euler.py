@@ -24,8 +24,13 @@ class Euler:
     """
 
     def __init__ (
-            self, drift, diffusion, 
-            time_steps = None, time_start = None, time_end = None, y0 = None, 
+            self, 
+            drift, 
+            diffusion, 
+            time_steps = None,
+            time_start = None,
+            time_end = None,
+            y0 = None, 
             paths = None
             ):
         """
@@ -84,11 +89,12 @@ class Euler:
                 )
 
     def solve (self):
+        """ Solve the SDE """
         # Creation of the placeholder for the solution.
         self.y = np.zeros(shape = (self.paths, self.time_steps))
         # And adding intial condition.
         self.y[:, 0] = self.y0
-        """ Solve the SDE """
+
         for i in range(self.time_steps - 1):
             self.y[:, i+1] = self.y[:, i] \
                     + self.drift(
@@ -108,10 +114,10 @@ class Euler:
         Here you can select the number of paths to plot with paths_plot
 
         Remember that this method is not very useful in any other situation
-        besides testing
+        besides testing, its just a sanity check
         """
         solution = plt.figure()
-        plt.plot(self.y[range(paths_plot)].T)
+        plt.plot(self.solve()[range(paths_plot)].T)
         plt.show()
         if save_plot == True:
             # For organization reasons the figures are saved into the
