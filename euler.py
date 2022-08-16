@@ -151,6 +151,8 @@ class Euler:
         # And adding intial condition.
         self.y[:, 0] = self.y0
 
+        # You need time_steps_solve - 1 because you have to use
+        # i+1 to get the last element
         for i in range(time_steps_solve - 1):
             self.y[:, i+1] = self.y[:, i] \
                     + self.drift(
