@@ -191,16 +191,21 @@ class Euler:
 
     def rate (self, real_solution, approximations):
         error = np.zeros(approximations)
+        lenght_solution = np.shape(real_solution)[1]
         for i in range(0, approximations):
             soln = self.solve(time_steps_solve = 10**(i+1))
             # TODO: Check this subsetting
-            real_solution_coarse = real_solution[:, ::10**(approximations-i+1)]
+            real_solution_coarse = real_solution[:, ::10**(lenght_solution-i-1)]
             error[i] = np.mean(
                     np.amax(
-                        np.subtract(soln, real_solution_coarse),
+                        np.abs(np.subtract(soln, real_solution_coarse)),
                         axis = 1
                         )
                     )
+            plt.figure()
+            plt.plot(soln[0, :].T)
+            plt.plot(real_solution_coarse[0, :].T)
+            plt.show()
         return error
 
     def plot_solution (self, paths_plot, save_plot = False):

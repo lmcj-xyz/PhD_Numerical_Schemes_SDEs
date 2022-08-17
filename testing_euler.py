@@ -3,7 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 A = 1
-B = 0.1
+B = 1
 
 def mu(x, t):
     return A*x
@@ -39,15 +39,15 @@ y = e.Euler(
 #print("drift:\n", y.drift(y.y, y.time_grid))
 #print("solution:\n", y.solve())
 #y.plot_solution(paths_plot = 5, save_plot = True)
-y.plot_solution(paths_plot = 3, save_plot = False)
-plt.figure()
-plt.plot(y.solve(time_steps_solve = 10**2)[0:3, :].T)
-plt.title("coarse euler")
-plt.show()
-plt.figure()
-plt.plot(y.solve(time_steps_solve = 10**1)[0:3, :].T)
-plt.title("coarse euler")
-plt.show()
+#y.plot_solution(paths_plot = 3, save_plot = False)
+#plt.figure()
+#plt.plot(y.solve(time_steps_solve = 10**2)[0:3, :].T)
+#plt.title("coarse euler")
+#plt.show()
+#plt.figure()
+#plt.plot(y.solve(time_steps_solve = 10**1)[0:3, :].T)
+#plt.title("coarse euler")
+#plt.show()
 
 # Creation of an explicit GBM to compare
 ########## This is wrong, check
@@ -71,17 +71,17 @@ for i in range(y.time_steps - 1):
 #gbm*y.y0
 
 #print(gbm)
-plt.figure()
-plt.plot(gbm[0:3, :].T)
-plt.title("gbm")
-plt.show()
+#plt.figure()
+#plt.plot(gbm[0:3, :].T)
+#plt.title("gbm")
+#plt.show()
 
-print(np.shape(gbm[:, ::10**1]))
-print(np.shape(gbm[:, ::10**2]))
+#print(np.shape(gbm[:, ::10**1]))
+#print(np.shape(gbm[:, ::10**2]))
 
 #dif = gbm - y.solve()
 #print(dif)
 #
 #print(np.amax(abs(dif), axis=1))
 
-y.rate(gbm, 4)
+print(y.rate(gbm, 4))
