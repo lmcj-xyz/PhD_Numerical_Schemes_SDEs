@@ -79,7 +79,7 @@ class Euler:
                 is not None else 100
 
         # Time step
-        self.dt = (self.time_end - self.time_start) / self.time_steps
+        self.dt = self.generate_dt()
 
         # Creation of normal random variable
         ## Since the time grid would start in t_1, and the random variable
@@ -100,27 +100,54 @@ class Euler:
         ## or a coarser one
         self.time_grid = self.generate_time_grid()
 
-    #def coarse_z (self, self.z):
+    def coarse_z (self, time_steps_z = None):
+        time_steps_z = time_steps_z if time_steps_z \
+                is not None else slef.time_steps
+        z_orig = self.z
+        #dt_z = self.generate_dt(time_steps_dt = time_steps_z)
+        dt_z = self.dt
+        # Placeholder for the new RV
+        z_coarse = np.zeros(shape = (self.paths, time_steps_z))
+        # The amount of elements each element of the coarser noise will have
+        # from the finer noise
+        # TODO: Make this more robust adding a conditional statement 
+        # checking is and integer and smaller than the original time steps, and
+        # raising an Error if that does not happen
+        n_z = int(np.shape(z_orig)[1] / time_steps_z)
+        
+        if n_z == 1:
+            z_coarse = z_orig
+        else:
+            for i in range(1, time_steps_z):
+                #z_coarse[:, i] = dt_z*np.sum(z_orig[:, (i-1)*n_z:i*n_z], axis=1)
+                z_coarse[:, i] = np.sum(z_orig[:, (i-1)*n_z:i*n_z], axis=1)
 
-    #def coarse_time_grid (self, self.time_grid):
+        return z_coarse
 
-    #def rate (self):
+    def generate_dt (
+            self, 
+            time_steps_dt = None
+            ):
+        time_steps_dt = time_steps_dt if time_steps_dt \
+                is not None else self.time_steps
+        time_start_dt = self.time_start
+        time_end_dt = self.time_end
+
+        dt_generated = (time_end_dt - time_start_dt) / time_steps_dt
+        return dt_generated
 
     def generate_time_grid (
             self, 
-            time_start_grid = None,
-            time_end_grid = None,
-            dt_grid = None,
             time_steps_grid = None
             ):
-        time_start_grid = time_start_grid if time_start_grid \
-                is not None else self.time_start
-        time_end_grid = time_end_grid if time_end_grid \
-                is not None else self.time_end
         time_steps_grid = time_steps_grid if time_steps_grid \
                 is not None else self.time_steps
-        dt_grid = dt_grid if dt_grid \
-                is not None else self.dt
+        time_start_grid = self.time_start
+        time_end_grid = self.time_end
+
+        dt_grid = self.generate_dt( 
+                time_steps_dt = time_steps_grid
+                )
 
         time_grid_generated = np.linspace(
                 start = time_start_grid + dt_grid, 
@@ -132,17 +159,14 @@ class Euler:
     def solve (
             self,
             time_steps_solve = None,
-            #time_grid_solve = None,
-            dt_solve = None,
-            z_solve = None
             ):
         time_steps_solve = time_steps_solve if time_steps_solve \
                 is not None else self.time_steps
         time_grid_solve = self.generate_time_grid(time_steps_solve) if time_steps_solve \
                 is not None else self.time_grid
-        dt_solve = dt_solve if dt_solve \
+        dt_solve = self.generate_dt(time_steps_dt = time_steps_solve) if time_steps_solve \
                 is not None else self.dt
-        z_solve = z_solve if z_solve \
+        z_solve = self.coarse_z(time_steps_z = time_steps_solve) if time_steps_solve \
                 is not None else self.z
 
         """ Solve the SDE """
@@ -165,6 +189,20 @@ class Euler:
                             )*z_solve[:, i+1]
         return self.y
 
+    def rate (self, real_solution, approximations):
+        error = np.zeros(approximations)
+        for i in range(0, approximations):
+            soln = self.solve(time_steps_solve = 10**(i+1))
+            # TODO: Check this subsetting
+            real_solution_coarse = real_solution[:, ::10**(approximations-i+1)]
+            error[i] = np.mean(
+                    np.amax(
+                        np.subtract(soln, real_solution_coarse),
+                        axis = 1
+                        )
+                    )
+        return error
+
     def plot_solution (self, paths_plot, save_plot = False):
         """
         Plot the solutions
@@ -176,6 +214,7 @@ class Euler:
         """
         solution = plt.figure()
         plt.plot(self.solve()[range(paths_plot)].T)
+        plt.title("euler")
         plt.show()
         if save_plot == True:
             # For organization reasons the figures are saved into the
