@@ -102,7 +102,7 @@ class Euler:
 
     def coarse_z (self, time_steps_z = None):
         time_steps_z = time_steps_z if time_steps_z \
-                is not None else slef.time_steps
+                is not None else self.time_steps
         z_orig = self.z
         #dt_z = self.generate_dt(time_steps_dt = time_steps_z)
         dt_z = self.dt
