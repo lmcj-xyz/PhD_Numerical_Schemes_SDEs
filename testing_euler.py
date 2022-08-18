@@ -3,7 +3,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 A = 1
-B = 1
+B = 0.1
+TIME_STEPS = 10**5
 
 def mu(x, t):
     return A*x
@@ -17,7 +18,7 @@ np.set_printoptions(precision = 3)
 y = e.Euler(
         drift = mu,
         diffusion = sigma,
-        time_steps = 10**5,
+        time_steps = TIME_STEPS,
         #time_end = 10,
         paths = 10
         )
@@ -34,7 +35,7 @@ y = e.Euler(
 #plt.figure()
 #plt.plot(y.coarse_z(time_steps_z = 10**2)[0, :].T)
 #plt.show()
-#print(np.shape(y.z)[1])
+print(np.shape(y.z)[1])
 #print("solution y placeholder:\n", y.y)
 #print("drift:\n", y.drift(y.y, y.time_grid))
 #print("solution:\n", y.solve())
@@ -53,7 +54,6 @@ y = e.Euler(
 ########## This is wrong, check
 gbm = np.zeros(shape = (y.paths, y.time_steps))
 gbm[:, 0] = 1
-#print(gbm)
 
 for i in range(y.time_steps - 1):
     gbm[:, i+1] = gbm[:, 0] * np.exp(
@@ -71,10 +71,11 @@ for i in range(y.time_steps - 1):
 #gbm*y.y0
 
 #print(gbm)
-#plt.figure()
-#plt.plot(gbm[0:3, :].T)
-#plt.title("gbm")
-#plt.show()
+plt.figure()
+plt.plot(gbm[0:3, :].T)
+#plt.plot(gbm.T)
+plt.title("gbm")
+plt.show()
 
 #print(np.shape(gbm[:, ::10**1]))
 #print(np.shape(gbm[:, ::10**2]))
@@ -84,4 +85,4 @@ for i in range(y.time_steps - 1):
 #
 #print(np.amax(abs(dif), axis=1))
 
-print(y.rate(gbm, 4))
+#print(y.rate(y.solve(), 3))

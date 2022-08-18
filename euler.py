@@ -99,7 +99,28 @@ class Euler:
         ## Also this is the finest grid, in the solve method we can use this
         ## or a coarser one
         self.time_grid = self.generate_time_grid()
+    #############################################################################
+    # end of __init__
+    #############################################################################
 
+    #############################################################################
+    # start of generate_dt
+    #############################################################################
+    def generate_dt (self, time_steps_dt = None):
+        time_steps_dt = time_steps_dt if time_steps_dt \
+                is not None else self.time_steps
+        time_start_dt = self.time_start
+        time_end_dt = self.time_end
+
+        dt_generated = (time_end_dt - time_start_dt) / time_steps_dt
+        return dt_generated
+    #############################################################################
+    # end of generate_dt
+    #############################################################################
+
+    #############################################################################
+    # start of coarse_z
+    #############################################################################
     def coarse_z (self, time_steps_z = None):
         time_steps_z = time_steps_z if time_steps_z \
                 is not None else self.time_steps
@@ -113,6 +134,8 @@ class Euler:
         # TODO: Make this more robust adding a conditional statement 
         # checking is and integer and smaller than the original time steps, and
         # raising an Error if that does not happen
+        # TODO: Change this using numpy.reshape
+
         n_z = int(np.shape(z_orig)[1] / time_steps_z)
         
         if n_z == 1:
@@ -123,23 +146,14 @@ class Euler:
                 z_coarse[:, i] = np.sum(z_orig[:, (i-1)*n_z:i*n_z], axis=1)
 
         return z_coarse
+    #############################################################################
+    # end of coarse_z
+    #############################################################################
 
-    def generate_dt (
-            self, 
-            time_steps_dt = None
-            ):
-        time_steps_dt = time_steps_dt if time_steps_dt \
-                is not None else self.time_steps
-        time_start_dt = self.time_start
-        time_end_dt = self.time_end
-
-        dt_generated = (time_end_dt - time_start_dt) / time_steps_dt
-        return dt_generated
-
-    def generate_time_grid (
-            self, 
-            time_steps_grid = None
-            ):
+    #############################################################################
+    # start of generate_time_grid
+    #############################################################################
+    def generate_time_grid (self, time_steps_grid = None):
         time_steps_grid = time_steps_grid if time_steps_grid \
                 is not None else self.time_steps
         time_start_grid = self.time_start
@@ -155,11 +169,14 @@ class Euler:
                 num = time_steps_grid
                 )
         return time_grid_generated
+    #############################################################################
+    # end of generate_time_grid
+    #############################################################################
 
-    def solve (
-            self,
-            time_steps_solve = None,
-            ):
+    #############################################################################
+    # start of solve
+    #############################################################################
+    def solve (self, time_steps_solve = None):
         time_steps_solve = time_steps_solve if time_steps_solve \
                 is not None else self.time_steps
         time_grid_solve = self.generate_time_grid(time_steps_solve) if time_steps_solve \
@@ -188,26 +205,67 @@ class Euler:
                             time_grid_solve[i]
                             )*z_solve[:, i+1]
         return self.y
+    #############################################################################
+    # end of solve
+    #############################################################################
 
+    #############################################################################
+    # start of rate
+    #############################################################################
     def rate (self, real_solution, approximations):
         error = np.zeros(approximations)
-        lenght_solution = np.shape(real_solution)[1]
+        x_axis = np.zeros(approximations)
+        reg = np.ones(approximations)
+        lenght_solution = int(np.log10(np.shape(real_solution)[1]))
         for i in range(0, approximations):
             soln = self.solve(time_steps_solve = 10**(i+1))
             # TODO: Check this subsetting
+            # The subsetting is correct
+            #real_solution_coarse = np.zeros(shape = (self.paths, 10**(i+1)))
             real_solution_coarse = real_solution[:, ::10**(lenght_solution-i-1)]
-            error[i] = np.mean(
-                    np.amax(
-                        np.abs(np.subtract(soln, real_solution_coarse)),
-                        axis = 1
+            error[i] = np.log10(
+                    np.mean(
+                        np.amax(
+                            np.abs(np.subtract(soln, real_solution_coarse)),
+                            axis = 1
+                            )
                         )
                     )
-            plt.figure()
-            plt.plot(soln[0, :].T)
-            plt.plot(real_solution_coarse[0, :].T)
-            plt.show()
-        return error
+            x_axis[i] = i+1
+            #print(soln[0, :].T)
+            #print(real_solution_coarse[0, :].T)
+            #print(np.shape(real_solution_coarse)[1], real_solution_coarse[1, :].T)
 
+            plt.figure()
+            plt.plot(soln[1, :].T)
+            plt.plot(real_solution_coarse[1, :].T)
+            plt.show()
+
+        A = np.vstack([x_axis, reg]).T
+        y_reg = error[:, np.newaxis]
+        alpha = np.linalg.lstsq(A, y_reg, rcond=None)[0]
+        print(alpha)
+
+        plt.figure()
+        plt.plot(x_axis, error, label="Error", marker="o")
+        plt.plot(
+                x_axis, 
+                alpha[1] + x_axis*alpha[0],
+                linestyle="--",
+                label="Slope %f"%alpha[0]
+                )
+        #plt.xlabel()
+        #plt.ylabel()
+        plt.legend()
+        plt.show()
+        return error
+    #############################################################################
+    # end of rate
+    #############################################################################
+
+    #############################################################################
+    # start of plot_solution
+    #############################################################################
     def plot_solution (self, paths_plot, save_plot = False):
         """
         Plot the solutions
@@ -232,3 +290,6 @@ class Euler:
                     +
                     '_solution'
                     )
+    #############################################################################
+    # end of plot_solution
+    #############################################################################
