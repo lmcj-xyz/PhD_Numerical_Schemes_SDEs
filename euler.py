@@ -90,7 +90,7 @@ class Euler:
         self.z = rng.normal(
                 loc = 0.0,
                 scale = np.sqrt(self.dt),
-                size = (self.paths, self.time_steps)
+                size = (self.time_steps, self.paths)
                 )
         # Creation of the time grid
         ## We create the time grid starting from the first non-zero term,
@@ -128,22 +128,22 @@ class Euler:
         #dt_z = self.generate_dt(time_steps_dt = time_steps_z)
         dt_z = self.dt
         # Placeholder for the new RV
-        z_coarse = np.zeros(shape = (self.paths, time_steps_z))
+        z_coarse = np.zeros(shape = (time_steps_z, self.paths))
         # The amount of elements each element of the coarser noise will have
         # from the finer noise
         # TODO: Make this more robust adding a conditional statement 
         # checking is and integer and smaller than the original time steps, and
         # raising an Error if that does not happen
-        # TODO: Change this using numpy.reshape
 
-        n_z = int(np.shape(z_orig)[1] / time_steps_z)
+        # TODO: Change this using numpy.reshape
+        n_z = int(np.shape(z_orig)[0] / time_steps_z)
         
         if n_z == 1:
             z_coarse = z_orig
         else:
             for i in range(1, time_steps_z):
-                #z_coarse[:, i] = dt_z*np.sum(z_orig[:, (i-1)*n_z:i*n_z], axis=1)
-                z_coarse[:, i] = np.sum(z_orig[:, (i-1)*n_z:i*n_z], axis=1)
+                #z_coarse[i, :] = dt_z*np.sum(z_orig[(i-1)*n_z:i*n_z], :], axis=0)
+                z_coarse[i, :] = np.sum(z_orig[(i-1)*n_z:i*n_z, :], axis=0)
 
         return z_coarse
     #############################################################################
@@ -188,22 +188,22 @@ class Euler:
 
         """ Solve the SDE """
         # Creation of the placeholder for the solution.
-        self.y = np.zeros(shape = (self.paths, time_steps_solve))
+        self.y = np.zeros(shape = (time_steps_solve, self.paths))
         # And adding intial condition.
-        self.y[:, 0] = self.y0
+        self.y[0, :] = self.y0
 
         # You need time_steps_solve - 1 because you have to use
         # i+1 to get the last element
         for i in range(time_steps_solve - 1):
-            self.y[:, i+1] = self.y[:, i] \
+            self.y[i+1, :] = self.y[i, :] \
                     + self.drift(
-                            self.y[:, i], 
+                            self.y[i, :], 
                             time_grid_solve[i]
                             )*dt_solve \
                     + self.diffusion(
-                            self.y[:, i],
+                            self.y[i, :],
                             time_grid_solve[i]
-                            )*z_solve[:, i+1]
+                            )*z_solve[i+1, :]
         return self.y
     #############################################################################
     # end of solve
@@ -215,19 +215,18 @@ class Euler:
     def rate (self, real_solution, approximations):
         error = np.zeros(approximations)
         x_axis = np.zeros(approximations)
-        reg = np.ones(approximations)
-        lenght_solution = int(np.log10(np.shape(real_solution)[1]))
+        lenght_solution = int(np.log10(np.shape(real_solution)[0]))
         for i in range(0, approximations):
             soln = self.solve(time_steps_solve = 10**(i+1))
             # TODO: Check this subsetting
             # The subsetting is correct
             #real_solution_coarse = np.zeros(shape = (self.paths, 10**(i+1)))
-            real_solution_coarse = real_solution[:, ::10**(lenght_solution-i-1)]
+            real_solution_coarse = real_solution[::10**(lenght_solution-i-1), :]
             error[i] = np.log10(
-                    np.mean(
-                        np.amax(
+                    np.amax(
+                        np.mean(
                             np.abs(np.subtract(soln, real_solution_coarse)),
-                            axis = 1
+                            axis = 0
                             )
                         )
                     )
@@ -236,23 +235,25 @@ class Euler:
             #print(real_solution_coarse[0, :].T)
             #print(np.shape(real_solution_coarse)[1], real_solution_coarse[1, :].T)
 
-            plt.figure()
-            plt.plot(soln[1, :].T)
-            plt.plot(real_solution_coarse[1, :].T)
-            plt.show()
+            #plt.figure()
+            #plt.plot(soln[:, 1].T)
+            #plt.plot(real_solution_coarse[:, 1].T)
+            #plt.show()
 
+        reg = np.ones(approximations)
         A = np.vstack([x_axis, reg]).T
         y_reg = error[:, np.newaxis]
-        alpha = np.linalg.lstsq(A, y_reg, rcond=None)[0]
-        print(alpha)
+        m, c = np.linalg.lstsq(A, y_reg, rcond=None)[0]
+        print(m)
+        #print(c)
 
         plt.figure()
         plt.plot(x_axis, error, label="Error", marker="o")
         plt.plot(
                 x_axis, 
-                alpha[1] + x_axis*alpha[0],
+                c + x_axis*m,
                 linestyle="--",
-                label="Slope %f"%alpha[0]
+                label="Slope %f"%m
                 )
         #plt.xlabel()
         #plt.ylabel()
@@ -276,7 +277,7 @@ class Euler:
         besides testing, its just a sanity check
         """
         solution = plt.figure()
-        plt.plot(self.solve()[range(paths_plot)].T)
+        plt.plot(self.solve()[:, range(paths_plot)])
         plt.title("euler")
         plt.show()
         if save_plot == True:
