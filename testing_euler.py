@@ -6,10 +6,10 @@ A = 0.1
 B = 0.3
 TIME_STEPS = 10**5
 
-def mu(x, t):
+def mu(x, t, m):
     return A*x
 
-def sigma(x, t):
+def sigma(x, t, m):
     return B*x
 
 # Option to print only 3 decimal places
@@ -27,7 +27,7 @@ y = e.Euler(
 
 #print("time steps:\n", y.time_steps)
 #print("time grid:", y.time_grid)
-print("dt:\n", y.dt)
+#print("dt:\n", y.dt)
 #print("random variable:\n", y.z)
 #plt.figure()
 #plt.plot(y.z[0, :].T)
@@ -80,4 +80,4 @@ y.plot_solution(paths_plot = 3, save_plot = False)
 #
 #print(np.amax(abs(dif), axis=1))
 
-print(y.rate(y.solve(), 3))
+#print(y.rate(y.solve(), 3))

@@ -197,12 +197,14 @@ class Euler:
         for i in range(time_steps_solve - 1):
             self.y[i+1, :] = self.y[i, :] \
                     + self.drift(
-                            self.y[i, :], 
-                            time_grid_solve[i]
+                            x = self.y[i, :], 
+                            t = time_grid_solve[i],
+                            m = time_steps_solve
                             )*dt_solve \
                     + self.diffusion(
-                            self.y[i, :],
-                            time_grid_solve[i]
+                            x = self.y[i, :],
+                            t = time_grid_solve[i],
+                            m = time_steps_solve
                             )*z_solve[i+1, :]
         return self.y
     #############################################################################
