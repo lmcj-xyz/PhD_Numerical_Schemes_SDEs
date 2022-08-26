@@ -20,8 +20,8 @@ y = e.Euler(
         diffusion = sigma,
         time_steps = TIME_STEPS,
         #time_end = 10,
-        paths = 10,
-        y0 = 10
+        paths = 1000,
+        y0 = 1
         )
 #, paths_plot = 3)
 
@@ -41,7 +41,7 @@ y = e.Euler(
 #print("drift:\n", y.drift(y.y, y.time_grid))
 #print("solution:\n", y.solve())
 #y.plot_solution(paths_plot = 5, save_plot = True)
-y.plot_solution(paths_plot = 3, save_plot = False)
+#y.plot_solution(paths_plot = 3, save_plot = False)
 #plt.figure()
 #plt.plot(y.solve(time_steps_solve = 10**2)[0:3, :].T)
 #plt.title("coarse euler")
@@ -80,4 +80,4 @@ y.plot_solution(paths_plot = 3, save_plot = False)
 #
 #print(np.amax(abs(dif), axis=1))
 
-#print(y.rate(y.solve(), 3))
+print(y.rate(y.solve(), 4))

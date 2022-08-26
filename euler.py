@@ -219,20 +219,20 @@ class Euler:
         x_axis = np.zeros(approximations)
         lenght_solution = int(np.log10(np.shape(real_solution)[0]))
         for i in range(0, approximations):
-            soln = self.solve(time_steps_solve = 10**(i+1))
+            m = 10**(lenght_solution-i-1)
+            soln = self.solve(time_steps_solve = m)
+            delta = (self.time_end - self.time_start)/m
             # TODO: Check this subsetting
             # The subsetting is correct
             #real_solution_coarse = np.zeros(shape = (self.paths, 10**(i+1)))
-            real_solution_coarse = real_solution[::10**(lenght_solution-i-1), :]
-            error[i] = np.log10(
-                    np.amax(
-                        np.mean(
-                            np.abs(np.subtract(soln, real_solution_coarse)),
-                            axis = 0
+            real_solution_coarse = real_solution[::10**(i+1), :]
+            error[i] = np.amax(
+                            np.mean(
+                                np.abs(np.subtract(real_solution_coarse, soln)),
+                                axis = 1
+                                )
                             )
-                        )
-                    )
-            x_axis[i] = i+1
+            x_axis[i] = delta
             #print(soln[0, :].T)
             #print(real_solution_coarse[0, :].T)
             #print(np.shape(real_solution_coarse)[1], real_solution_coarse[1, :].T)
@@ -243,20 +243,20 @@ class Euler:
             #plt.show()
 
         reg = np.ones(approximations)
-        A = np.vstack([x_axis, reg]).T
-        y_reg = error[:, np.newaxis]
+        A = np.vstack([np.arange(1, approximations+1), reg]).T
+        y_reg = np.log(error[:, np.newaxis])
         m, c = np.linalg.lstsq(A, y_reg, rcond=None)[0]
         print(m)
         #print(c)
 
         plt.figure()
-        plt.plot(x_axis, error, label="Error", marker="o")
-        plt.plot(
-                x_axis, 
-                c + x_axis*m,
-                linestyle="--",
-                label="Slope %f"%m
-                )
+        plt.loglog(x_axis, error, label="Error", marker="o")
+        #plt.plot(
+        #        x_axis, 
+        #        c + x_axis*m,
+        #        linestyle="--",
+        #        label="Slope %f"%m
+        #        )
         #plt.xlabel()
         #plt.ylabel()
         plt.legend()
