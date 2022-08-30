@@ -214,7 +214,8 @@ class Euler:
     #############################################################################
     # start of rate
     #############################################################################
-    def rate (self, real_solution, approximations):
+    def rate (self, real_solution, approximations, 
+            show_plot=False, save_plot=False):
         error = np.zeros(approximations)
         x_axis = np.zeros(approximations)
         lenght_solution = int(np.log10(np.shape(real_solution)[0]))
@@ -228,7 +229,9 @@ class Euler:
             real_solution_coarse = real_solution[::10**(i+1), :]
             error[i] = np.amax(
                             np.mean(
-                                np.abs(np.subtract(real_solution_coarse, soln)),
+                                np.abs(
+                                    np.subtract(real_solution_coarse, soln)
+                                    ),
                                 axis = 1
                                 )
                             )
@@ -242,26 +245,45 @@ class Euler:
             #plt.plot(real_solution_coarse[:, 1].T)
             #plt.show()
 
+        # Consider a system of equations
+        # A*p = x
         reg = np.ones(approximations)
-        A = np.vstack([np.arange(1, approximations+1), reg]).T
-        y_reg = np.log(error[:, np.newaxis])
-        m, c = np.linalg.lstsq(A, y_reg, rcond=None)[0]
-        print(m)
+        A = np.vstack([np.log10(x_axis), reg]).T
+        #A = np.vstack([x_axis, reg]).T
+        y_reg = np.log10(error[:, np.newaxis])
+        #y_reg = error[:, np.newaxis]
+        rate, intersection = np.linalg.lstsq(A, y_reg, rcond=None)[0]
         #print(c)
 
-        plt.figure()
+
+        rate_plot = plt.figure()
         plt.loglog(x_axis, error, label="Error", marker="o")
-        #plt.plot(
-        #        x_axis, 
-        #        c + x_axis*m,
+        #plt.loglog(
+        #        10**x_axis, 
+        #        10**intersection + 10**(x_axis*rate),
         #        linestyle="--",
-        #        label="Slope %f"%m
+        #        label="Rate of convergence: %f"%rate
         #        )
-        #plt.xlabel()
-        #plt.ylabel()
+        plt.xlabel("Step size")
+        plt.ylabel("log(error)")
         plt.legend()
-        plt.show()
-        return error
+
+        if show_plot == True:
+            plt.show()
+
+        if save_plot == True:
+            # For organization reasons the figures are saved into the
+            # ./figures_rate/ directory with a time stamp
+            rate_plot.savefig(
+                    fname = 
+                    'figures_rate/'
+                    +
+                    datetime.today().strftime('%Y-%m-%d_%H:%M:%S')
+                    +
+                    '_rate'
+                    )
+
+        return error, rate, np.log10(error), np.log10(x_axis)
     #############################################################################
     # end of rate
     #############################################################################

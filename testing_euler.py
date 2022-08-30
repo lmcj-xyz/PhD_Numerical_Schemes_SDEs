@@ -80,4 +80,10 @@ y = e.Euler(
 #
 #print(np.amax(abs(dif), axis=1))
 
-print(y.rate(y.solve(), 4))
+error, rate, logerror, logx = y.rate(real_solution = y.solve(), approximations = 4, 
+        show_plot = True, save_plot = False)
+print(error)
+print(rate)
+print(logerror)
+print(logx)
+#y.plot_rate(y.solve(), 4)
