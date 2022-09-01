@@ -267,9 +267,9 @@ class Euler:
 
         rate_plot = plt.figure()
         plt.loglog(x_axis, error, label="Error", marker="o")
-        #plt.loglog(
-        #        10**x_axis, 
-        #        10**intersection + 10**(x_axis*rate),
+        #plt.plot(
+        #        x_axis, 
+        #        np.log10(intersection) + np.log10(x_axis)*rate,
         #        linestyle="--",
         #        label="Rate of convergence: %f"%rate
         #        )
