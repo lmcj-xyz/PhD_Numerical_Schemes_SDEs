@@ -2,7 +2,7 @@
 """
 Created on Mon Aug  8 16:06:58 2022
 
-@author: mmlmcj
+@author: Luis Mario Chaparro Jáquez
 
 @title: Euler scheme
 """
@@ -141,9 +141,15 @@ class Euler:
         if n_z == 1:
             z_coarse = z_orig
         else:
-            for i in range(1, time_steps_z):
-                #z_coarse[i, :] = dt_z*np.sum(z_orig[(i-1)*n_z:i*n_z], :], axis=0)
-                z_coarse[i, :] = np.sum(z_orig[(i-1)*n_z:i*n_z, :], axis=0)
+            temp = z_orig.reshape(
+                    time_steps_z, 
+                    np.shape(z_orig)[0]//time_steps_z,
+                    self.paths
+                    )
+            z_coarse = np.sum(temp, axis=1)
+            #for i in range(1, time_steps_z):
+            #    #z_coarse[i, :] = dt_z*np.sum(z_orig[(i-1)*n_z:i*n_z], :], axis=0)
+            #    z_coarse[i, :] = np.sum(z_orig[(i-1)*n_z:i*n_z, :], axis=0)
 
         return z_coarse
     #############################################################################
@@ -223,8 +229,6 @@ class Euler:
             m = 10**(lenght_solution-i-1)
             soln = self.solve(time_steps_solve = m)
             delta = (self.time_end - self.time_start)/m
-            # TODO: Check this subsetting
-            # The subsetting is correct
             #real_solution_coarse = np.zeros(shape = (self.paths, 10**(i+1)))
             real_solution_coarse = real_solution[::10**(i+1), :]
             error[i] = np.amax(
@@ -236,13 +240,18 @@ class Euler:
                                 )
                             )
             x_axis[i] = delta
+            #print(m**2)
             #print(soln[0, :].T)
             #print(real_solution_coarse[0, :].T)
             #print(np.shape(real_solution_coarse)[1], real_solution_coarse[1, :].T)
 
             #plt.figure()
-            #plt.plot(soln[:, 1].T)
-            #plt.plot(real_solution_coarse[:, 1].T)
+            ##plt.plot(soln[:, 1].T)
+            ##plt.plot(real_solution_coarse[:, 1].T)
+            #plt.plot(soln[:, ])
+            #plt.plot(real_solution_coarse[:, ])
+            ##plt.plot(soln.T)
+            ##plt.plot(real_solution_coarse.T)
             #plt.show()
 
         # Consider a system of equations
@@ -283,7 +292,7 @@ class Euler:
                     '_rate'
                     )
 
-        return error, rate, np.log10(error), np.log10(x_axis)
+        return error, rate#, np.log10(error), np.log10(x_axis)
     #############################################################################
     # end of rate
     #############################################################################

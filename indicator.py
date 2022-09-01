@@ -1,26 +1,30 @@
-import Euler as e
+import euler as e
 import numpy as np
 import matplotlib.pyplot as plt
 
 # Time steps
-m = 10**6
+M = 10**5
 
 # Distributional drift
-def bn (t, x):
-    return 0
+def bn (t, x, m):
+    #return np.sqrt(M**2/2*np.pi)*np.trapz(y=np.exp(-(m**2*x**2)/2), x=x)
+    return 3
 
 # Constant diffusion
-def sigma (t, x):
-    return 0
+def sigma (t, x, m):
+    return 1*x
 
 # Euler approximation
 y = e.Euler(
         drift = bn,
         diffusion = sigma,
-        time_steps = m,
-        paths = 10,
-        y0 = 0
+        time_steps = M,
+        paths = 100,
+        y0 = 1
         )
 
 # Rate of convergence
-print(y.rate())
+error, rate = y.rate(real_solution = y.solve(), approximations = 3, 
+        show_plot = True, save_plot = True)
+print("error array", error)
+print("rate =", rate)

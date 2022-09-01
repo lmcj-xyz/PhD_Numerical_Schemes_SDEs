@@ -21,7 +21,7 @@ y = e.Euler(
         time_steps = TIME_STEPS,
         #time_end = 10,
         paths = 1000,
-        y0 = 1
+        y0 = 0.001
         )
 #, paths_plot = 3)
 
@@ -53,8 +53,8 @@ y = e.Euler(
 
 # Creation of an explicit GBM to compare
 ########## This is wrong, check
-#gbm = np.zeros_like(y.y)
-#print(np.shape(gbm))
+#gbm = np.zeros_like(y.z)
+##print(np.shape(gbm))
 #gbm[0, :] = y.y0
 #
 #for i in range(y.time_steps - 1):
@@ -80,10 +80,10 @@ y = e.Euler(
 #
 #print(np.amax(abs(dif), axis=1))
 
-error, rate, logerror, logx = y.rate(real_solution = y.solve(), approximations = 4, 
+error, rate = y.rate(real_solution = y.solve(), approximations = 3, 
         show_plot = True, save_plot = False)
-print(error)
-print(rate)
-print(logerror)
-print(logx)
+print("error array", error)
+print("rate =", rate)
+#print(logerror)
+#print(logx)
 #y.plot_rate(y.solve(), 4)
