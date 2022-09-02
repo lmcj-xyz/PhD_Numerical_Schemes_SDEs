@@ -22,8 +22,8 @@ y = e.Euler(
         drift = bn,
         diffusion = sigma,
         time_steps = M,
-        paths = 100,
-        y0 = 1
+        paths = 1000,
+        y0 = 0
         )
 
 # Rate of convergence

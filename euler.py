@@ -273,6 +273,11 @@ class Euler:
         #        linestyle="--",
         #        label="Rate of convergence: %f"%rate
         #        )
+        plt.title(
+                label="Rate = "
+                +str(rate)
+                +"\nProxy of solution: 10^"+str(lenght_solution)+" time steps"
+                )
         plt.xlabel("Step size")
         plt.ylabel("log(error)")
         plt.legend()
@@ -311,7 +316,7 @@ class Euler:
         """
         solution = plt.figure()
         plt.plot(self.solve()[:, range(paths_plot)])
-        plt.title("euler")
+        plt.title("Euler scheme")
         plt.show()
         if save_plot == True:
             # For organization reasons the figures are saved into the
