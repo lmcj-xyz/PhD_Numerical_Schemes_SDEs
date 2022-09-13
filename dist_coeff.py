@@ -1,4 +1,3 @@
-# September 9th 14:38:38
 # -*- coding: utf-8 -*-
 """
 Created on Fri Sept  9 14:38:38 2022
@@ -14,6 +13,7 @@ from numpy.random import default_rng
 rng = default_rng()
 from datetime import datetime
 from scipy.stats import norm
+from scipy.integrate import quad
 
 class distribution:
     """
@@ -35,10 +35,11 @@ class distribution:
     -------
 
     """
-    def __init__(self, hurst, limit, points):
+    def __init__(self, hurst, limit, points, time_steps):
         self.hurst = hurst
         self.limit = limit
         self.points = points
+        self.time_steps = time_steps
 
         self.grid = np.linspace(
                 start = -limit,
@@ -48,9 +49,10 @@ class distribution:
 
         self.fbm_path = self.fbm()
 
-        self.normal_differences = np.zeros_like(self.grid)
-        for i in self.grid:
-            self.normal_differences[np.where(self.grid = i)] = self.normal_differences(i, 1, 10)
+        self.df = self.normal_difference()
+        
+        #self.dist, self.dist1 = np.sum(np.multiply(self.fbm_path, self.df), axis=1)
+        self.dist = np.sum(np.multiply(self.fbm_path, self.df), axis=1)
     
     def fbm(self):
         x_grid, y_grid = np.meshgrid(
@@ -69,37 +71,42 @@ class distribution:
         fbm_array = np.matmul(cholesky, g)
         return fbm_array
 
-    def normal_difference(self, x, t, m):
-        diff_norm = np.zeros_like(self.grid)
+    # This is creating the array to perform the convolution of
+    # f*p(x) where x is the same as thea argument x received by the function
+    def normal_difference(self):
         length_grid = np.shape(self.grid)[0]
+        diff_norm = np.zeros(shape=(length_grid, length_grid))
         #print("length of grid: ", length_grid)
         #dx = 2*self.limit/length_grid
         dx = self.limit/length_grid
         for i in range(length_grid):
-            #print("element: ", self.grid[i])
-            #print("element + dx: ", self.grid[i]+dx)
-            #print("element - dx: ", self.grid[i]-dx)
-            diff_norm[i] = \
-                    norm.cdf(
-                    self.grid[i] + dx, 
-                    #loc=self.grid[i], 
-                    loc=x, 
-                    scale=1/(m**(8/3))
-                    ) -\
-                    norm.cdf(
-                    self.grid[i] - dx, 
-                    #loc=self.grid[i], 
-                    loc=x, 
-                    scale=1/(m**(8/3))
-                    )
-        diff_norm
-        return diff_norm
+            for j in range(length_grid):
+                diff_norm[j, i] = quad(
+                        lambda w: 
+                        w*norm.pdf(
+                            w, 
+                            loc=self.grid[i],
+                            scale=1/(self.time_steps**(8/3))
+                            ),
+                        self.grid[j] - dx,
+                        self.grid[j] + dx
+                        )[0]
+        #xi, xj = np.meshgrid(self.grid, self.grid, sparse=False, indexing='ij')
+        #diff_norm_1 = quad(
+        #                lambda w: 
+        #                w*norm.pdf(
+        #                    w, 
+        #                    loc=xi,
+        #                    scale=1/(self.time_steps**(8/3))
+        #                    ),
+        #                xj - dx,
+        #                xj + dx
+        #                )[0]
 
-    
-        
+        return diff_norm#, diff_norm_1
        
 # Tests
-x = distribution(hurst = 0.75, limit = 4, points = 10**3)
+x = distribution(hurst = 0.75, limit = 4, points = 10**2, time_steps=10**1)
 #print(x.grid)
 ## Covariance matrix
 #cov = x.fbm()
@@ -113,7 +120,19 @@ x = distribution(hurst = 0.75, limit = 4, points = 10**3)
 #plt.plot(x.grid, frac)
 #plt.show()
 #print("grid: ", x.grid)
-print("value of b: ", x.b(x=1, t=1, m=10))
+#print("value of b: ", x.normal_difference(x=1, t=1, m=10))
+#print(x.normal_difference_m)
+#plt.figure()
+#plt.plot(x.grid, x.fbm_path)
+#plt.show()
+#x.dist
 plt.figure()
-plt.plot(x.grid, x.b(x=3, t=1, m=10))
+plt.plot(x.grid, x.fbm_path)
+plt.plot(x.grid, x.dist)
+#plt.plot(x.grid, x.dist1)
 plt.show()
+#print(x.dist)
+#print(x.df)
+#plt.figure()
+#plt.plot(x.grid, x.df)
+#plt.show()
