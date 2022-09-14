@@ -53,7 +53,29 @@ class distribution:
         
         #self.dist, self.dist1 = np.sum(np.multiply(self.fbm_path, self.df), axis=1)
         self.dist = np.sum(np.multiply(self.fbm_path, self.df), axis=1)
+
+        # Tests
+        self.con = self.constant()
+        self.conconv = np.sum(np.multiply(self.con, self.df), axis=1)
+
+        self.zer = self.zeros()
+        self.zerconv = np.sum(np.multiply(self.zer, self.df), axis=1)
+
+        self.lin = self.linear()
+        self.linconv = np.sum(np.multiply(self.lin, self.df), axis=1)
     
+    def zeros(self):
+        zeros_arr = np.zeros_like(self.grid)
+        return zeros_arr
+
+    def constant(self):
+        constant_arr = np.ones_like(self.grid)
+        return constant_arr
+        
+    def linear(self):
+        linear_arr = self.grid
+        return linear_arr
+
     def fbm(self):
         x_grid, y_grid = np.meshgrid(
                 self.grid, 
@@ -68,8 +90,8 @@ class distribution:
                 )
         g = rng.standard_normal(size=self.points)
         cholesky = np.linalg.cholesky(a=covariance)
-        fbm_array = np.matmul(cholesky, g)
-        return fbm_array
+        fbm_arr = np.matmul(cholesky, g)
+        return fbm_arr
 
     # This is creating the array to perform the convolution of
     # f*p(x) where x is the same as thea argument x received by the function
@@ -77,18 +99,20 @@ class distribution:
         length_grid = np.shape(self.grid)[0]
         diff_norm = np.zeros(shape=(length_grid, length_grid))
         #print("length of grid: ", length_grid)
-        #dx = 2*self.limit/length_grid
         dx = self.limit/length_grid
         for i in range(length_grid):
             for j in range(length_grid):
                 diff_norm[j, i] = quad(
                         lambda w: 
-                        w*norm.pdf(
+                        (-self.time_steps**(8/3))*(w - self.grid[i])*norm.pdf(
                             w, 
                             loc=self.grid[i],
+                            #loc=0,
                             scale=1/(self.time_steps**(8/3))
                             ),
+                        #self.grid[i] - self.grid[j] - dx,
                         self.grid[j] - dx,
+                        #self.grid[i] - self.grid[j] + dx
                         self.grid[j] + dx
                         )[0]
         #xi, xj = np.meshgrid(self.grid, self.grid, sparse=False, indexing='ij')
@@ -106,7 +130,7 @@ class distribution:
         return diff_norm#, diff_norm_1
        
 # Tests
-x = distribution(hurst = 0.75, limit = 4, points = 10**2, time_steps=10**1)
+x = distribution(hurst = 0.75, limit = 4, points = 10**1, time_steps=10**1)
 #print(x.grid)
 ## Covariance matrix
 #cov = x.fbm()
@@ -126,13 +150,22 @@ x = distribution(hurst = 0.75, limit = 4, points = 10**2, time_steps=10**1)
 #plt.plot(x.grid, x.fbm_path)
 #plt.show()
 #x.dist
-plt.figure()
-plt.plot(x.grid, x.fbm_path)
-plt.plot(x.grid, x.dist)
-#plt.plot(x.grid, x.dist1)
-plt.show()
+#print(x.fbm_path)
+#print(x.dist)
+#print(x.conconv)
+#print(x.zerconv)
+#print(x.linconv)
+#plt.figure()
+#plt.plot(x.grid, x.fbm_path, label="fBm")
+#plt.plot(x.grid, x.dist, label="dist")
+#plt.plot(x.grid, x.conconv, label="constant")
+#plt.plot(x.grid, x.zerconv, label="zeros")
+#plt.plot(x.grid, x.linconv, label="linear")
+#plt.legend()
+#plt.show()
 #print(x.dist)
 #print(x.df)
 #plt.figure()
 #plt.plot(x.grid, x.df)
 #plt.show()
+print(x.df)
