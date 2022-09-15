@@ -96,20 +96,18 @@ class distribution:
     # This is creating the array to perform the convolution of
     # f*p(x) where x is the same as thea argument x received by the function
     def normal_difference(self):
-        length_grid = np.shape(self.grid)[0]
+        length_grid = self.grid.shape[0]
         diff_norm = np.zeros(shape=(length_grid, length_grid))
         #print("length of grid: ", length_grid)
         dx = self.limit/length_grid
         for i in range(length_grid):
             for j in range(length_grid):
+                p = lambda w: \
+                        (-self.time_steps**(8/3))* \
+                        (w - self.grid[i])* \
+                        norm.pdf( w, loc=self.grid[i], scale=1/(self.time_steps**(8/3)) )
                 diff_norm[j, i] = quad(
-                        lambda w: 
-                        (-self.time_steps**(8/3))*(w - self.grid[i])*norm.pdf(
-                            w, 
-                            loc=self.grid[i],
-                            #loc=0,
-                            scale=1/(self.time_steps**(8/3))
-                            ),
+                        p,
                         #self.grid[i] - self.grid[j] - dx,
                         self.grid[j] - dx,
                         #self.grid[i] - self.grid[j] + dx
@@ -130,7 +128,7 @@ class distribution:
         return diff_norm#, diff_norm_1
        
 # Tests
-x = distribution(hurst = 0.75, limit = 4, points = 10**1, time_steps=10**1)
+x = distribution(hurst=0.75, limit=1, points=10**1, time_steps=10**1)
 #print(x.grid)
 ## Covariance matrix
 #cov = x.fbm()
@@ -150,22 +148,31 @@ x = distribution(hurst = 0.75, limit = 4, points = 10**1, time_steps=10**1)
 #plt.plot(x.grid, x.fbm_path)
 #plt.show()
 #x.dist
+
 #print(x.fbm_path)
 #print(x.dist)
 #print(x.conconv)
 #print(x.zerconv)
 #print(x.linconv)
-#plt.figure()
+
+plt.figure()
 #plt.plot(x.grid, x.fbm_path, label="fBm")
-#plt.plot(x.grid, x.dist, label="dist")
+plt.plot(x.grid, x.dist, label="dist")
 #plt.plot(x.grid, x.conconv, label="constant")
 #plt.plot(x.grid, x.zerconv, label="zeros")
 #plt.plot(x.grid, x.linconv, label="linear")
-#plt.legend()
-#plt.show()
+plt.legend()
+plt.show()
+
 #print(x.dist)
 #print(x.df)
 #plt.figure()
 #plt.plot(x.grid, x.df)
 #plt.show()
-print(x.df)
+
+plt.figure()
+plt.plot(x.df)
+plt.show()
+
+#print(x.df.size)
+#print(x.df.shape)
