@@ -132,7 +132,7 @@ class distribution:
         return diff_norm#, diff_norm_1
        
 # Tests
-x = distribution(hurst=0.75, limit=1, points=10**1, time_steps=10**1)
+x = distribution(hurst=0.75, limit=1, points=10**1, time_steps=10**(1))
 #print(x.grid)
 ## Covariance matrix
 #cov = x.fbm()
