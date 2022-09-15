@@ -108,7 +108,7 @@ class distribution:
                         norm.pdf( 
                                 self.grid[i], 
                                 loc=u,
-                                scale=1/(self.time_steps**(8/3)) 
+                                scale=np.sqrt(1/(self.time_steps**(8/3)) )
                                 )
                 diff_norm[j, i] = quad(
                         p,
@@ -132,7 +132,7 @@ class distribution:
         return diff_norm#, diff_norm_1
        
 # Tests
-x = distribution(hurst=0.75, limit=1, points=10**1, time_steps=10**(1))
+x = distribution(hurst=0.75, limit=1, points=10**(2), time_steps=10**(1))
 #print(x.grid)
 ## Covariance matrix
 #cov = x.fbm()
