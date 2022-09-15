@@ -52,17 +52,17 @@ class distribution:
         self.df = self.normal_difference()
         
         #self.dist, self.dist1 = np.sum(np.multiply(self.fbm_path, self.df), axis=1)
-        self.dist = np.sum(np.multiply(self.fbm_path, self.df), axis=1)
+        self.dist = np.sum(np.multiply(self.fbm_path, self.df.T), axis=1)
 
         # Tests
         self.con = self.constant()
-        self.conconv = np.sum(np.multiply(self.con, self.df), axis=1)
+        self.conconv = np.sum(np.multiply(self.con, self.df.T), axis=1)
 
         self.zer = self.zeros()
-        self.zerconv = np.sum(np.multiply(self.zer, self.df), axis=1)
+        self.zerconv = np.sum(np.multiply(self.zer, self.df.T), axis=1)
 
         self.lin = self.linear()
-        self.linconv = np.sum(np.multiply(self.lin, self.df), axis=1)
+        self.linconv = np.sum(np.multiply(self.lin, self.df.T), axis=1)
     
     def zeros(self):
         zeros_arr = np.zeros_like(self.grid)
@@ -99,19 +99,23 @@ class distribution:
         length_grid = self.grid.shape[0]
         diff_norm = np.zeros(shape=(length_grid, length_grid))
         #print("length of grid: ", length_grid)
-        dx = self.limit/length_grid
+        delta = self.limit/length_grid
         for i in range(length_grid):
             for j in range(length_grid):
-                p = lambda w: \
+                p = lambda u: \
                         (-self.time_steps**(8/3))* \
-                        (w - self.grid[i])* \
-                        norm.pdf( w, loc=self.grid[i], scale=1/(self.time_steps**(8/3)) )
+                        (self.grid[i] - u)* \
+                        norm.pdf( 
+                                self.grid[i], 
+                                loc=u,
+                                scale=1/(self.time_steps**(8/3)) 
+                                )
                 diff_norm[j, i] = quad(
                         p,
-                        #self.grid[i] - self.grid[j] - dx,
-                        self.grid[j] - dx,
-                        #self.grid[i] - self.grid[j] + dx
-                        self.grid[j] + dx
+                        self.grid[j] - self.grid[i] - delta,
+                        #self.grid[j] - dx,
+                        self.grid[j] - self.grid[i] + delta
+                        #self.grid[j] + dx
                         )[0]
         #xi, xj = np.meshgrid(self.grid, self.grid, sparse=False, indexing='ij')
         #diff_norm_1 = quad(
@@ -156,11 +160,11 @@ x = distribution(hurst=0.75, limit=1, points=10**1, time_steps=10**1)
 #print(x.linconv)
 
 plt.figure()
-#plt.plot(x.grid, x.fbm_path, label="fBm")
+plt.plot(x.grid, x.fbm_path, label="fBm")
 plt.plot(x.grid, x.dist, label="dist")
-#plt.plot(x.grid, x.conconv, label="constant")
+plt.plot(x.grid, x.conconv, label="constant")
 #plt.plot(x.grid, x.zerconv, label="zeros")
-#plt.plot(x.grid, x.linconv, label="linear")
+plt.plot(x.grid, x.linconv, label="linear")
 plt.legend()
 plt.show()
 
@@ -170,9 +174,9 @@ plt.show()
 #plt.plot(x.grid, x.df)
 #plt.show()
 
-plt.figure()
-plt.plot(x.df)
-plt.show()
+#plt.figure()
+#plt.plot(x.df)
+#plt.show()
 
 #print(x.df.size)
 #print(x.df.shape)
