@@ -41,6 +41,8 @@ class distribution:
         self.points = points
         self.time_steps = time_steps
 
+        self.t_heat = np.sqrt(1/(self.time_steps**(8/3)))
+
         self.grid = np.linspace(
                 start = -limit,
                 stop = limit,
@@ -103,12 +105,12 @@ class distribution:
         for i in range(length_grid):
             for j in range(length_grid):
                 p = lambda u: \
-                        (-self.time_steps**(8/3))* \
+                        (-1/self.t_heat**2)* \
                         (self.grid[i] - u)* \
                         norm.pdf( 
                                 self.grid[i], 
                                 loc=u,
-                                scale=np.sqrt(1/(self.time_steps**(8/3)) )
+                                scale=self.t_heat
                                 )
                 diff_norm[j, i] = quad(
                         p,
