@@ -15,6 +15,8 @@ from datetime import datetime
 from scipy.stats import norm
 from scipy.integrate import quad
 
+#from numba import jit
+
 class distribution:
     """
     Generates a distributional coefficient by computing the generalised
@@ -97,6 +99,7 @@ class distribution:
 
     # This is creating the array to perform the convolution of
     # f*p(x) where x is the same as thea argument x received by the function
+    #@jit(nopython=True)
     def normal_difference(self):
         length_grid = self.grid.shape[0]
         diff_norm = np.zeros(shape=(length_grid, length_grid))
@@ -104,10 +107,7 @@ class distribution:
         delta = self.limit/length_grid
         for i in range(length_grid):
             for j in range(length_grid):
-                p = lambda u: \
-                        (-1/self.t_heat**2)* \
-                        (self.grid[i] - u)* \
-                        norm.pdf( 
+                p = lambda u:  (-1/self.t_heat**2)*  (self.grid[i] - u)*  norm.pdf( 
                                 self.grid[i], 
                                 loc=u,
                                 scale=self.t_heat
