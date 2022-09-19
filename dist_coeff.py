@@ -121,7 +121,7 @@ class distribution:
                         )[0]
         #xi, xj = np.meshgrid(self.grid, self.grid, sparse=False, indexing='ij')
         #p = lambda w: w*norm.pdf(w, loc=xi, scale=self.t_heat)
-        #diff_norm_1 = quad(p, xj - xi - delta, xj - xi + delta)[0]
+        #diff_norm_1 = np.vectorize(quad(p, xj - xi - delta, xj - xi + delta)[0])
 
         return diff_norm#, diff_norm_1
        
