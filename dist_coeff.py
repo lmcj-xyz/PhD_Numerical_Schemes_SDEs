@@ -107,7 +107,7 @@ class distribution:
         delta = self.limit/length_grid
         for i in range(length_grid):
             for j in range(length_grid):
-                p = lambda u:  (-1/self.t_heat**2)*  (self.grid[i] - u)*  norm.pdf( 
+                p = lambda u: (-1/self.t_heat**2)*(self.grid[i] - u)*norm.pdf( 
                                 self.grid[i], 
                                 loc=u,
                                 scale=self.t_heat
@@ -120,16 +120,8 @@ class distribution:
                         #self.grid[j] + dx
                         )[0]
         #xi, xj = np.meshgrid(self.grid, self.grid, sparse=False, indexing='ij')
-        #diff_norm_1 = quad(
-        #                lambda w: 
-        #                w*norm.pdf(
-        #                    w, 
-        #                    loc=xi,
-        #                    scale=1/(self.time_steps**(8/3))
-        #                    ),
-        #                xj - dx,
-        #                xj + dx
-        #                )[0]
+        #p = lambda w: w*norm.pdf(w, loc=xi, scale=self.t_heat)
+        #diff_norm_1 = quad(p, xj - xi - delta, xj - xi + delta)[0]
 
         return diff_norm#, diff_norm_1
        
