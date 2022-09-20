@@ -115,18 +115,18 @@ class distribution:
         const = -1/t_var**2
 
         # Array of functions
-        #p = lambda u: const*(self.grid - u)*norm.pdf(self.grid, loc=u, scale=t_var)
-        #for j in range(self.length_grid):
-        #    jj = self.grid[j]
-        #    diff_norm[j, :] = quad_vec(p, jj - delta, jj + delta)[0]
+        p = lambda u: const*(self.grid - u)*norm.pdf(self.grid, loc=u, scale=t_var)
+        for j in range(self.length_grid):
+            jj = self.grid[j]
+            diff_norm[j, :] = quad_vec(p, jj - delta, jj + delta)[0]
 
-        # Horrible nested loops
-        for i in range(self.length_grid):
-            ii = self.grid[i]
-            p = lambda u: const*(ii - u)*norm.pdf(ii, loc=u, scale=t_var)
-            for j in range(self.length_grid):
-                jj = self.grid[j]
-                diff_norm[j, i] = quad(p, jj - delta, jj + delta)[0]
+        ## Horrible nested loops
+        #for i in range(self.length_grid):
+        #    ii = self.grid[i]
+        #    p = lambda u: const*(ii - u)*norm.pdf(ii, loc=u, scale=t_var)
+        #    for j in range(self.length_grid):
+        #        jj = self.grid[j]
+        #        diff_norm[j, i] = quad(p, jj - delta, jj + delta)[0]
         
         # Meshgrid attempt
         #xi, xj = np.meshgrid(self.grid, self.grid, sparse=False, indexing='ij')
@@ -139,9 +139,10 @@ class distribution:
         sd_heat = np.sqrt(1/(m**(8/3)))
         df = self.normal_differences(t_var=sd_heat)
         dist_a = np.sum(np.multiply(self.fbm_path, df.T), axis=1)
+        #dist_a_1 = np.sum(np.multiply(self.fbm_path, df_1.T), axis=1)
         delta = self.limit/self.length_grid
         return np.piecewise(
                 x, 
                 [(k - delta <= x)*(x < k + delta) for k in self.grid],
                 [k for k in dist_a]
-                ), df, df_1
+                )
