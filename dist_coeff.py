@@ -13,7 +13,7 @@ from numpy.random import default_rng
 rng = default_rng()
 from datetime import datetime
 from scipy.stats import norm
-from scipy.integrate import quad
+from scipy.integrate import quad_vec, quad
 
 #from numba import jit
 
@@ -37,48 +37,56 @@ class distribution:
     -------
 
     """
-    def __init__(self, hurst, limit, points, time_steps):
+    def __init__(self, hurst, limit, points):#, time_steps):
         self.hurst = hurst
         self.limit = limit
         self.points = points
-        self.time_steps = time_steps
+        #self.time_steps = time_steps
+        #self.time_steps2 = time_steps/10
 
-        self.t_heat = np.sqrt(1/(self.time_steps**(8/3)))
+        #self.t_heat = np.sqrt(1/(self.time_steps**(8/3)))
+        #self.t_heat2 = np.sqrt((1/(self.time_steps2**(8/3))))
 
         self.grid = np.linspace(
                 start = -limit,
                 stop = limit,
                 num = points
                 )
+        self.length_grid = self.grid.shape[0]
 
         self.fbm_path = self.fbm()
 
-        self.df = self.normal_difference()
+        #self.df = self.normal_differences(self.t_heat)
+        ##self.df2 = self.normal_differences(self.t_heat2)
         
-        #self.dist, self.dist1 = np.sum(np.multiply(self.fbm_path, self.df), axis=1)
-        self.dist = np.sum(np.multiply(self.fbm_path, self.df.T), axis=1)
+        ##self.dist, self.dist1 = np.sum(np.multiply(self.fbm_path, self.df), axis=1)
+        #self.dist_array = np.sum(np.multiply(self.fbm_path, self.df.T), axis=1)
+        ##self.dist_array2 = np.sum(np.multiply(self.fbm_path, self.df2.T), axis=1)
 
-        # Tests
-        self.con = self.constant()
-        self.conconv = np.sum(np.multiply(self.con, self.df.T), axis=1)
+    #    # Tests
+    #    self.con = self.constant()
+    #    self.conconv = np.sum(np.multiply(self.con, self.df.T), axis=1)
+    #    #self.conconv2 = np.sum(np.multiply(self.con, self.df2.T), axis=1)
 
-        self.zer = self.zeros()
-        self.zerconv = np.sum(np.multiply(self.zer, self.df.T), axis=1)
+    #    self.zer = self.zeros()
+    #    self.zerconv = np.sum(np.multiply(self.zer, self.df.T), axis=1)
+    #    #self.zerconv2 = np.sum(np.multiply(self.zer, self.df2.T), axis=1)
 
-        self.lin = self.linear()
-        self.linconv = np.sum(np.multiply(self.lin, self.df.T), axis=1)
-    
-    def zeros(self):
-        zeros_arr = np.zeros_like(self.grid)
-        return zeros_arr
+    #    self.lin = self.linear()
+    #    self.linconv = np.sum(np.multiply(self.lin, self.df.T), axis=1)
+    #    #self.linconv2 = np.sum(np.multiply(self.lin, self.df2.T), axis=1)
+    #
+    #def zeros(self):
+    #    zeros_arr = np.zeros_like(self.grid)
+    #    return zeros_arr
 
-    def constant(self):
-        constant_arr = np.ones_like(self.grid)
-        return constant_arr
-        
-    def linear(self):
-        linear_arr = self.grid
-        return linear_arr
+    #def constant(self):
+    #    constant_arr = np.ones_like(self.grid)
+    #    return constant_arr
+    #    
+    #def linear(self):
+    #    linear_arr = self.grid
+    #    return linear_arr
 
     def fbm(self):
         x_grid, y_grid = np.meshgrid(
@@ -100,77 +108,40 @@ class distribution:
     # This is creating the array to perform the convolution of
     # f*p(x) where x is the same as thea argument x received by the function
     #@jit(nopython=True)
-    def normal_difference(self):
-        length_grid = self.grid.shape[0]
-        diff_norm = np.zeros(shape=(length_grid, length_grid))
-        #print("length of grid: ", length_grid)
-        delta = self.limit/length_grid
-        for i in range(length_grid):
-            for j in range(length_grid):
-                p = lambda u: (-1/self.t_heat**2)*(self.grid[i] - u)*norm.pdf( 
-                                self.grid[i], 
-                                loc=u,
-                                scale=self.t_heat
-                                )
-                diff_norm[j, i] = quad(
-                        p,
-                        self.grid[j] - self.grid[i] - delta,
-                        #self.grid[j] - dx,
-                        self.grid[j] - self.grid[i] + delta
-                        #self.grid[j] + dx
-                        )[0]
+    def normal_differences(self, t_var):
+        diff_norm = np.zeros(shape=(self.length_grid, self.length_grid))
+        #diff_norm_1 = np.zeros(shape=(self.length_grid, self.length_grid))
+        delta = self.limit/self.length_grid
+        const = -1/t_var**2
+
+        # Array of functions
+        #p = lambda u: const*(self.grid - u)*norm.pdf(self.grid, loc=u, scale=t_var)
+        #for j in range(self.length_grid):
+        #    jj = self.grid[j]
+        #    diff_norm[j, :] = quad_vec(p, jj - delta, jj + delta)[0]
+
+        # Horrible nested loops
+        for i in range(self.length_grid):
+            ii = self.grid[i]
+            p = lambda u: const*(ii - u)*norm.pdf(ii, loc=u, scale=t_var)
+            for j in range(self.length_grid):
+                jj = self.grid[j]
+                diff_norm[j, i] = quad(p, jj - delta, jj + delta)[0]
+        
+        # Meshgrid attempt
         #xi, xj = np.meshgrid(self.grid, self.grid, sparse=False, indexing='ij')
-        #p = lambda w: w*norm.pdf(w, loc=xi, scale=self.t_heat)
-        #diff_norm_1 = np.vectorize(quad(p, xj - xi - delta, xj - xi + delta)[0])
+        #p = lambda w: (-1/t_var**2)*(xi - w)*norm.pdf(xi, loc=u, scale=t_var)
+        #diff_norm_1 = quad(p, xj - delta, xj + delta)[0]
 
         return diff_norm#, diff_norm_1
-       
-# Tests
-x = distribution(hurst=0.75, limit=1, points=10**(2), time_steps=10**(1))
-#print(x.grid)
-## Covariance matrix
-#cov = x.fbm()
-#print(cov)
-#plt.imshow(cov)
-#plt.colorbar()
-#plt.show()
-## fBm
-#frac = x.fbm_path
-#plt.figure()
-#plt.plot(x.grid, frac)
-#plt.show()
-#print("grid: ", x.grid)
-#print("value of b: ", x.normal_difference(x=1, t=1, m=10))
-#print(x.normal_difference_m)
-#plt.figure()
-#plt.plot(x.grid, x.fbm_path)
-#plt.show()
-#x.dist
 
-#print(x.fbm_path)
-#print(x.dist)
-#print(x.conconv)
-#print(x.zerconv)
-#print(x.linconv)
-
-plt.figure()
-plt.plot(x.grid, x.fbm_path, label="fBm")
-plt.plot(x.grid, x.dist, label="dist")
-plt.plot(x.grid, x.conconv, label="constant")
-#plt.plot(x.grid, x.zerconv, label="zeros")
-plt.plot(x.grid, x.linconv, label="linear")
-plt.legend()
-plt.show()
-
-#print(x.dist)
-#print(x.df)
-#plt.figure()
-#plt.plot(x.grid, x.df)
-#plt.show()
-
-#plt.figure()
-#plt.plot(x.df)
-#plt.show()
-
-#print(x.df.size)
-#print(x.df.shape)
+    def func(self, t, x, m):
+        sd_heat = np.sqrt(1/(m**(8/3)))
+        df = self.normal_differences(t_var=sd_heat)
+        dist_a = np.sum(np.multiply(self.fbm_path, df.T), axis=1)
+        delta = self.limit/self.length_grid
+        return np.piecewise(
+                x, 
+                [(k - delta <= x)*(x < k + delta) for k in self.grid],
+                [k for k in dist_a]
+                ), df, df_1

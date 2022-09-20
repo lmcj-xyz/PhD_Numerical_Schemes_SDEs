@@ -2,6 +2,7 @@ import euler as e
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.stats import norm
+from dist_coeff import *
 
 # Time steps
 M = 10**5
