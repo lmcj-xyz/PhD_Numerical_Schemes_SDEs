@@ -5,7 +5,7 @@ from scipy.stats import norm
 from dist_coeff import *
 
 # Time steps
-M = 10**5
+M = 10**3
 # Instance of distributional coefficient
 dist = distribution(hurst=0.75, limit=5, points=10**4)
 
@@ -29,7 +29,7 @@ y = e.Euler(
         )
 
 # Rate of convergence
-error, rate = y.rate(real_solution = y.solve(), approximations = 3, 
-        show_plot = True, save_plot = True)
+error, rate = y.rate(real_solution = y.solve(), approximations = 2, 
+        show_plot = True, save_plot = False)
 print("error array", error)
 print("rate =", rate)
