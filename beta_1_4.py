@@ -6,13 +6,14 @@ from dist_coeff import *
 
 # Time steps
 M = 10**5
+# Instance of distributional coefficient
+dist = distribution(hurst=0.75, limit=5, points=10**4)
 
 # n(m) = m^(8/3)
 
 # Distributional drift
 def bn (t, x, m):
-    n = m**(8/3)
-    return np.sqrt(n/2*np.pi)*np.exp(-(n*x**2)/2)
+    return dist.func(t, x, m)
 
 # Constant diffusion
 def sigma (t, x, m):
