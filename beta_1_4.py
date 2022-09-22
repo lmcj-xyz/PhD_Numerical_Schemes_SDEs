@@ -7,12 +7,13 @@ from dist_coeff import *
 # Time steps
 M = 10**3
 # Instance of distributional coefficient
-dist = distribution(hurst=0.75, limit=5, points=10**4)
+#dist = Distribution(hurst=0.75, limit=5, points=10**2)
 
 # n(m) = m^(8/3)
 
 # Distributional drift
 def bn (t, x, m):
+    dist = Distribution(hurst=0.75, limit=5, points=10**2, time_steps=m)
     return dist.func(t, x, m)
 
 # Constant diffusion
@@ -24,7 +25,7 @@ y = e.Euler(
         drift = bn,
         diffusion = sigma,
         time_steps = M,
-        paths = 1000,
+        paths = 100,
         y0 = 1
         )
 

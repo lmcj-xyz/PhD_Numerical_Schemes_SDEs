@@ -3,9 +3,9 @@ import numpy as np
 import matplotlib.pyplot as plt
 import time
 
-start_time = time.time()
+start_time = time.process_time()
 # Tests
-x = dc.distribution(hurst=0.75, limit=5, points=10**2)#, time_steps=10**(1))
+x = dc.Distribution(hurst=0.75, limit=5, points=10**3, time_steps=10**(1))
 
 #plt.figure()
 #plt.plot(x.df)
@@ -17,15 +17,16 @@ x = dc.distribution(hurst=0.75, limit=5, points=10**2)#, time_steps=10**(1))
 #xx = np.linspace(-x.limit, x.limit, 10**5)
 #yy1 = x.func(t=0, x=xx, m=10**0)
 #yy2 = x.func(t=0, x=xx, m=10**1)
-##yy3 = x.func(t=0, x=xx, m=10**2)
-##yy4 = x.func(t=0, x=xx, m=10**3)
+#yy3 = x.func(t=0, x=xx, m=10**2)
+#yy4 = x.func(t=0, x=xx, m=10**3)
 #
 ##print(df1 - df1_1)
 ##print(df2 - df2_1)
 #
-#end_time = time.time()
-#print(end_time - start_time)
-#
+
+#####################
+# Derivatives of known functions
+#####################
 plt.figure()
 plt.plot(x.grid, x.fbm_path, label="fBm")
 plt.plot(x.grid, x.dist_array, label="dist")
@@ -38,7 +39,7 @@ plt.plot(x.grid, x.conconv, label="constant")
 plt.plot(x.grid, x.linconv, label="linear")
 plt.legend()
 plt.grid()
-#plt.ylim(-5, 5)
+plt.ylim(-5, 5)
 plt.show()
 
 #plt.figure()
@@ -106,3 +107,5 @@ plt.show()
 #print(x.df.size)
 #print(x.df.shape)
 
+end_time = time.process_time()
+print("time elapsed: ", end_time - start_time)

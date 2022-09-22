@@ -17,7 +17,7 @@ from scipy.integrate import quad_vec, quad
 
 #from numba import jit
 
-class distribution:
+class Distribution:
     """
     Generates a distributional coefficient by computing the generalised
     derivative of a fractional Brownian motion (fBm).
@@ -37,14 +37,14 @@ class distribution:
     -------
 
     """
-    def __init__(self, hurst, limit, points):#, time_steps):
+    def __init__(self, hurst, limit, points, time_steps):
         self.hurst = hurst
         self.limit = limit
         self.points = points
-        #self.time_steps = time_steps
+        self.time_steps = time_steps
         #self.time_steps2 = time_steps/10
 
-        #self.t_heat = np.sqrt(1/(self.time_steps**(8/3)))
+        self.t_heat = np.sqrt(1/(self.time_steps**(8/3)))
         #self.t_heat2 = np.sqrt((1/(self.time_steps2**(8/3))))
 
         self.grid = np.linspace(
@@ -56,8 +56,8 @@ class distribution:
 
         self.fbm_path = self.fbm()
 
-        self.df = self.normal_differences(0.1)
-        #self.df2 = self.normal_differences(self.t_heat2)
+        #self.df = self.normal_differences(0.1)
+        self.df = self.normal_differences(self.t_heat)
         
         ##self.dist, self.dist1 = np.sum(np.multiply(self.fbm_path, self.df), axis=1)
         self.dist_array = np.sum(np.multiply(self.fbm_path, self.df.T), axis=1)
@@ -110,15 +110,14 @@ class distribution:
     #@jit(nopython=True)
     def normal_differences(self, t_var):
         diff_norm = np.zeros(shape=(self.length_grid, self.length_grid))
-        #diff_norm1 = np.zeros(shape=(self.length_grid, self.length_grid))
         delta = self.limit/self.length_grid
-        #const = -1/t_var**2
+        const = -1/t_var**2
 
         # Array of functions
-        #p = lambda u: const*(self.grid - u)*norm.pdf(self.grid, loc=u, scale=t_var)
-        #for j in range(self.length_grid):
-        #    jj = self.grid[j]
-        #    diff_norm[j, :] = quad_vec(p, jj - delta, jj + delta)[0]
+        p = lambda u: const*(self.grid - u)*norm.pdf(self.grid, loc=u, scale=t_var)
+        for j in range(self.length_grid):
+            jj = self.grid[j]
+            diff_norm[j, :] = quad_vec(p, jj - delta, jj + delta)[0]
 
         ## Horrible nested loops
         #for i in range(self.length_grid):
@@ -129,20 +128,24 @@ class distribution:
         #        diff_norm[j, i] = quad(p, jj - delta, jj + delta)[0]
         
         # Meshgrid attempt
-        xi, xj = np.meshgrid(self.grid, self.grid, sparse=False, indexing='ij')
-        diff_norm = (xj + delta)*norm.cdf(xj - delta, loc=xi, scale=t_var) \
-                - (xj - delta)*norm.cdf(xj - delta, loc=xi, scale=t_var) \
-                - 2*delta*norm.cdf(xj, loc=xi, scale=t_var)
-        #diff_norm = (xi)*norm.cdf(xi, loc=xj + delta, scale=t_var) \
-        #        + (xi)*norm.cdf(xi, loc=xj - delta, scale=t_var) \
-        #        + 2*delta*norm.cdf(xi, loc=xj, scale=t_var)
+        #xi, xj = np.meshgrid(self.grid, self.grid, sparse=False, indexing='ij')
+        #diff_norm = (xj + delta)*norm.cdf(xj - delta, loc=xi, scale=t_var) \
+        #        - (xj - delta)*norm.cdf(xj - delta, loc=xi, scale=t_var) \
+        #        - 2*delta*norm.cdf(xj, loc=xi, scale=t_var)
+        ##diff_norm = (xj + delta)*norm.cdf(xi, loc=xj - delta, scale=t_var) \
+        ##          - (xj - delta)*norm.cdf(xi, loc=xj - delta, scale=t_var) \
+        ##               - 2*delta*norm.cdf(xi, loc=xj, scale=t_var)
+        #diff_norm = const*diff_norm
 
         return diff_norm#, diff_norm1
 
     def func(self, t, x, m):
-        var_heat = np.sqrt(1/(m**(8/3)))
-        df = self.normal_differences(t_var=var_heat)
-        dist_a = np.sum(np.multiply(self.fbm_path, df.T), axis=1)
+        #var_heat = np.sqrt(1/(m**(8/3)))
+        var_heat = self.t_heat
+        #df = self.normal_differences(t_var=var_heat)
+        df = self.df
+        #dist_a = np.sum(np.multiply(self.fbm_path, df.T), axis=1)
+        dist_a = self.dist_array
         #dist_a_1 = np.sum(np.multiply(self.fbm_path, df_1.T), axis=1)
         delta = self.limit/self.length_grid
         return np.piecewise(
