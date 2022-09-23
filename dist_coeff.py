@@ -167,6 +167,7 @@ class Distribution:
 
         return diff_norm#, diff_norm1
 
+    # this function is piecewise linear, not constant
     def func(self, t, x, m):
         #var_heat = np.sqrt(1/(m**(8/3)))
         var_heat = self.t_heat

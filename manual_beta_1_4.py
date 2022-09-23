@@ -136,11 +136,11 @@ class Euler:
         length_solution = int(np.log10(np.shape(real_solution)[0]))
         for i in range(approximations):
             m = 10**(length_solution-i-1)
-            ############
-            print("m = ", m)
-            print("i = ", i)
-            print("func length = ", len(dist.func_list))
-            ############
+            #############
+            #print("m = ", m)
+            #print("i = ", i)
+            #print("func length = ", len(dist.func_list))
+            #############
             delta = (self.time_end - self.time_start)/m
             soln = self.solve(time_steps_solve = m, drift=dist.func_list[i+1])
             real_solution_coarse = real_solution[::10**(i+1), :]
@@ -232,6 +232,7 @@ class Distribution:
             def f (t, x, m):
                 var_heat = self.t_heat[k]
                 delta = self.limit/self.length_grid
+                # this function must be piecewise linear, not constant
                 return np.piecewise(
                         x, 
                         [(k - delta <= x)*(x < k + delta) for k in self.grid],
@@ -293,7 +294,7 @@ M = 10**4
 beta = 0.25
 h = 1 - beta
 l = 5
-def_points_bn = 10**3
+def_points_bn = 10**4
 
 # Euler approximation
 y = Euler(
@@ -303,7 +304,7 @@ y = Euler(
         #drift = bn,
         #diffusion = sigma,
         time_steps = M,
-        paths = 10,
+        paths = 100,
         y0 = 1
         )
 
@@ -317,4 +318,3 @@ print("rate =", rate)
 
 et = time.process_time()
 print("time: ", et-st)
-
