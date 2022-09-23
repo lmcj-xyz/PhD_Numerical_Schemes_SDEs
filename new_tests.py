@@ -1,8 +1,11 @@
 import numpy as np
+import matplotlib.pyplot as plt
 
-x = np.linspace(-1, 1, 10)
-f = lambda w: x - w
+x = np.array([0, 1, 2, 1, 0])
+y = np.arange(5)
 
-print(f(1))
-print(f(0))
-print(f(-1))
+con = np.convolve(x, y, 'same')
+
+plt.figure()
+plt.plot(con)
+plt.show()

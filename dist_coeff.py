@@ -60,33 +60,56 @@ class Distribution:
         self.df = self.normal_differences(self.t_heat)
         
         ##self.dist, self.dist1 = np.sum(np.multiply(self.fbm_path, self.df), axis=1)
-        self.dist_array = np.sum(np.multiply(self.fbm_path, self.df.T), axis=1)
-        ##self.dist_array2 = np.sum(np.multiply(self.fbm_path, self.df2.T), axis=1)
+        # Convolution
+        self.dist_array = np.convolve(self.fbm_path, self.df, 'same')
+        ## Vector
+        #self.dist_array = np.zeros_like(self.grid)
+        #for i in range(self.length_grid):
+        #    self.dist_array[i] = np.sum(np.multiply(self.fbm_path, np.roll(self.df, i)))
+        ## Matrix
+        #self.dist_array = np.sum(np.multiply(self.fbm_path, self.df.T), axis=1)
 
-        # Tests
-        self.con = self.constant()
-        self.conconv = np.sum(np.multiply(self.con, self.df.T), axis=1)
-        #self.conconv2 = np.sum(np.multiply(self.con, self.df2.T), axis=1)
+    #    # Tests with known functions
+    #    # Constant 1
+    #    self.con = self.constant()
+    #    # Convolution
+    #    self.conconv = np.convolve(self.con, self.df, 'same')
+    #    ## Vector
+    #    #self.conconv = np.zeros_like(self.grid)
+    #    #for i in range(self.length_grid):
+    #    #    self.conconv[i] = np.sum(np.multiply(self.conconv, np.roll(self.df, i)))
+    #    ## Matrix
+    #    #self.conconv = np.sum(np.multiply(self.con, self.df.T), axis=1)
+    #    ##self.conconv2 = np.sum(np.multiply(self.con, self.df2.T), axis=1)
 
-        self.zer = self.zeros()
-        self.zerconv = np.sum(np.multiply(self.zer, self.df.T), axis=1)
-        #self.zerconv2 = np.sum(np.multiply(self.zer, self.df2.T), axis=1)
+    #    # Constant 0
+    #    #self.zer = self.zeros()
+    #    #self.zerconv = np.sum(np.multiply(self.zer, self.df.T), axis=1)
+    #    ##self.zerconv2 = np.sum(np.multiply(self.zer, self.df2.T), axis=1)
 
-        self.lin = self.linear()
-        self.linconv = np.sum(np.multiply(self.lin, self.df.T), axis=1)
-        #self.linconv2 = np.sum(np.multiply(self.lin, self.df2.T), axis=1)
-    
-    def zeros(self):
-        zeros_arr = np.zeros_like(self.grid)
-        return zeros_arr
+    #    # Linear function
+    #    self.lin = self.linear()
+    #    # Convolution
+    #    self.linconv = np.convolve(self.lin, self.df, 'same')
+    #    ## Vector
+    #    #self.linconv = np.zeros_like(self.grid)
+    #    #for i in range(self.length_grid):
+    #    #    self.linconv[i] = np.sum(np.multiply(self.linconv, np.roll(self.df, i)))
+    #    ## Matrix
+    #    #self.linconv = np.sum(np.multiply(self.lin, self.df.T), axis=1)
+    #    ##self.linconv2 = np.sum(np.multiply(self.lin, self.df2.T), axis=1)
+    #
+    #def zeros(self):
+    #    zeros_arr = np.zeros_like(self.grid)
+    #    return zeros_arr
 
-    def constant(self):
-        constant_arr = np.ones_like(self.grid)
-        return constant_arr
-        
-    def linear(self):
-        linear_arr = self.grid
-        return linear_arr
+    #def constant(self):
+    #    constant_arr = np.ones_like(self.grid)
+    #    return constant_arr
+    #    
+    #def linear(self):
+    #    linear_arr = self.grid
+    #    return linear_arr
 
     def fbm(self):
         x_grid, y_grid = np.meshgrid(
@@ -109,15 +132,20 @@ class Distribution:
     # f*p(x) where x is the same as thea argument x received by the function
     #@jit(nopython=True)
     def normal_differences(self, t_var):
-        diff_norm = np.zeros(shape=(self.length_grid, self.length_grid))
+        #diff_norm = np.zeros(shape=(self.length_grid, self.length_grid))
+        diff_norm = np.zeros(shape=self.length_grid)
         delta = self.limit/self.length_grid
         const = -1/t_var**2
 
-        # Array of functions
+        # Creating only one array instead of matrix
         p = lambda u: const*(self.grid - u)*norm.pdf(self.grid, loc=u, scale=t_var)
-        for j in range(self.length_grid):
-            jj = self.grid[j]
-            diff_norm[j, :] = quad_vec(p, jj - delta, jj + delta)[0]
+        diff_norm = quad_vec(p, -delta, delta)[0]
+
+        ## Array of functions
+        #p = lambda u: const*(self.grid - u)*norm.pdf(self.grid, loc=u, scale=t_var)
+        #for j in range(self.length_grid):
+        #    jj = self.grid[j]
+        #    diff_norm[j, :] = quad_vec(p, jj - delta, jj + delta)[0]
 
         ## Horrible nested loops
         #for i in range(self.length_grid):
@@ -127,7 +155,7 @@ class Distribution:
         #        jj = self.grid[j]
         #        diff_norm[j, i] = quad(p, jj - delta, jj + delta)[0]
         
-        # Meshgrid attempt
+        ## Meshgrid attempt
         #xi, xj = np.meshgrid(self.grid, self.grid, sparse=False, indexing='ij')
         #diff_norm = (xj + delta)*norm.cdf(xj - delta, loc=xi, scale=t_var) \
         #        - (xj - delta)*norm.cdf(xj - delta, loc=xi, scale=t_var) \

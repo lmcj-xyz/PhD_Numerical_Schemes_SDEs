@@ -224,9 +224,9 @@ class Euler:
             show_plot=False, save_plot=False):
         error = np.zeros(approximations)
         x_axis = np.zeros(approximations)
-        lenght_solution = int(np.log10(np.shape(real_solution)[0]))
+        length_solution = int(np.log10(np.shape(real_solution)[0]))
         for i in range(0, approximations):
-            m = 10**(lenght_solution-i-1)
+            m = 10**(length_solution-i-1)
             soln = self.solve(time_steps_solve = m)
             delta = (self.time_end - self.time_start)/m
             #real_solution_coarse = np.zeros(shape = (self.paths, 10**(i+1)))
@@ -276,7 +276,7 @@ class Euler:
         plt.title(
                 label="Rate = "
                 +str(rate)
-                +"\nProxy of solution: 10^"+str(lenght_solution)+" time steps"
+                +"\nProxy of solution: 10^"+str(length_solution)+" time steps"
                 )
         plt.xlabel("Step size")
         plt.ylabel("log(error)")
