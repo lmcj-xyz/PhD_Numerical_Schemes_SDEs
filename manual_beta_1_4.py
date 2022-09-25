@@ -28,7 +28,9 @@ class Euler:
             time_start = None,
             time_end = None,
             y0 = None, 
-            paths = None
+            paths = None,
+            approximations = None,
+            batches = None
             ):
 
         #self.drift = drift
@@ -43,6 +45,10 @@ class Euler:
                 is not None else 1
         self.paths = paths if paths \
                 is not None else 100
+        self.batches = batches if batches \
+                is not None else 20
+        self.approximations = approximations if approximations \
+                is not None else 5
 
         self.h = h
         self.l = l
@@ -51,11 +57,13 @@ class Euler:
         self.dt = self.generate_dt()
 
         self.z = rng.normal(
-                loc = 0.0,
-                scale = np.sqrt(self.dt),
-                size = (self.time_steps, self.paths)
+                loc=0.0,
+                scale=np.sqrt(self.dt),
+                size=(self.time_steps, self.paths, self.batches)
                 )
         self.time_grid = self.generate_time_grid()
+
+        self.drift_list = Distribution(hurst=self.h, limit=self.l, points=self.bp, time_steps=self.time_steps, approximations=self.approximations).func_list
 
     def generate_dt (self, time_steps_dt = None):
         time_steps_dt = time_steps_dt if time_steps_dt \
@@ -71,7 +79,7 @@ class Euler:
                 is not None else self.time_steps
         z_orig = self.z
         dt_z = self.dt
-        z_coarse = np.zeros(shape = (time_steps_z, self.paths))
+        z_coarse = np.zeros(shape = (time_steps_z, self.paths, self.batches))
 
         n_z = int(np.shape(z_orig)[0] / time_steps_z)
         
@@ -81,7 +89,7 @@ class Euler:
             temp = z_orig.reshape(
                     time_steps_z, 
                     np.shape(z_orig)[0]//time_steps_z,
-                    self.paths
+                    self.paths, self.batches
                     )
             z_coarse = np.sum(temp, axis=1)
 
@@ -104,7 +112,7 @@ class Euler:
                 )
         return time_grid_generated
 
-    def solve (self, drift, time_steps_solve = None):
+    def solve (self, drift = None, time_steps_solve = None):
         time_steps_solve = time_steps_solve if time_steps_solve \
                 is not None else self.time_steps
         time_grid_solve = self.generate_time_grid(time_steps_solve) if time_steps_solve \
@@ -113,38 +121,46 @@ class Euler:
                 is not None else self.dt
         z_solve = self.coarse_z(time_steps_z = time_steps_solve) if time_steps_solve \
                 is not None else self.z
+        drift = drift if drift  \
+                is not None else self.drift_list[0]
 
-        self.y = np.zeros(shape = (time_steps_solve, self.paths))
-        self.y[0, :] = self.y0
+        self.y = np.zeros(shape=(time_steps_solve, self.paths, self.batches))
+        self.y[0, :, :] = self.y0
+        #self.y[0, :] = self.y0
         
         for i in range(time_steps_solve - 1):
-            self.y[i+1, :] = self.y[i, :] \
+            #self.y[i+1, :] = self.y[i, :] \
+            self.y[i+1, :, :] = self.y[i, :, :] \
                     + drift(
-                            x = self.y[i, :], 
+                            x = self.y[i, :, :], 
+                            #x = self.y[i, :], 
                             t = time_grid_solve[i],
                             m = time_steps_solve
                             )*dt_solve \
-                    + z_solve[i+1, :]
+                    + z_solve[i+1, :, :]
+                    #+ z_solve[i+1, :]
         return self.y
 
-    def rate (self, approximations, show_plot=False, save_plot=False):
-        error = np.zeros(approximations)
-        x_axis = np.zeros(approximations)
+    def rate (self, show_plot=False, save_plot=False):
+        ##### de aqui seguimos
+        error = np.zeros(shape=(self.approximations, self.batches))
+        x_axis = np.zeros(self.approximations)
         #m = self.time_steps
-        dist = Distribution(hurst=self.h, limit=self.l, points=self.bp, time_steps=self.time_steps, approximations=approximations)
-        real_solution = self.solve(time_steps_solve=self.time_steps, drift=dist.func_list[0])
+        #dist = Distribution(hurst=self.h, limit=self.l, points=self.bp, time_steps=self.time_steps, self.approximations=approximations)
+        real_solution = self.solve(time_steps_solve=self.time_steps, drift=self.drift_list[0])
         length_solution = int(np.log10(np.shape(real_solution)[0]))
-        for i in range(approximations):
-            m = 10**(length_solution-i-1)
+        for i in range(self.approximations):
+            m = (10**(length_solution-i-1))
             #############
-            #print("m = ", m)
+            print("m = ", m)
             #print("i = ", i)
             #print("func length = ", len(dist.func_list))
             #############
             delta = (self.time_end - self.time_start)/m
-            soln = self.solve(time_steps_solve = m, drift=dist.func_list[i+1])
-            real_solution_coarse = real_solution[::10**(i+1), :]
-            error[i] = np.amax(
+            soln = self.solve(time_steps_solve = m, drift=self.drift_list[i+1])
+            real_solution_coarse = real_solution[::10**(i+1), :, :]
+            #real_solution_coarse = real_solution[::10**(i+1), :]
+            error[i, :] = np.amax(
                             np.mean(
                                 np.abs(
                                     np.subtract(real_solution_coarse, soln)
@@ -154,7 +170,8 @@ class Euler:
                             )
             x_axis[i] = delta
 
-        reg = np.ones(approximations)
+        """
+        reg = np.ones(self.approximations)
         A = np.vstack([np.log10(x_axis), reg]).T
         y_reg = np.log10(error[:, np.newaxis])
         rate, intersection = np.linalg.lstsq(A, y_reg, rcond=None)[0]
@@ -182,9 +199,11 @@ class Euler:
                     +
                     '_rate'
                     )
+        """
 
-        return error, rate#, np.log10(error), np.log10(x_axis)
+        return error#, rate#, np.log10(error), np.log10(x_axis)
 
+    # no modificado para batches
     def plot_solution (self, paths_plot, save_plot = False):
         solution = plt.figure()
         plt.plot(self.solve()[:, range(paths_plot)])
@@ -248,6 +267,7 @@ class Distribution:
                 sparse=False,
                 indexing='ij'
                 )
+                
         covariance = 0.5*(
                 np.abs(x_grid)**(2*self.hurst) +
                 np.abs(y_grid)**(2*self.hurst) - 
@@ -284,7 +304,7 @@ class Distribution:
 st = time.process_time()
 
 # Time steps
-M = 10**4
+M = 10**3
 # Instance of distributional coefficient
 #dist = Distribution(hurst=0.75, limit=5, points=10**2)
 
@@ -294,7 +314,7 @@ M = 10**4
 beta = 0.25
 h = 1 - beta
 l = 5
-def_points_bn = 10**4
+def_points_bn = 10**2
 
 # Euler approximation
 y = Euler(
@@ -305,6 +325,8 @@ y = Euler(
         #diffusion = sigma,
         time_steps = M,
         paths = 100,
+        batches = 10,
+        approximations = 2,
         y0 = 1
         )
 
@@ -312,9 +334,12 @@ y = Euler(
 #y.plot_solution(paths_plot=3, save_plot=False)
 
 # Rate of convergence
-error, rate = y.rate(approximations = 3, show_plot = True, save_plot = False)
-print("error array", error)
-print("rate =", rate)
+#error, rate = y.rate(show_plot = True, save_plot = False)
+error = y.rate(show_plot = True, save_plot = False)
+print("error array = \n", error)
+print("error shape = ", np.shape(error))
+#print("rate =", rate)
 
+################################################################################
 et = time.process_time()
 print("time: ", et-st)
