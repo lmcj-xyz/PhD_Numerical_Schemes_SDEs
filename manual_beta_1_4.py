@@ -17,6 +17,86 @@ from scipy.stats import norm
 
 import time
 
+class Distribution:
+
+    def __init__(self, hurst, limit, points, time_steps, approximations):
+        self.hurst = hurst
+        self.limit = limit
+        self.points = points
+        self.approximations = approximations
+
+        self.grid = np.linspace(
+                start = -limit,
+                stop = limit,
+                num = points
+                )
+        self.length_grid = self.grid.shape[0]
+
+        self.fbm_path = self.fbm()
+
+        self.pow_time_steps = int(np.log10(time_steps))
+        
+        self.time_steps_array = [10**(self.pow_time_steps-k) for k in range(approximations+1)]
+
+        self.t_heat = [np.sqrt(1/(k**(8/3))) for k in self.time_steps_array]
+
+        self.df = [self.normal_differences(k) for k in self.t_heat]
+        
+        self.dist_array = [np.convolve(self.fbm_path, k, 'same') for k in self.df]
+
+        self.func_list = []
+        for k in range(approximations+1):
+            def f (t, x, m):
+                var_heat = self.t_heat[k]
+                delta = self.limit/self.length_grid
+                # this function must be piecewise linear, not constant
+                return np.piecewise(
+                        x, 
+                        [(k - delta <= x)*(x < k + delta) for k in self.grid],
+                        [k for k in self.dist_array[k]]
+                        )
+
+            self.func_list.append(f)
+
+    def fbm(self):
+        x_grid, y_grid = np.meshgrid(
+                self.grid, 
+                self.grid, 
+                sparse=False,
+                indexing='ij'
+                )
+                
+        covariance = 0.5*(
+                np.abs(x_grid)**(2*self.hurst) +
+                np.abs(y_grid)**(2*self.hurst) - 
+                np.abs(x_grid - y_grid)**(2*self.hurst)
+                )
+        g = rng.standard_normal(size=self.points)
+        cholesky = np.linalg.cholesky(a=covariance)
+        fbm_arr = np.matmul(cholesky, g)
+        return fbm_arr
+
+    def normal_differences(self, t_var):
+        diff_norm = np.zeros(shape=self.length_grid)
+        delta = self.limit/self.length_grid
+        const = -1/t_var**2
+
+        p = lambda u: const*(self.grid - u)*norm.pdf(self.grid, loc=u, scale=t_var)
+        diff_norm = quad_vec(p, -delta, delta)[0]
+
+        return diff_norm
+
+    #def func(self, t, x, m):
+    #    var_heat = self.t_heat
+    #    #df = self.df
+    #    #dist_a = self.dist_array
+    #    delta = self.limit/self.length_grid
+    #    return np.piecewise(
+    #            x, 
+    #            [(k - delta <= x)*(x < k + delta) for k in self.grid],
+    #            [k for k in dist_a]
+    #            )
+
 class Euler:
 
     def __init__ (
@@ -171,14 +251,42 @@ class Euler:
                             )
             x_axis[i] = delta
 
-        """
+        error_ic = np.zeros(shape=(2, self.approximations))
+        for i in range(self.approximations):
+            error_var = np.var(error[i, :])
+            error_sqrt = np.sqrt(error_var/self.batches)
+            error_med = np.median(error[i, :])
+            error_ic[0, i] = error_med - 1.96*error_sqrt
+            error_ic[1, i] = error_med + 1.96*error_sqrt
+
+        error_median = np.median(error, axis=1)
+
         reg = np.ones(self.approximations)
         A = np.vstack([np.log10(x_axis), reg]).T
-        y_reg = np.log10(error[:, np.newaxis])
+        y_reg = np.log10(error_median[:, np.newaxis])
         rate, intersection = np.linalg.lstsq(A, y_reg, rcond=None)[0]
 
+        """
         rate_plot = plt.figure()
         plt.loglog(x_axis, error, label="Error", marker="o")
+        plt.title(
+                label="Rate = "
+                +str(rate)
+                +"\nProxy of solution: 10^"+str(length_solution)+" time steps"
+                )
+        plt.xlabel("Step size")
+        plt.ylabel("log(error)")
+        plt.legend()
+        """
+        rate_plot = plt.figure()
+        plt.errorbar(
+                np.log10(x_axis),
+                np.log10(error_median),
+                np.log10(error_ic),
+                label="Error",
+                marker="o"
+                )
+        #plt.plot(np.log(x_axis), intersection+np.log(x_axis)*rate)
         plt.title(
                 label="Rate = "
                 +str(rate)
@@ -200,9 +308,8 @@ class Euler:
                     +
                     '_rate'
                     )
-        """
 
-        return error#, rate#, np.log10(error), np.log10(x_axis)
+        return error, error_ic, error_median, rate#, np.log10(error), np.log10(x_axis)
 
     # no modificado para batches
     def plot_solution (self, paths_plot, save_plot = False):
@@ -220,92 +327,12 @@ class Euler:
                     '_solution'
                     )
 
-class Distribution:
-
-    def __init__(self, hurst, limit, points, time_steps, approximations):
-        self.hurst = hurst
-        self.limit = limit
-        self.points = points
-        self.approximations = approximations
-
-        self.grid = np.linspace(
-                start = -limit,
-                stop = limit,
-                num = points
-                )
-        self.length_grid = self.grid.shape[0]
-
-        self.fbm_path = self.fbm()
-
-        self.pow_time_steps = int(np.log10(time_steps))
-        
-        self.time_steps_array = [10**(self.pow_time_steps-k) for k in range(approximations+1)]
-
-        self.t_heat = [np.sqrt(1/(k**(8/3))) for k in self.time_steps_array]
-
-        self.df = [self.normal_differences(k) for k in self.t_heat]
-        
-        self.dist_array = [np.convolve(self.fbm_path, k, 'same') for k in self.df]
-
-        self.func_list = []
-        for k in range(approximations+1):
-            def f (t, x, m):
-                var_heat = self.t_heat[k]
-                delta = self.limit/self.length_grid
-                # this function must be piecewise linear, not constant
-                return np.piecewise(
-                        x, 
-                        [(k - delta <= x)*(x < k + delta) for k in self.grid],
-                        [k for k in self.dist_array[k]]
-                        )
-
-            self.func_list.append(f)
-
-    def fbm(self):
-        x_grid, y_grid = np.meshgrid(
-                self.grid, 
-                self.grid, 
-                sparse=False,
-                indexing='ij'
-                )
-                
-        covariance = 0.5*(
-                np.abs(x_grid)**(2*self.hurst) +
-                np.abs(y_grid)**(2*self.hurst) - 
-                np.abs(x_grid - y_grid)**(2*self.hurst)
-                )
-        g = rng.standard_normal(size=self.points)
-        cholesky = np.linalg.cholesky(a=covariance)
-        fbm_arr = np.matmul(cholesky, g)
-        return fbm_arr
-
-    def normal_differences(self, t_var):
-        diff_norm = np.zeros(shape=self.length_grid)
-        delta = self.limit/self.length_grid
-        const = -1/t_var**2
-
-        p = lambda u: const*(self.grid - u)*norm.pdf(self.grid, loc=u, scale=t_var)
-        diff_norm = quad_vec(p, -delta, delta)[0]
-
-        return diff_norm
-
-    #def func(self, t, x, m):
-    #    var_heat = self.t_heat
-    #    #df = self.df
-    #    #dist_a = self.dist_array
-    #    delta = self.limit/self.length_grid
-    #    return np.piecewise(
-    #            x, 
-    #            [(k - delta <= x)*(x < k + delta) for k in self.grid],
-    #            [k for k in dist_a]
-    #            )
-
 ## Euler scheme for distributional coefficient in C^1/4
 
 st = time.process_time()
 
 # Time steps
-M = 10**3
+M = 10**4
 # Instance of distributional coefficient
 #dist = Distribution(hurst=0.75, limit=5, points=10**2)
 
@@ -314,7 +341,7 @@ M = 10**3
 # Distributional drift
 beta = 0.25
 h = 1 - beta
-l = 5
+l = 10
 def_points_bn = 10**2
 
 # Euler approximation
@@ -326,8 +353,8 @@ y = Euler(
         #diffusion = sigma,
         time_steps = M,
         paths = 100,
-        batches = 10,
-        approximations = 2,
+        batches = 15,
+        approximations = 3,
         y0 = 1
         )
 
@@ -336,10 +363,12 @@ y = Euler(
 
 # Rate of convergence
 #error, rate = y.rate(show_plot = True, save_plot = False)
-error = y.rate(show_plot = True, save_plot = False)
+error, ic, error_median, rate = y.rate(show_plot = True, save_plot = True)
 print("error array = \n", error)
+print("IC = \n", ic)
+print("error array median = \n", error_median)
+print("rate =", rate)
 print("error shape = ", np.shape(error))
-#print("rate =", rate)
 
 ################################################################################
 et = time.process_time()

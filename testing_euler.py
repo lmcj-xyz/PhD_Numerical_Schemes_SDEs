@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 
 A = 0.1
 B = 0.3
-TIME_STEPS = 10**5
+TIME_STEPS = 10**4
 
 def mu(x, t, m):
     return A*x
@@ -21,7 +21,7 @@ y = e.Euler(
         time_steps = TIME_STEPS,
         #time_end = 10,
         paths = 1000,
-        y0 = 0.001
+        y0 = 0.001, batches=10,
         )
 #, paths_plot = 3)
 
@@ -80,9 +80,9 @@ y = e.Euler(
 #
 #print(np.amax(abs(dif), axis=1))
 
-error, rate = y.rate(real_solution = y.solve(), approximations = 3, 
+error, rate = y.rate(real_solution = y.solve(), approximations = 3,
         show_plot = True, save_plot = False)
-print("error array", error)
+print("error array\n", error)
 print("rate =", rate)
 #print(logerror)
 #print(logx)

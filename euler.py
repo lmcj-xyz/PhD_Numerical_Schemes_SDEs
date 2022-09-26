@@ -31,7 +31,8 @@ class Euler:
             time_start = None,
             time_end = None,
             y0 = None, 
-            paths = None
+            paths = None,
+            batches = None
             ):
         """
         Parameters
@@ -77,6 +78,8 @@ class Euler:
                 is not None else 1
         self.paths = paths if paths \
                 is not None else 100
+        self.batches = batches if batches \
+                is not None else 10
 
         # Time step
         self.dt = self.generate_dt()
@@ -90,7 +93,7 @@ class Euler:
         self.z = rng.normal(
                 loc = 0.0,
                 scale = np.sqrt(self.dt),
-                size = (self.time_steps, self.paths)
+                size = (self.time_steps, self.paths, self.batches)
                 )
         # Creation of the time grid
         ## We create the time grid starting from the first non-zero term,
@@ -128,7 +131,7 @@ class Euler:
         #dt_z = self.generate_dt(time_steps_dt = time_steps_z)
         dt_z = self.dt
         # Placeholder for the new RV
-        z_coarse = np.zeros(shape = (time_steps_z, self.paths))
+        z_coarse = np.zeros(shape = (time_steps_z, self.paths, self.batches))
         # The amount of elements each element of the coarser noise will have
         # from the finer noise
         # TODO: Make this more robust adding a conditional statement 
@@ -144,7 +147,8 @@ class Euler:
             temp = z_orig.reshape(
                     time_steps_z, 
                     np.shape(z_orig)[0]//time_steps_z,
-                    self.paths
+                    self.paths,
+                    self.batches
                     )
             z_coarse = np.sum(temp, axis=1)
             #for i in range(1, time_steps_z):
@@ -194,24 +198,24 @@ class Euler:
 
         """ Solve the SDE """
         # Creation of the placeholder for the solution.
-        self.y = np.zeros(shape = (time_steps_solve, self.paths))
+        self.y = np.zeros(shape = (time_steps_solve, self.paths, self.batches))
         # And adding intial condition.
-        self.y[0, :] = self.y0
+        self.y[0, :, :] = self.y0
 
         # You need time_steps_solve - 1 because you have to use
         # i+1 to get the last element
         for i in range(time_steps_solve - 1):
-            self.y[i+1, :] = self.y[i, :] \
+            self.y[i+1, :, :] = self.y[i, :, :] \
                     + self.drift(
-                            x = self.y[i, :], 
+                            x = self.y[i, :, :], 
                             t = time_grid_solve[i],
                             m = time_steps_solve
                             )*dt_solve \
                     + self.diffusion(
-                            x = self.y[i, :],
+                            x = self.y[i, :, :],
                             t = time_grid_solve[i],
                             m = time_steps_solve
-                            )*z_solve[i+1, :]
+                            )*z_solve[i+1, :, :]
         return self.y
     #############################################################################
     # end of solve
@@ -222,22 +226,23 @@ class Euler:
     #############################################################################
     def rate (self, real_solution, approximations, 
             show_plot=False, save_plot=False):
-        error = np.zeros(approximations)
+        error = np.zeros(shape=(approximations, self.batches))
         x_axis = np.zeros(approximations)
         length_solution = int(np.log10(np.shape(real_solution)[0]))
-        for i in range(0, approximations):
+        for i in range(approximations):
             m = 10**(length_solution-i-1)
             soln = self.solve(time_steps_solve = m)
             delta = (self.time_end - self.time_start)/m
             #real_solution_coarse = np.zeros(shape = (self.paths, 10**(i+1)))
-            real_solution_coarse = real_solution[::10**(i+1), :]
-            error[i] = np.amax(
+            real_solution_coarse = real_solution[::10**(i+1), :, :]
+            error[i, :] = np.amax(
                             np.mean(
                                 np.abs(
                                     np.subtract(real_solution_coarse, soln)
                                     ),
                                 axis = 1
-                                )
+                                ),
+                            axis=0
                             )
             x_axis[i] = delta
             #print(m**2)
@@ -254,25 +259,44 @@ class Euler:
             ##plt.plot(real_solution_coarse.T)
             #plt.show()
 
+        error_ic = np.zeros(shape=(2, approximations))
+        for i in range(approximations):
+            error_var = np.var(error[i, :])
+            print(error_var)
+            error_sqrt = np.sqrt(error_var/self.batches)
+            error_med = np.median(error[i, :])
+            error_ic[0, i] = error_med - 1.96*error_sqrt
+            error_ic[1, i] = error_med + 1.96*error_sqrt
+        #error_ic = np.flip(error_ic, axis=1)
+        error_median = np.median(error, axis=1)
+
         # Consider a system of equations
         # A*p = x
         reg = np.ones(approximations)
         A = np.vstack([np.log10(x_axis), reg]).T
         #A = np.vstack([x_axis, reg]).T
-        y_reg = np.log10(error[:, np.newaxis])
+        y_reg = np.log10(error_median[:, np.newaxis])
         #y_reg = error[:, np.newaxis]
         rate, intersection = np.linalg.lstsq(A, y_reg, rcond=None)[0]
         #print(c)
 
 
         rate_plot = plt.figure()
-        plt.loglog(x_axis, error, label="Error", marker="o")
-        #plt.plot(
-        #        x_axis, 
-        #        np.log10(intersection) + np.log10(x_axis)*rate,
-        #        linestyle="--",
-        #        label="Rate of convergence: %f"%rate
-        #        )
+        plt.errorbar(
+                np.log10(x_axis),
+                np.log10(error_median),
+                #np.log10(error_ic),
+                error_ic,
+                label="Error"#, marker="o"
+                )
+        
+        #plt.loglog(x_axis, error, label="Error", marker="o")
+        ##plt.plot(
+        ##        x_axis, 
+        ##        np.log10(intersection) + np.log10(x_axis)*rate,
+        ##        linestyle="--",
+        ##        label="Rate of convergence: %f"%rate
+        ##        )
         plt.title(
                 label="Rate = "
                 +str(rate)
@@ -297,7 +321,7 @@ class Euler:
                     '_rate'
                     )
 
-        return error, rate#, np.log10(error), np.log10(x_axis)
+        return error_ic, rate#, np.log10(error), np.log10(x_axis)
     #############################################################################
     # end of rate
     #############################################################################

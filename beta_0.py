@@ -22,12 +22,13 @@ y = e.Euler(
         drift = bn,
         diffusion = sigma,
         time_steps = M,
-        paths = 1000,
+        paths = 100,
+        batches = 50,
         y0 = 0
         )
 
 # Rate of convergence
 error, rate = y.rate(real_solution = y.solve(), approximations = 3, 
         show_plot = True, save_plot = False)
-print("error array", error)
+print("error array\n", error)
 print("rate =", rate)
