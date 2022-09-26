@@ -166,7 +166,8 @@ class Euler:
                                     np.subtract(real_solution_coarse, soln)
                                     ),
                                 axis = 1
-                                )
+                                ),
+                            axis = 0
                             )
             x_axis[i] = delta
 
