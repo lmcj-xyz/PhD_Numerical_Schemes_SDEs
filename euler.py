@@ -228,13 +228,16 @@ class Euler:
             show_plot=False, save_plot=False):
         error = np.zeros(shape=(approximations, self.batches))
         x_axis = np.zeros(approximations)
-        length_solution = int(np.log10(np.shape(real_solution)[0]))
+        #length_solution = int(np.log10(np.shape(real_solution)[0]))
+        length_solution = int(np.log2(np.shape(real_solution)[0]))
         for i in range(approximations):
-            m = 10**(length_solution-i-1)
+            #m = 10**(length_solution-i-1)
+            m = 2**(length_solution-i-1)
             soln = self.solve(time_steps_solve = m)
             delta = (self.time_end - self.time_start)/m
             #real_solution_coarse = np.zeros(shape = (self.paths, 10**(i+1)))
-            real_solution_coarse = real_solution[::10**(i+1), :, :]
+            #real_solution_coarse = real_solution[::10**(i+1), :, :]
+            real_solution_coarse = real_solution[::2**(i+1), :, :]
             error[i, :] = np.amax(
                             np.mean(
                                 np.abs(
@@ -264,18 +267,18 @@ class Euler:
             error_var = np.var(error[i, :])
             print(error_var)
             error_sqrt = np.sqrt(error_var/self.batches)
-            error_med = np.median(error[i, :])
-            error_ic[0, i] = error_med - 1.96*error_sqrt
-            error_ic[1, i] = error_med + 1.96*error_sqrt
+            error_m = np.mean(error[i, :])
+            error_ic[0, i] = error_m - 1.96*error_sqrt
+            error_ic[1, i] = error_m + 1.96*error_sqrt
         #error_ic = np.flip(error_ic, axis=1)
-        error_median = np.median(error, axis=1)
+        error_mean = np.mean(error, axis=1)
 
         # Consider a system of equations
         # A*p = x
         reg = np.ones(approximations)
         A = np.vstack([np.log10(x_axis), reg]).T
         #A = np.vstack([x_axis, reg]).T
-        y_reg = np.log10(error_median[:, np.newaxis])
+        y_reg = np.log10(error_mean[:, np.newaxis])
         #y_reg = error[:, np.newaxis]
         rate, intersection = np.linalg.lstsq(A, y_reg, rcond=None)[0]
         #print(c)
@@ -283,8 +286,10 @@ class Euler:
 
         rate_plot = plt.figure()
         plt.errorbar(
-                np.log10(x_axis),
-                np.log10(error_median),
+                #np.log10(x_axis),
+                np.log2(x_axis),
+                #np.log10(error_mean),
+                np.log2(error_mean),
                 #np.log10(error_ic),
                 error_ic,
                 label="Error"#, marker="o"
@@ -300,7 +305,7 @@ class Euler:
         plt.title(
                 label="Rate = "
                 +str(rate)
-                +"\nProxy of solution: 10^"+str(length_solution)+" time steps"
+                +"\nProxy of solution: 2^"+str(length_solution)+" time steps"
                 )
         plt.xlabel("Step size")
         plt.ylabel("log(error)")
