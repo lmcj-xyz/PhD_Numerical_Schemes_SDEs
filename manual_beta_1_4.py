@@ -232,7 +232,8 @@ class Euler:
         length_solution = int(np.log2(np.shape(real_solution)[0]))
         for i in range(self.approximations):
             #m = (10**(length_solution-i-1))
-            m = (2**(length_solution-i-1))
+            #m = (2**(length_solution-i-1))
+            m = (2**(i+1))
             #############
             print("m = ", m)
             #print("i = ", i)
@@ -241,8 +242,8 @@ class Euler:
             delta = (self.time_end - self.time_start)/m
             soln = self.solve(time_steps_solve = m, drift=self.drift_list[i+1])
             #real_solution_coarse = real_solution[::10**(i+1), :, :]
-            real_solution_coarse = real_solution[::2**(i+1), :, :]
-            #real_solution_coarse = real_solution[::10**(i+1), :]
+            #real_solution_coarse = real_solution[::2**(i+1), :, :]
+            real_solution_coarse = real_solution[::2**(length_solution-i-1), :, :]
             error[i, :] = np.amax(
                             np.mean(
                                 np.abs(
@@ -270,7 +271,7 @@ class Euler:
 
         reg = np.ones(self.approximations)
         A = np.vstack([np.log2(x_axis), reg]).T
-        y_reg = np.log10(error_mean[:, np.newaxis])
+        y_reg = np.log2(error_mean[:, np.newaxis])
         rate, intersection = np.linalg.lstsq(A, y_reg, rcond=None)[0]
 
         """
@@ -345,7 +346,7 @@ class Euler:
 st = time.process_time()
 
 # Time steps
-M = 2**7
+M = 2**10
 # Instance of distributional coefficient
 #dist = Distribution(hurst=0.75, limit=5, points=10**2)
 
