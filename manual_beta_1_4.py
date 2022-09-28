@@ -34,29 +34,43 @@ class Distribution:
 
         self.fbm_path = self.fbm()
 
-        self.pow_time_steps = int(np.log10(time_steps))
+        self.pow_time_steps = int(np.log2(time_steps))
         
-        self.time_steps_array = [10**(self.pow_time_steps-k) for k in range(approximations+1)]
+        #self.time_steps_array = [2**(self.pow_time_steps-k) for k in range(approximations+1)]
+        self.time_steps_array = [2**(k+1) for k in range(1, approximations+1)]
+        print(len(self.time_steps_array))
 
+        # This is the other way around
         self.t_heat = [np.sqrt(1/(k**(8/3))) for k in self.time_steps_array]
+        for i in self.t_heat:
+            print(i)
 
         self.df = [self.normal_differences(k) for k in self.t_heat]
+        #for i in self.t_heat:
+        #    plt.figure()
+        #    plt.plot(self.normal_differences(i))
+        #    plt.show()
         
         self.dist_array = [np.convolve(self.fbm_path, k, 'same') for k in self.df]
+        #plt.figure()
+        #plt.title("dist array")
+        #plt.plot(np.array(self.dist_array).T)
+        #plt.show()
 
         self.func_list = []
         for k in range(approximations+1):
             def f (t, x, m):
-                var_heat = self.t_heat[k]
+                var_heat = self.t_heat[k-1]
                 delta = self.limit/self.length_grid
                 # this function must be piecewise linear, not constant
                 return np.piecewise(
                         x, 
                         [(k - delta <= x)*(x < k + delta) for k in self.grid],
-                        [k for k in self.dist_array[k]]
+                        [k for k in self.dist_array[k-1]]
                         )
 
             self.func_list.append(f)
+        #print(type(self.func_list[1]))
 
     def fbm(self):
         x_grid, y_grid = np.meshgrid(
@@ -145,6 +159,12 @@ class Euler:
 
         self.drift_list = Distribution(hurst=self.h, limit=self.l, points=self.bp, time_steps=self.time_steps, approximations=self.approximations).func_list
 
+        #self.x = np.linspace(-2, 2, 100)
+        #for i in self.drift_list:
+        #    plt.figure()
+        #    plt.plot(i( x = self.x, t = 3, m = 3))
+        #    plt.show()
+
     def generate_dt (self, time_steps_dt = None):
         time_steps_dt = time_steps_dt if time_steps_dt \
                 is not None else self.time_steps
@@ -222,7 +242,6 @@ class Euler:
         return self.y
 
     def rate (self, show_plot=False, save_plot=False):
-        ##### de aqui seguimos
         error = np.zeros(shape=(self.approximations, self.batches))
         x_axis = np.zeros(self.approximations)
         #m = self.time_steps
@@ -377,7 +396,7 @@ y = Euler(
 
 # Rate of convergence
 #error, rate = y.rate(show_plot = True, save_plot = False)
-error, ic, error_mean, rate = y.rate(show_plot = True, save_plot = True)
+error, ic, error_mean, rate = y.rate(show_plot = True, save_plot = False)
 print("error array = \n", error)
 print("IC = \n", ic)
 print("shape IC = \n", np.shape(ic))
