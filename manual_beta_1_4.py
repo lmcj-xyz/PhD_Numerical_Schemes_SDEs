@@ -116,7 +116,7 @@ class Euler:
         #self.drift = drift
         #self.diffusion = diffusion
         self.time_steps = time_steps if time_steps \
-                is not None else 10**2
+                is not None else 2**6
         self.time_start = time_start if time_start \
                 is not None else 0
         self.time_end = time_end if time_end \
@@ -228,9 +228,11 @@ class Euler:
         #m = self.time_steps
         #dist = Distribution(hurst=self.h, limit=self.l, points=self.bp, time_steps=self.time_steps, self.approximations=approximations)
         real_solution = self.solve(time_steps_solve=self.time_steps, drift=self.drift_list[0])
-        length_solution = int(np.log10(np.shape(real_solution)[0]))
+        #length_solution = int(np.log10(np.shape(real_solution)[0]))
+        length_solution = int(np.log2(np.shape(real_solution)[0]))
         for i in range(self.approximations):
-            m = (10**(length_solution-i-1))
+            #m = (10**(length_solution-i-1))
+            m = (2**(length_solution-i-1))
             #############
             print("m = ", m)
             #print("i = ", i)
@@ -238,7 +240,8 @@ class Euler:
             #############
             delta = (self.time_end - self.time_start)/m
             soln = self.solve(time_steps_solve = m, drift=self.drift_list[i+1])
-            real_solution_coarse = real_solution[::10**(i+1), :, :]
+            #real_solution_coarse = real_solution[::10**(i+1), :, :]
+            real_solution_coarse = real_solution[::2**(i+1), :, :]
             #real_solution_coarse = real_solution[::10**(i+1), :]
             error[i, :] = np.amax(
                             np.mean(
@@ -266,7 +269,7 @@ class Euler:
         error_mean = np.mean(error, axis=1)
 
         reg = np.ones(self.approximations)
-        A = np.vstack([np.log10(x_axis), reg]).T
+        A = np.vstack([np.log2(x_axis), reg]).T
         y_reg = np.log10(error_mean[:, np.newaxis])
         rate, intersection = np.linalg.lstsq(A, y_reg, rcond=None)[0]
 
@@ -285,9 +288,11 @@ class Euler:
         rate_plot = plt.figure()
         plt.errorbar(
                 #x=x_axis,
-                x=np.log10(x_axis),
+                #x=np.log10(x_axis),
+                x=np.log2(x_axis),
                 #y=error_mean,
-                y=np.log10(error_mean),
+                #y=np.log10(error_mean),
+                y=np.log2(error_mean),
                 #yerr=np.log10(error_ic),
                 yerr=error_ic,
                 label="Error",
@@ -298,7 +303,7 @@ class Euler:
         plt.title(
                 label="Rate = "
                 +str(rate)
-                +"\nProxy of solution: 10^"+str(length_solution)+" time steps"
+                +"\nProxy of solution: 2^"+str(length_solution)+" time steps"
                 )
         plt.xlabel("Step size")
         plt.ylabel("log(error)")
@@ -340,7 +345,7 @@ class Euler:
 st = time.process_time()
 
 # Time steps
-M = 10**5
+M = 2**7
 # Instance of distributional coefficient
 #dist = Distribution(hurst=0.75, limit=5, points=10**2)
 
@@ -362,7 +367,7 @@ y = Euler(
         time_steps = M,
         paths = 100,
         batches = 100,
-        approximations = 3,
+        approximations = 5,
         y0 = 1
         )
 
