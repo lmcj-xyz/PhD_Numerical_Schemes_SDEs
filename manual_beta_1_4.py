@@ -34,43 +34,130 @@ class Distribution:
 
         self.fbm_path = self.fbm()
 
+        # To compute the parameter t of the heat kernel
         self.pow_time_steps = int(np.log2(time_steps))
         
         #self.time_steps_array = [2**(self.pow_time_steps-k) for k in range(approximations+1)]
+        # Get the number of time steps for the approximations I need
+        # Starting from 2^2 = 4 time steps, and going up to 2^approximations+1
+        # For instance if approximations = 5, we would have time steps from
+        # 2^2 = 4 to 2^6 = 64
         self.time_steps_array = [2**(k+1) for k in range(1, approximations+1)]
-        print(len(self.time_steps_array))
+        #print(self.time_steps_array)
 
-        # This is the other way around
+        # For the time steps of the approximations we compute the parameter
+        # t of the heat kernel
         self.t_heat = [np.sqrt(1/(k**(8/3))) for k in self.time_steps_array]
-        for i in self.t_heat:
-            print(i)
+        print("t's approx", self.t_heat)
+        # The same but for the real solution
+        self.t_real_solution = np.sqrt(1/(time_steps**(8/3)))
+        print("t real", self.t_real_solution)
 
         self.df = [self.normal_differences(k) for k in self.t_heat]
-        #for i in self.t_heat:
+        self.df_real_solution = self.normal_differences(self.t_real_solution)
+        #self.df_dummy = [self.normal_differences(10^(-k)) for k in range(1, 10)]
+
+        #for i in self.df:
         #    plt.figure()
-        #    plt.plot(self.normal_differences(i))
+        #    plt.title("df approx")
+        #    plt.plot(i)
+        #    plt.show()
+        #plt.figure()
+        #plt.title("df real")
+        #plt.plot(self.df_real_solution)
+        #plt.show()
+        #for i in self.df_dummy:
+        #    plt.figure()
+        #    plt.title("df dummy")
+        #    plt.plot(i)
         #    plt.show()
         
+        # This stores the distributional array for each amount of
+        # time_steps, i.e. t parameters for the kernel
         self.dist_array = [np.convolve(self.fbm_path, k, 'same') for k in self.df]
+        self.dist_array_real_solution = np.convolve(self.fbm_path, self.df_real_solution, 'same')
+
+        #for k in range(approximations):
+        #    #print(k)
+        #    plt.figure()
+        #    plt.title("approx")
+        #    plt.plot(np.array(self.dist_array[k][:]))
+        #    plt.ylim(-5, 5)
+        #    plt.show()
+        #plt.figure()
+        #plt.title("real soln")
+        #plt.plot(self.dist_array_real_solution)
+        #plt.ylim(-5, 5)
+        #plt.show()
+
         #plt.figure()
         #plt.title("dist array")
         #plt.plot(np.array(self.dist_array).T)
         #plt.show()
+        #print("number dist array = ", len(self.dist_array))
+        #for i in self.dist_array:
+        #    print("dist array shape = ", np.shape(i))
+        #    plt.figure()
+        #    plt.title("dist array")
+        #    plt.plot(i)
+        #    plt.ylim(-5, 5)
+        #    plt.show()
+        #print("dist array shape = ", np.shape(self.dist_array_real_solution))
 
         self.func_list = []
-        for k in range(approximations+1):
+        for k in range(approximations):
+            #print("grid = ", np.shape(self.grid), "dist = ", np.shape(self.dist_array[k]))
             def f (t, x, m):
-                var_heat = self.t_heat[k-1]
+                #var_heat = self.t_heat[k]
+                # Limit is half the length of the interval [-limit, limit]
+                # therefore, if delta x is the separation between x
+                # limit/length_grid = (delta x) / 2 is half of it
                 delta = self.limit/self.length_grid
+                #print([(i - delta <= x)*(x < i + delta) for i in self.grid])
                 # this function must be piecewise linear, not constant
                 return np.piecewise(
                         x, 
-                        [(k - delta <= x)*(x < k + delta) for k in self.grid],
-                        [k for k in self.dist_array[k-1]]
+                        [(i - delta <= x)*(x < i + delta) for i in self.grid],
+                        [i for i in self.dist_array[k]]
                         )
 
             self.func_list.append(f)
-        #print(type(self.func_list[1]))
+
+        #print("grid = ", np.shape(self.grid), "dist = ", np.shape(self.dist_array_real_solution))
+        #print("functions = ", len(self.func_list))
+
+        def f1 (t, x, m):
+            #var_heat = self.t_real_solution
+            delta = self.limit/self.length_grid
+            # this function must be piecewise linear, not constant
+            return np.piecewise(
+                    x,
+                    [(i - delta <= x)*(x < i + delta) for i in self.grid],
+                    [i for i in self.dist_array_real_solution]
+                    )
+        #self.func_real_solution = f1
+
+        # The last element in this list is the drift for the real solution
+        # Careful with that, remember to use this for the approximarion with
+        # i in range(approximations) and take i as index
+        # and for the real solution take the index -1
+        self.func_list.append(f1)
+
+        #print(type(self.func_real_solution))
+
+        #x_test = np.linspace(-1, 1, 10)
+        #for i in range(approximations+1):
+        #    plt.figure()
+        #    plt.title("dist function approx 2^%d time steps" % (i+2))
+        #    plt.plot(self.func_list[i](t=1, x=x_test, m=1))
+        #    plt.show()
+        #plt.figure()
+        #plt.title("dist function real")
+        #plt.plot(self.func_real_solution(t=1, x=x_test, m=self.t_real_solution))
+        #plt.show()
+
+############################### METHODS
+
 
     def fbm(self):
         x_grid, y_grid = np.meshgrid(
@@ -157,7 +244,11 @@ class Euler:
                 )
         self.time_grid = self.generate_time_grid()
 
+        # From the index 0 to approximations-1
+        # we have the drift for the approximations
+        # the index approximations, or -1 is the drift of the real solution
         self.drift_list = Distribution(hurst=self.h, limit=self.l, points=self.bp, time_steps=self.time_steps, approximations=self.approximations).func_list
+        #print("drift list elements = ", len(self.drift_list))
 
         #self.x = np.linspace(-2, 2, 100)
         #for i in self.drift_list:
@@ -246,7 +337,7 @@ class Euler:
         x_axis = np.zeros(self.approximations)
         #m = self.time_steps
         #dist = Distribution(hurst=self.h, limit=self.l, points=self.bp, time_steps=self.time_steps, self.approximations=approximations)
-        real_solution = self.solve(time_steps_solve=self.time_steps, drift=self.drift_list[0])
+        real_solution = self.solve(time_steps_solve=self.time_steps, drift=self.drift_list[-1])
         #length_solution = int(np.log10(np.shape(real_solution)[0]))
         length_solution = int(np.log2(np.shape(real_solution)[0]))
         for i in range(self.approximations):
@@ -259,7 +350,7 @@ class Euler:
             #print("func length = ", len(dist.func_list))
             #############
             delta = (self.time_end - self.time_start)/m
-            soln = self.solve(time_steps_solve = m, drift=self.drift_list[i+1])
+            soln = self.solve(time_steps_solve = m, drift=self.drift_list[i])
             #real_solution_coarse = real_solution[::10**(i+1), :, :]
             #real_solution_coarse = real_solution[::2**(i+1), :, :]
             real_solution_coarse = real_solution[::2**(length_solution-i-1), :, :]
@@ -365,7 +456,11 @@ class Euler:
 st = time.process_time()
 
 # Time steps
-M = 2**10
+#### Careful with the time steps, remember that you only define
+#### the array of the dist coeff for so many points,
+#### if you have a very small variance then effectivelly you will have integration
+#### between points that are not defined
+M = 2**8
 # Instance of distributional coefficient
 #dist = Distribution(hurst=0.75, limit=5, points=10**2)
 
@@ -375,7 +470,7 @@ M = 2**10
 beta = 0.25
 h = 1 - beta
 l = 10
-def_points_bn = 10**3
+def_points_bn = 10**2
 
 # Euler approximation
 y = Euler(
