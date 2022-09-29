@@ -311,7 +311,8 @@ class Euler:
             temp = z_orig.reshape(
                     time_steps_z, 
                     np.shape(z_orig)[0]//time_steps_z,
-                    self.paths, self.batches
+                    self.paths, 
+                    self.batches
                     )
             z_coarse = np.sum(temp, axis=1)
 
@@ -344,31 +345,45 @@ class Euler:
         z_solve = self.coarse_z(time_steps_z = time_steps_solve) if time_steps_solve \
                 is not None else self.z
         drift = drift if drift  \
-                is not None else self.drift_list[0]
+                is not None else self.drift_list[-1]
 
-        self.y = np.zeros(shape=(time_steps_solve, self.paths, self.batches))
-        self.y[0, :, :] = self.y0
+        y = np.zeros(shape=(time_steps_solve, self.paths, self.batches))
+        y[0, :, :] = self.y0
         #self.y[0, :] = self.y0
         
         for i in range(time_steps_solve - 1):
             #self.y[i+1, :] = self.y[i, :] \
-            self.y[i+1, :, :] = self.y[i, :, :] \
+            y[i+1, :, :] = y[i, :, :] \
                     + drift(
-                            x = self.y[i, :, :], 
-                            #x = self.y[i, :], 
                             t = time_grid_solve[i],
+                            x = y[i, :, :], 
+                            #x = self.y[i, :], 
                             m = time_steps_solve
                             )*dt_solve \
                     + z_solve[i+1, :, :]
                     #+ z_solve[i+1, :]
-        return self.y
+        return y
+
+    def b(self, t, x, m):
+        return 5*x
 
     def rate (self, show_plot=False, save_plot=False):
         error = np.zeros(shape=(self.approximations, self.batches))
         x_axis = np.zeros(self.approximations)
         #m = self.time_steps
         #dist = Distribution(hurst=self.h, limit=self.l, points=self.bp, time_steps=self.time_steps, self.approximations=approximations)
-        real_solution = self.solve(time_steps_solve=self.time_steps, drift=self.drift_list[-1])
+        
+        ##### Tests for the function used in each step
+        #x_test = np.linspace(-15, 15, 50)
+        #plt.figure()
+        #plt.title("dist function real")
+        #plt.plot(self.drift_list[-1](t=1, x=x_test, m=1))
+        #plt.show()
+
+        #real_solution = self.solve(time_steps_solve=self.time_steps, drift=self.drift_list[-1])
+        # Test with known SDE
+        real_solution = self.solve(time_steps_solve=self.time_steps, drift=self.b)
+
         #length_solution = int(np.log10(np.shape(real_solution)[0]))
         length_solution = int(np.log2(np.shape(real_solution)[0]))
         for i in range(self.approximations):
@@ -384,7 +399,15 @@ class Euler:
             #############
             delta = (self.time_end - self.time_start)/m
             print("delta t = ", delta)
-            soln = self.solve(time_steps_solve = m, drift=self.drift_list[i])
+
+            #plt.figure()
+            #plt.title("dist function approx 2^%d" % (i+2))
+            #plt.plot(self.drift_list[i](t=1, x=x_test, m=1))
+            #plt.show()
+
+            #soln = self.solve(time_steps_solve = m, drift=self.drift_list[i])
+            soln = self.solve(time_steps_solve = m, drift=self.b)
+
             #real_solution_coarse = real_solution[::10**(i+1), :, :]
             #real_solution_coarse = real_solution[::2**(i+1), :, :]
             #real_solution_coarse = real_solution[::2**(length_solution-i-1-1), :, :]
@@ -393,15 +416,31 @@ class Euler:
             # by the new desired length,
             # then we use that to  select that amount of elements
             real_solution_coarse = real_solution[::int(2**length_solution/m), :, :]
-            error[i, :] = np.amax(
-                            np.mean(
+            
+            #print("shape real soln = ", np.shape(real_solution_coarse)[0])
+            #print("shape appr soln = ", np.shape(soln)[0])
+            plt.figure()
+            plt.title("comparison")
+            plt.plot(real_solution_coarse[:,1,1])
+            plt.plot(soln[:,1,1])
+            plt.show()
+
+            #error[i, :] = np.amax(
+            #                np.mean(
+            #                    np.abs(
+            #                        np.subtract(real_solution_coarse, soln)
+            #                        ),
+            #                    axis = 1
+            #                    ),
+            #                axis = 0
+            #                )
+
+            error[i, :] = np.mean(
                                 np.abs(
                                     np.subtract(real_solution_coarse, soln)
                                     ),
                                 axis = 1
-                                ),
-                            axis = 0
-                            )
+                                )[-1,:]
             x_axis[i] = delta
 
         #error_ic = np.zeros(shape=(2, self.approximations))

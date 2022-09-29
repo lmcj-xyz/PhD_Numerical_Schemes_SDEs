@@ -2,8 +2,8 @@ import euler as e
 import numpy as np
 import matplotlib.pyplot as plt
 
-A = 0.1
-B = 0.3
+A = 2.5
+B = 1.0
 TIME_STEPS = 2**6
 
 def mu(x, t, m):
@@ -21,7 +21,8 @@ y = e.Euler(
         time_steps = TIME_STEPS,
         #time_end = 10,
         paths = 1000,
-        y0 = 0.001, batches=10,
+        y0 = 1.0, 
+        batches=10,
         )
 #, paths_plot = 3)
 

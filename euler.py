@@ -238,6 +238,13 @@ class Euler:
             #real_solution_coarse = np.zeros(shape = (self.paths, 10**(i+1)))
             #real_solution_coarse = real_solution[::10**(i+1), :, :]
             real_solution_coarse = real_solution[::2**(i+1), :, :]
+
+            #plt.figure()
+            #plt.title("comparison")
+            #plt.plot(real_solution_coarse[:,1,1])
+            #plt.plot(soln[:,1,1])
+            #plt.show()
+
             error[i, :] = np.amax(
                             np.mean(
                                 np.abs(
@@ -265,20 +272,20 @@ class Euler:
         error_ic = np.zeros(shape=(2, approximations))
         for i in range(approximations):
             error_var = np.var(error[i, :])
-            print(error_var)
+            #print(error_var)
             error_sqrt = np.sqrt(error_var/self.batches)
             error_m = np.mean(error[i, :])
-            error_ic[0, i] = error_m - 1.96*error_sqrt
-            error_ic[1, i] = error_m + 1.96*error_sqrt
+            error_ic[0, i] =  1.96*error_sqrt
+            error_ic[1, i] =  1.96*error_sqrt
         #error_ic = np.flip(error_ic, axis=1)
         error_mean = np.mean(error, axis=1)
 
         # Consider a system of equations
         # A*p = x
         reg = np.ones(approximations)
-        A = np.vstack([np.log10(x_axis), reg]).T
+        A = np.vstack([np.log2(x_axis), reg]).T
         #A = np.vstack([x_axis, reg]).T
-        y_reg = np.log10(error_mean[:, np.newaxis])
+        y_reg = np.log2(error_mean[:, np.newaxis])
         #y_reg = error[:, np.newaxis]
         rate, intersection = np.linalg.lstsq(A, y_reg, rcond=None)[0]
         #print(c)
