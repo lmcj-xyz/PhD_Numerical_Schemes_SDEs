@@ -48,10 +48,10 @@ class Distribution:
         # For the time steps of the approximations we compute the parameter
         # t of the heat kernel
         self.t_heat = [np.sqrt(1/(k**(8/3))) for k in self.time_steps_array]
-        print("t's approx", self.t_heat)
+        #print("t's approx", self.t_heat)
         # The same but for the real solution
         self.t_real_solution = np.sqrt(1/(time_steps**(8/3)))
-        print("t real", self.t_real_solution)
+        #print("t real", self.t_real_solution)
 
         self.df = [self.normal_differences(k) for k in self.t_heat]
         self.df_real_solution = self.normal_differences(self.t_real_solution)
@@ -104,9 +104,9 @@ class Distribution:
         #    plt.show()
         #print("dist array shape = ", np.shape(self.dist_array_real_solution))
 
-        self.func_list = []
-        for k in range(approximations):
-            #print("grid = ", np.shape(self.grid), "dist = ", np.shape(self.dist_array[k]))
+        # This is a function to create functions and avoid the function
+        # to be defined once only and being repeated
+        def create_function(dd):
             def f (t, x, m):
                 #var_heat = self.t_heat[k]
                 # Limit is half the length of the interval [-limit, limit]
@@ -118,10 +118,39 @@ class Distribution:
                 return np.piecewise(
                         x, 
                         [(i - delta <= x)*(x < i + delta) for i in self.grid],
-                        [i for i in self.dist_array[k]]
+                        #d
+                        [dd[i] for i in range(len(self.grid))]
                         )
+            return f
+            
 
+        self.func_list = []
+        for k in range(approximations):
+            #print("grid = ", np.shape(self.grid), "dist = ", np.shape(self.dist_array[k]))
+            #plt.figure()
+            #plt.plot(self.dist_array[k])
+            #plt.ylim(-100, 100)
+            #plt.show()
+            d = self.dist_array[k].tolist()
+            f = create_function(d)
+            #def f (t, x, m):
+            #    #var_heat = self.t_heat[k]
+            #    # Limit is half the length of the interval [-limit, limit]
+            #    # therefore, if delta x is the separation between x
+            #    # limit/length_grid = (delta x) / 2 is half of it
+            #    delta = self.limit/self.length_grid
+            #    #print([(i - delta <= x)*(x < i + delta) for i in self.grid])
+            #    # this function must be piecewise linear, not constant
+            #    return np.piecewise(
+            #            x, 
+            #            [(i - delta <= x)*(x < i + delta) for i in self.grid],
+            #            #d
+            #            [self.dist_array[k][i] for i in range(len(self.grid))]
+            #            )
             self.func_list.append(f)
+
+        #for k in range(approximations):
+        #    print(self.func_list[k](t=1, x=1, m=1))
 
         #print("grid = ", np.shape(self.grid), "dist = ", np.shape(self.dist_array_real_solution))
         #print("functions = ", len(self.func_list))
@@ -133,7 +162,7 @@ class Distribution:
             return np.piecewise(
                     x,
                     [(i - delta <= x)*(x < i + delta) for i in self.grid],
-                    [i for i in self.dist_array_real_solution]
+                    [self.dist_array_real_solution[i] for i in range(len(self.grid))]
                     )
         #self.func_real_solution = f1
 
@@ -145,12 +174,14 @@ class Distribution:
 
         #print(type(self.func_real_solution))
 
-        #x_test = np.linspace(-1, 1, 10)
+        ##### Test to see the functions created
+        #x_test = np.linspace(-1, 1, 50)
         #for i in range(approximations+1):
         #    plt.figure()
         #    plt.title("dist function approx 2^%d time steps" % (i+2))
         #    plt.plot(self.func_list[i](t=1, x=x_test, m=1))
         #    plt.show()
+
         #plt.figure()
         #plt.title("dist function real")
         #plt.plot(self.func_real_solution(t=1, x=x_test, m=self.t_real_solution))
@@ -343,17 +374,25 @@ class Euler:
         for i in range(self.approximations):
             #m = (10**(length_solution-i-1))
             #m = (2**(length_solution-i-1))
-            m = (2**(i+1))
+            # 2^(i+2) because we want the approximations starting with
+            # 2^2 time steps
+            m = 2**(i+2)
             #############
             print("m = ", m)
             #print("i = ", i)
             #print("func length = ", len(dist.func_list))
             #############
             delta = (self.time_end - self.time_start)/m
+            print("delta t = ", delta)
             soln = self.solve(time_steps_solve = m, drift=self.drift_list[i])
             #real_solution_coarse = real_solution[::10**(i+1), :, :]
             #real_solution_coarse = real_solution[::2**(i+1), :, :]
-            real_solution_coarse = real_solution[::2**(length_solution-i-1), :, :]
+            #real_solution_coarse = real_solution[::2**(length_solution-i-1-1), :, :]
+
+            # To get the coarse real solution we divide the original length
+            # by the new desired length,
+            # then we use that to  select that amount of elements
+            real_solution_coarse = real_solution[::int(2**length_solution/m), :, :]
             error[i, :] = np.amax(
                             np.mean(
                                 np.abs(
@@ -481,7 +520,7 @@ y = Euler(
         #diffusion = sigma,
         time_steps = M,
         paths = 100,
-        batches = 100,
+        batches = 50,
         approximations = 5,
         y0 = 1
         )
@@ -492,12 +531,12 @@ y = Euler(
 # Rate of convergence
 #error, rate = y.rate(show_plot = True, save_plot = False)
 error, ic, error_mean, rate = y.rate(show_plot = True, save_plot = False)
-print("error array = \n", error)
-print("IC = \n", ic)
-print("shape IC = \n", np.shape(ic))
-print("error array mean = \n", error_mean)
+#print("error array = \n", error)
+#print("IC = \n", ic)
+#print("shape IC = \n", np.shape(ic))
+#print("error array mean = \n", error_mean)
 print("rate =", rate)
-print("error shape = ", np.shape(error))
+#print("error shape = ", np.shape(error))
 
 ################################################################################
 et = time.process_time()
