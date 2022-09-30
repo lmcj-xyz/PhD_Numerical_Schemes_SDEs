@@ -2,7 +2,7 @@ import euler as e
 import numpy as np
 import matplotlib.pyplot as plt
 
-A = 2.5
+A = 1.5
 B = 1.0
 TIME_STEPS = 2**6
 

@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 from scipy.stats import norm
 
 # Time steps
-M = 10**4
+M = 2**8
 
 # n(m) = m^2
 
@@ -28,7 +28,7 @@ y = e.Euler(
         )
 
 # Rate of convergence
-error, rate = y.rate(real_solution = y.solve(), approximations = 3, 
+error, rate = y.rate(real_solution = y.solve(), approximations = 4, 
         show_plot = True, save_plot = False)
 print("error array\n", error)
 print("rate =", rate)

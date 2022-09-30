@@ -303,6 +303,7 @@ class Euler:
         dt_z = self.dt
         z_coarse = np.zeros(shape = (time_steps_z, self.paths, self.batches))
 
+
         n_z = int(np.shape(z_orig)[0] / time_steps_z)
         
         if n_z == 1:
@@ -310,7 +311,8 @@ class Euler:
         else:
             temp = z_orig.reshape(
                     time_steps_z, 
-                    np.shape(z_orig)[0]//time_steps_z,
+                    n_z,
+                    #np.shape(z_orig)[0]//time_steps_z,
                     self.paths, 
                     self.batches
                     )
@@ -324,9 +326,7 @@ class Euler:
         time_start_grid = self.time_start
         time_end_grid = self.time_end
 
-        dt_grid = self.generate_dt( 
-                time_steps_dt = time_steps_grid
-                )
+        dt_grid = self.generate_dt(time_steps_dt = time_steps_grid)
 
         time_grid_generated = np.linspace(
                 start = time_start_grid + dt_grid, 
@@ -340,9 +340,9 @@ class Euler:
                 is not None else self.time_steps
         time_grid_solve = self.generate_time_grid(time_steps_solve) if time_steps_solve \
                 is not None else self.time_grid
-        dt_solve = self.generate_dt(time_steps_dt = time_steps_solve) if time_steps_solve \
+        dt_solve = self.generate_dt(time_steps_dt=time_steps_solve) if time_steps_solve \
                 is not None else self.dt
-        z_solve = self.coarse_z(time_steps_z = time_steps_solve) if time_steps_solve \
+        z_solve = self.coarse_z(time_steps_z=time_steps_solve) if time_steps_solve \
                 is not None else self.z
         drift = drift if drift  \
                 is not None else self.drift_list[-1]
