@@ -300,7 +300,8 @@ class Euler:
         time_steps_z = time_steps_z if time_steps_z \
                 is not None else self.time_steps
         z_orig = self.z
-        dt_z = self.dt
+        #dt_z = self.dt
+        dt_z = self.generate_dt(time_steps_dt=time_steps_z)
         z_coarse = np.zeros(shape = (time_steps_z, self.paths, self.batches))
 
 
@@ -316,7 +317,7 @@ class Euler:
                     self.paths, 
                     self.batches
                     )
-            z_coarse = np.sum(temp, axis=1)
+            z_coarse = np.sum(temp, axis=1)*dt_z
 
         return z_coarse
 

@@ -128,8 +128,8 @@ class Euler:
         time_steps_z = time_steps_z if time_steps_z \
                 is not None else self.time_steps
         z_orig = self.z
-        #dt_z = self.generate_dt(time_steps_dt = time_steps_z)
-        dt_z = self.dt
+        dt_z = self.generate_dt(time_steps_dt = time_steps_z)
+        #dt_z = self.dt
         # Placeholder for the new RV
         z_coarse = np.zeros(shape = (time_steps_z, self.paths, self.batches))
         # The amount of elements each element of the coarser noise will have
@@ -146,11 +146,20 @@ class Euler:
         else:
             temp = z_orig.reshape(
                     time_steps_z, 
-                    np.shape(z_orig)[0]//time_steps_z,
+                    #np.shape(z_orig)[0]//time_steps_z,
+                    n_z,
                     self.paths,
                     self.batches
                     )
             z_coarse = np.sum(temp, axis=1)
+        #temp = z_orig.reshape(
+        #        time_steps_z, 
+        #        np.shape(z_orig)[0]//time_steps_z,
+        #        self.paths,
+        #        self.batches
+        #        )
+        #z_coarse = np.sum(temp, axis=1)
+            #z_coarse = np.sum(temp, axis=1)*dt_z
             #for i in range(1, time_steps_z):
             #    #z_coarse[i, :] = dt_z*np.sum(z_orig[(i-1)*n_z:i*n_z], :], axis=0)
             #    z_coarse[i, :] = np.sum(z_orig[(i-1)*n_z:i*n_z, :], axis=0)

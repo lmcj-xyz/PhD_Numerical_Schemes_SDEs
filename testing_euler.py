@@ -13,18 +13,34 @@ def sigma(x, t, m):
     return B*x
 
 # Option to print only 3 decimal places
-np.set_printoptions(precision = 3)
+#np.set_printoptions(precision = 3)
 
 y = e.Euler(
         drift = mu,
         diffusion = sigma,
         time_steps = TIME_STEPS,
         #time_end = 10,
-        paths = 1000,
+        paths = 100,
         y0 = 1.0, 
-        batches=10,
+        batches=20,
         )
 #, paths_plot = 3)
+
+#print("%f empirical variance %f = " % (TIME_STEPS, np.mean(np.var(y.z, axis=0))))
+#print("%f theoretical variance %f = " % (TIME_STEPS, 1/TIME_STEPS))
+#
+#test_steps = 2**7
+#print("%f steps empirical variance = %f" %(test_steps, np.mean(np.var(y.coarse_z(test_steps), axis=0))))
+##print("%f steps empirical expectation = %f" %(test_steps, np.mean(np.mean(y.coarse_z(test_steps), axis=0))))
+#print("%f steps theoretical variance = %f" %(test_steps, 1/test_steps))
+#x1 = np.linspace(0, 1, TIME_STEPS)
+#x2 = np.linspace(0, 1, test_steps)
+###print("length x1 = ", len(x1))
+###print("length x2 = ", len(x2))
+#plt.figure()
+#plt.plot(x1, y.z[:, 1, 1])
+#plt.plot(x2, y.coarse_z(test_steps)[:, 1, 1])
+#plt.show()
 
 #print("time steps:\n", y.time_steps)
 #print("time grid:", y.time_grid)
@@ -81,7 +97,7 @@ y = e.Euler(
 #
 #print(np.amax(abs(dif), axis=1))
 
-error, rate = y.rate(real_solution = y.solve(), approximations = 5,
+error, rate = y.rate(real_solution = y.solve(), approximations = 4,
         show_plot = True, save_plot = False)
 print("error array\n", error)
 print("rate =", rate)

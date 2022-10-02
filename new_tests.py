@@ -1,11 +1,16 @@
 import numpy as np
 import matplotlib.pyplot as plt
+from numpy.random import default_rng
+rng = default_rng()
 
-x = np.array([0, 1, 2, 1, 0])
-y = np.arange(5)
+t1 = np.linspace(0, 1, 2**5)
+t2 = np.linspace(0, 1, 2**3)
 
-con = np.convolve(x, y, 'same')
+x = rng.normal(size=2**5, loc=1, scale=1/2**5)
+y = np.sum(x.reshape(2**3, 2**2), axis=1)*1/2**2
 
 plt.figure()
-plt.plot(con)
+plt.plot(t1, x)
+plt.plot(t2, y)
+plt.grid()
 plt.show()
