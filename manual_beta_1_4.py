@@ -257,34 +257,41 @@ class Euler:
         self.paths = paths if paths \
                 is not None else 100
         self.batches = batches if batches \
-                is not None else 20
+                is not None else 20 # This parameter is not currently used
         self.approximations = approximations if approximations \
                 is not None else 5
 
-        self.h = h
-        self.l = l
-        self.bp = bp
+        # Parameters needed for the generation of the distributional coefficient
+        self.h = h # Hurst parameter
+        self.l = l # Uper limit of support, the function will be supported on [-l, l]
+        self.bp = bp # Points of definition for the coefficient
 
+        # Generates a dt for each amount of time steps
+        # Used in the method solve
         self.dt = self.generate_dt()
 
-        """
+        # Random variable Representing the differences of Brownian motion for each time step
         self.z = rng.normal(
                 loc=0.0,
                 scale=np.sqrt(self.dt),
                 #size=(self.time_steps, self.paths, self.batches)
                 size=(self.time_steps, self.paths)
                 )
-        """
         
         # From the index 0 to approximations-1
         # we have the drift for the approximations
-        # the index approximations, or -1 is the drift of the real solution
+        # the last index, or -1 is the drift of the real solution
         self.drift_list = Distribution(hurst=self.h, limit=self.l, points=self.bp, time_steps=self.time_steps, approximations=self.approximations).func_list
+        ############# TESTS ##################
+        # Print the length of the list of function
         #print("drift list elements = ", len(self.drift_list))
 
+        # Plot the different distributional coefficient (depending on step size)
         #self.x = np.linspace(-2, 2, 100)
+        #
         #for i in self.drift_list:
         #    plt.figure()
+        ### The parameters t and m do not matter, they are kept to work with the generic scheme
         #    plt.plot(i( x = self.x, t = 3, m = 3))
         #    plt.show()
 
@@ -306,36 +313,52 @@ class Euler:
         dt_grid = self.generate_dt(time_steps_dt = time_steps_grid)
 
         time_grid_generated = np.linspace(
-                start = time_start_grid + dt_grid, 
+                start = time_start_grid + dt_grid, # We don't want the time t=0 since that is given by the initial condition
                 stop = time_end_grid,
                 num = time_steps_grid
                 )
         return time_grid_generated
-    """
+    
     def coarse_z (self, time_steps_z = None):
         time_steps_z = time_steps_z if time_steps_z \
                 is not None else self.time_steps
         z_orig = self.z
-        dt_z = self.generate_dt(time_steps_dt=time_steps_z)
+        #dt_z = self.generate_dt(time_steps_dt=time_steps_z)
         #z_coarse = np.zeros(shape = (time_steps_z, self.paths, self.batches))
+        
+        ### We want the coarser Z to have the time steps of the coarser approximations
         z_coarse = np.zeros(shape = (time_steps_z, self.paths))
 
-        n_z = int(np.shape(z_orig)[0] / time_steps_z)
+        ### Quotient between the original amount of time steps
+        ### and the time steps for a coarser approximation
+        q_z = int(np.shape(z_orig)[0] / time_steps_z)
         
-        if n_z == 1:
+        ### Subsampling or change of resolution for the RV
+        if q_z == 1:
             z_coarse = z_orig
         else:
+            ### This is a NumPy way of subsampling the RV
+            ### It creates a temporary array by reshaping the original RV with shape
+            ### (time_steps, paths)
+            ### into an array with shape
+            ### (time_steps, q_z, paths)
+            ### Then it will sum over the axis of the new dimension
+            ### to get a new RV z_coarse of shape
+            ### (time_steps_z, paths)
+            ### Where time_steps_z is the time steps for the approximation
             temp = z_orig.reshape(
                     time_steps_z, 
-                    n_z,
-                    self.paths
-                    #, 
-                    #self.batches
+                    q_z,
+                    self.paths#, self.batches
                     )
             z_coarse = np.sum(temp, axis=1)
+            ### In the method solve (below), line 374 you can uncomment a series
+            ### of print statements where you can see the variance of the change
+            ### for different time steps
+            ### It naturally deteriorates if we have a small number of time steps
 
         return z_coarse
-    """
+    
     def solve (self, drift = None, time_steps_solve = None):
         time_steps_solve = time_steps_solve if time_steps_solve \
                 is not None else self.time_steps
@@ -343,28 +366,28 @@ class Euler:
                 is not None else self.time_grid
         dt_solve = self.generate_dt(time_steps_dt=time_steps_solve) if time_steps_solve \
                 is not None else self.dt
-        """
         z_solve = self.coarse_z(time_steps_z=time_steps_solve) if time_steps_solve \
                 is not None else self.z
-        """
         drift = drift if drift  \
                 is not None else self.drift_list[-1]
-        z_solve = rng.normal(
-                loc=0.0,
-                scale=np.sqrt(dt_solve),
-                #size=(self.time_steps, self.paths, self.batches)
-                size=(time_steps_solve, self.paths)
-                )
-        #print("thoretical variance original Z", 1/self.time_steps)
-        #print("variance original Z", np.mean(np.var(self.z, axis=1)))
-        #print("thoretical variance new Z", 1/time_steps_solve)
-        #print("variance new Z", np.mean(np.var(z_solve, axis=1)))
-        #y = np.zeros(shape=(time_steps_solve, self.paths, self.batches))
+
+        ############# TESTS ##################
+        ### Here you can see how the variance changes when we change the "resolution"
+        ### of the RV that represents the differences of BM
+        '''
+        print("thoretical variance original Z = ", 1/self.time_steps)
+        print(" empirical variance original Z = ", np.mean(np.var(self.z, axis=0)))
+        print("     thoretical variance new Z = ", 1/time_steps_solve)
+        print("      empirical variance new Z = ", np.mean(np.var(z_solve, axis=0)))
+        '''
+        #^^^^^^^^^^^^ TESTS ^^^^^^^^^^^^^^^^^#
         
+        ### We require ONE element more than the time steps in order to use the 
+        ### all the elements in the RV representing differences of BM
+        #y = np.zeros(shape=(time_steps_solve+1, self.paths, self.batches))
         y = np.zeros(shape=(time_steps_solve+1, self.paths))
-        #y = np.zeros(shape=(time_steps_solve, self.paths))
         #y[0, :, :] = self.y0
-        y[0, :] = self.y0
+        y[0, :] = self.y0 # Initial condition
         
         #for i in range(time_steps_solve - 1):
         for i in range(time_steps_solve):
@@ -381,6 +404,9 @@ class Euler:
                     #+ z_solve[i+1, :, :]
         return y
 
+    ### Modify this function if you want to use a different drift
+    ### to use it comment and uncomment the tests starting on LINE 433 to avoid the Euler scheme
+    ### running for the distributional coeffiecient and only run it for b
     def b(self, t, x, m):
         return 1.5*x
 
@@ -391,18 +417,28 @@ class Euler:
         #m = self.time_steps
         #dist = Distribution(hurst=self.h, limit=self.l, points=self.bp, time_steps=self.time_steps, self.approximations=approximations)
         
-        ##### Tests for the function used in each step
+        ############# TESTS #################
+        ##### Plots for the function used in each step
+        ### The function will have support in [-l, l]
+        ### the larger domain from x_test is to illustrate the support
         #x_test = np.linspace(-15, 15, 50)
         #plt.figure()
         #plt.title("dist function real")
         #plt.plot(self.drift_list[-1](t=1, x=x_test, m=1))
         ##plt.plot(self.b(t=1, x=x_test, m=1))
         #plt.show()
-
-        # Distributional coefficient
+        #^^^^^^^^^^^^ TESTS ^^^^^^^^^^^^^^^^^#
+        
+        ############# TESTS #################
+        # Uncomment as appropriate
+        # IMPORTANT: Also uncomment and comment in the TESTS starting in LINE 468 as appropriate
+        
+        # Euler scheme with Distributional coefficient
         #real_solution = self.solve(time_steps_solve=self.time_steps, drift=self.drift_list[-1])
-        # Test with known SDE
+        
+        # Euler scheme for known SDE given by function b in line 410
         real_solution = self.solve(time_steps_solve=self.time_steps, drift=self.b)
+        #^^^^^^^^^^^^ TESTS ^^^^^^^^^^^^^^^^^#
 
         #length_solution = int(np.log10(np.shape(real_solution)[0]))
         length_solution = int(np.log2(np.shape(real_solution)[0]))
@@ -412,25 +448,37 @@ class Euler:
             # 2^(i+2) because we want the approximations starting with
             # 2^2 time steps
             m = 2**(i+2)
+            delta = (self.time_end - self.time_start)/m
             #############
-            print("m = ", m)
+            #print("m = ", m)
             #print("i = ", i)
             #print("func length = ", len(dist.func_list))
             #############
-            delta = (self.time_end - self.time_start)/m
-            print("delta t = ", delta)
+            #print("delta t = ", delta)
 
+            ############# TESTS #################
+            ### If you uncomment as appropriate you will see the different drifts that are used
+            ### Used to see that we are actually using the appropriate drift for each approximation
             #plt.figure()
             #plt.title("dist function approx 2^%d" % (i+2))
             #plt.plot(self.drift_list[i](t=1, x=x_test, m=1))
-            ##plt.plot(self.b(t=1, x=x_test, m=1))
             #plt.show()
-
-            # Distributional coefficient
+            #^^^^^^^^^^^^ TESTS ^^^^^^^^^^^^^^^^^#
+            
+            ############# TESTS #################
+            # IMPORTANT: Also uncomment as appropriate the tests starting in LINE 432
+            # Approximation with distributional coefficient
             #soln = self.solve(time_steps_solve = m, drift=self.drift_list[i])
-            # Known SDE
+            
+            # Approximation for known SDE with drift given by method b
             soln = self.solve(time_steps_solve = m, drift=self.b)
+            #^^^^^^^^^^^^ TESTS ^^^^^^^^^^^^^^^^^#
 
+            ##### Not necesary #####
+            
+            ### We do not need this because we only want the solution at terminal time
+            ### It is needed if we want the maximum or supremum of the paths
+            
             #real_solution_coarse = real_solution[::10**(i+1), :, :]
             #real_solution_coarse = real_solution[::2**(i+1), :, :]
             #real_solution_coarse = real_solution[::2**(length_solution-i-1-1), :, :]
@@ -440,19 +488,26 @@ class Euler:
             # then we use that to  select that amount of elements
             #real_solution_coarse = real_solution[::int(2**length_solution/m), :, :]
             #real_solution_coarse = real_solution[::int(2**length_solution/m), :]
+            #^^^^ Not necesary ^^^^#
+            
+            ############# TESTS #################
+            ### This is the plot of a single path of the solution to the SDE
+            ### Compared with the approximation with fewer time steps
+            ### Just for illustrative purposes
             
             #print("shape real soln = ", np.shape(real_solution_coarse)[0])
             #print("shape appr soln = ", np.shape(soln)[0])
             plt.figure()
             plt.title("comparison")
             #plt.plot(real_solution_coarse[:,1])
-
             plt.plot(np.linspace(0,1,self.time_steps+1),real_solution[:,1])
             plt.plot(np.linspace(0,1,m+1),soln[:,1])
             #plt.plot(np.linspace(0,1,self.time_steps),real_solution[:,1])
             #plt.plot(np.linspace(0,1,m),soln[:,1])
             plt.show()
+            #^^^^^^^^^^^^ TESTS ^^^^^^^^^^^^^^^^^#
 
+            ### Not needed
             #error[i] = np.amax(
             #                np.mean(
             #                    np.abs(
@@ -469,32 +524,32 @@ class Euler:
             #                        ),
             #                    axis = 1
             #                    )[-1,:]
+            #^^^ Not needed ^^^^^^^^^^#
+            
+            ### Computation of the error for the approximation i for all paths
+            ### of the approximation and all paths of the "real solution"
             error[i, :] = np.abs(real_solution[-1, :] - soln[-1, :])
             x_axis[i] = delta
 
         #print(error)
         #error_ic = np.zeros(shape=(2, self.approximations))
         error_ic = np.zeros(shape=(self.approximations))
-        error_ic_up = np.zeros(shape=(self.approximations))
-        error_ic_down = np.zeros(shape=(self.approximations))
         for i in range(self.approximations):
             error_mean = np.mean(error[i, :])
-            error_var = (1/self.paths)*np.sum((error[i,:] - error_mean)**2)
+            error_mean_log = np.log2(error_mean)
+            #error_var = (1/self.paths)*np.sum((error[i,:] - error_mean)**2)
+            error_var = (1/self.paths)*np.sum((np.log2(error[i,:]) - error_mean_log)**2)
             #error_var = np.var(error[i, :])
-            error_sqrt = np.sqrt(error_var/self.batches)
-            #error_m = np.mean(error[i, :])
-            #error_ic[0, i] = error_m - 1.96*error_sqrt
-            #error_ic[1, i] = error_m + 1.96*error_sqrt
-            #error_ic[0, i] = - 1.96*error_sqrt
-            #error_ic[1, i] = + 1.96*error_sqrt
+            error_sqrt = np.sqrt(error_var/self.paths)
             error_ic[i] = 1.96*error_sqrt
 
         error_meanv = np.mean(error, axis=1)
-        print("Upper limit IC: ", error_meanv + error_ic)
-        print("Lower limit IC: ", error_meanv - error_ic)
-        print("Log upper limit IC: ", np.log(error_meanv) + np.log(error_ic))
-        print("Log lower limit IC: ", np.log(error_meanv) - np.log(error_ic))
+    
+        print("\t\tThe first pair below is for the minimum amount of time steps\n\t\twhile the last is for the maximum")
+        print("upper limit IC: ", np.log2(error_meanv) + error_ic)
+        print("lower limit IC: ", np.log2(error_meanv) - error_ic)
 
+        ### Linear regression to compute rate of convergence
         reg = np.ones(self.approximations)
         A = np.vstack([np.log2(x_axis), reg]).T
         y_reg = np.log2(error_meanv[:, np.newaxis])
@@ -514,16 +569,10 @@ class Euler:
         """
         rate_plot = plt.figure()
         plt.errorbar(
-                #x=x_axis,
-                #x=np.log10(x_axis),
                 x=np.log2(x_axis),
-                #y=error_mean,
-                #y=np.log10(error_mean),
                 y=np.log2(error_meanv),
-                #yerr=np.log10(error_ic),
                 yerr=error_ic,
                 label="Error",
-                #marker=".",
                 ecolor="red"
                 )
         plt.grid()
