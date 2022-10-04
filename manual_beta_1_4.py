@@ -296,11 +296,25 @@ class Euler:
         dt_generated = (time_end_dt - time_start_dt) / time_steps_dt
         return dt_generated
     
+    def generate_time_grid (self, time_steps_grid = None):
+        time_steps_grid = time_steps_grid if time_steps_grid \
+                is not None else self.time_steps
+        time_start_grid = self.time_start
+        time_end_grid = self.time_end
+
+        dt_grid = self.generate_dt(time_steps_dt = time_steps_grid)
+
+        time_grid_generated = np.linspace(
+                start = time_start_grid + dt_grid, 
+                stop = time_end_grid,
+                num = time_steps_grid
+                )
+        return time_grid_generated
+
     def coarse_z (self, time_steps_z = None):
         time_steps_z = time_steps_z if time_steps_z \
                 is not None else self.time_steps
         z_orig = self.z
-        #dt_z = self.dt
         dt_z = self.generate_dt(time_steps_dt=time_steps_z)
         #z_coarse = np.zeros(shape = (time_steps_z, self.paths, self.batches))
         z_coarse = np.zeros(shape = (time_steps_z, self.paths))
@@ -321,21 +335,6 @@ class Euler:
 
         return z_coarse
 
-    def generate_time_grid (self, time_steps_grid = None):
-        time_steps_grid = time_steps_grid if time_steps_grid \
-                is not None else self.time_steps
-        time_start_grid = self.time_start
-        time_end_grid = self.time_end
-
-        dt_grid = self.generate_dt(time_steps_dt = time_steps_grid)
-
-        time_grid_generated = np.linspace(
-                start = time_start_grid + dt_grid, 
-                stop = time_end_grid,
-                num = time_steps_grid
-                )
-        return time_grid_generated
-
     def solve (self, drift = None, time_steps_solve = None):
         time_steps_solve = time_steps_solve if time_steps_solve \
                 is not None else self.time_steps
@@ -348,12 +347,19 @@ class Euler:
         drift = drift if drift  \
                 is not None else self.drift_list[-1]
 
+        #print("thoretical variance original Z", 1/self.time_steps)
+        #print("variance original Z", np.mean(np.var(self.z, axis=1)))
+        #print("thoretical variance new Z", 1/time_steps_solve)
+        #print("variance new Z", np.mean(np.var(z_solve, axis=1)))
         #y = np.zeros(shape=(time_steps_solve, self.paths, self.batches))
-        y = np.zeros(shape=(time_steps_solve, self.paths))
+        
+        y = np.zeros(shape=(time_steps_solve+1, self.paths))
+        #y = np.zeros(shape=(time_steps_solve, self.paths))
         #y[0, :, :] = self.y0
         y[0, :] = self.y0
         
-        for i in range(time_steps_solve - 1):
+        #for i in range(time_steps_solve - 1):
+        for i in range(time_steps_solve):
             #y[i+1, :, :] = y[i, :, :] \
             y[i+1, :] = y[i, :] \
                     + drift(
@@ -362,7 +368,8 @@ class Euler:
                             x = y[i, :], 
                             m = time_steps_solve
                             )*dt_solve \
-                    + z_solve[i+1, :]
+                    + z_solve[i, :]
+                    #+ z_solve[i+1, :]
                     #+ z_solve[i+1, :, :]
         return y
 
@@ -377,12 +384,14 @@ class Euler:
         #dist = Distribution(hurst=self.h, limit=self.l, points=self.bp, time_steps=self.time_steps, self.approximations=approximations)
         
         ##### Tests for the function used in each step
-        x_test = np.linspace(-15, 15, 50)
-        plt.figure()
-        plt.title("dist function real")
-        plt.plot(self.drift_list[-1](t=1, x=x_test, m=1))
-        plt.show()
+        #x_test = np.linspace(-15, 15, 50)
+        #plt.figure()
+        #plt.title("dist function real")
+        #plt.plot(self.drift_list[-1](t=1, x=x_test, m=1))
+        ##plt.plot(self.b(t=1, x=x_test, m=1))
+        #plt.show()
 
+        # Distributional coefficient
         #real_solution = self.solve(time_steps_solve=self.time_steps, drift=self.drift_list[-1])
         # Test with known SDE
         real_solution = self.solve(time_steps_solve=self.time_steps, drift=self.b)
@@ -403,12 +412,15 @@ class Euler:
             delta = (self.time_end - self.time_start)/m
             print("delta t = ", delta)
 
-            plt.figure()
-            plt.title("dist function approx 2^%d" % (i+2))
-            plt.plot(self.drift_list[i](t=1, x=x_test, m=1))
-            plt.show()
+            #plt.figure()
+            #plt.title("dist function approx 2^%d" % (i+2))
+            #plt.plot(self.drift_list[i](t=1, x=x_test, m=1))
+            ##plt.plot(self.b(t=1, x=x_test, m=1))
+            #plt.show()
 
+            # Distributional coefficient
             #soln = self.solve(time_steps_solve = m, drift=self.drift_list[i])
+            # Known SDE
             soln = self.solve(time_steps_solve = m, drift=self.b)
 
             #real_solution_coarse = real_solution[::10**(i+1), :, :]
@@ -426,8 +438,11 @@ class Euler:
             plt.figure()
             plt.title("comparison")
             #plt.plot(real_solution_coarse[:,1])
-            plt.plot(np.linspace(0,1,self.time_steps),real_solution[:,1])
-            plt.plot(np.linspace(0,1,m),soln[:,1])
+
+            plt.plot(np.linspace(0,1,self.time_steps+1),real_solution[:,1])
+            plt.plot(np.linspace(0,1,m+1),soln[:,1])
+            #plt.plot(np.linspace(0,1,self.time_steps),real_solution[:,1])
+            #plt.plot(np.linspace(0,1,m),soln[:,1])
             plt.show()
 
             #error[i] = np.amax(
@@ -452,6 +467,8 @@ class Euler:
         #print(error)
         #error_ic = np.zeros(shape=(2, self.approximations))
         error_ic = np.zeros(shape=(self.approximations))
+        error_ic_up = np.zeros(shape=(self.approximations))
+        error_ic_down = np.zeros(shape=(self.approximations))
         for i in range(self.approximations):
             error_mean = np.mean(error[i, :])
             error_var = (1/self.paths)*np.sum((error[i,:] - error_mean)**2)
@@ -465,6 +482,10 @@ class Euler:
             error_ic[i] = 1.96*error_sqrt
 
         error_meanv = np.mean(error, axis=1)
+        print("Upper limit IC: ", error_meanv + error_ic)
+        print("Lower limit IC: ", error_meanv - error_ic)
+        print("Log upper limit IC: ", np.log(error_meanv) + np.log(error_ic))
+        print("Log lower limit IC: ", np.log(error_meanv) - np.log(error_ic))
 
         reg = np.ones(self.approximations)
         A = np.vstack([np.log2(x_axis), reg]).T
@@ -497,6 +518,7 @@ class Euler:
                 #marker=".",
                 ecolor="red"
                 )
+        plt.grid()
         #plt.plot(np.log(x_axis), intersection+np.log(x_axis)*rate)
         plt.title(
                 label="Rate = "
