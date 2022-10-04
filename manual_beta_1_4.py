@@ -267,14 +267,15 @@ class Euler:
 
         self.dt = self.generate_dt()
 
+        """
         self.z = rng.normal(
                 loc=0.0,
                 scale=np.sqrt(self.dt),
                 #size=(self.time_steps, self.paths, self.batches)
                 size=(self.time_steps, self.paths)
                 )
-        self.time_grid = self.generate_time_grid()
-
+        """
+        
         # From the index 0 to approximations-1
         # we have the drift for the approximations
         # the index approximations, or -1 is the drift of the real solution
@@ -310,7 +311,7 @@ class Euler:
                 num = time_steps_grid
                 )
         return time_grid_generated
-
+    """
     def coarse_z (self, time_steps_z = None):
         time_steps_z = time_steps_z if time_steps_z \
                 is not None else self.time_steps
@@ -334,7 +335,7 @@ class Euler:
             z_coarse = np.sum(temp, axis=1)
 
         return z_coarse
-
+    """
     def solve (self, drift = None, time_steps_solve = None):
         time_steps_solve = time_steps_solve if time_steps_solve \
                 is not None else self.time_steps
@@ -342,11 +343,18 @@ class Euler:
                 is not None else self.time_grid
         dt_solve = self.generate_dt(time_steps_dt=time_steps_solve) if time_steps_solve \
                 is not None else self.dt
+        """
         z_solve = self.coarse_z(time_steps_z=time_steps_solve) if time_steps_solve \
                 is not None else self.z
+        """
         drift = drift if drift  \
                 is not None else self.drift_list[-1]
-
+        z_solve = rng.normal(
+                loc=0.0,
+                scale=np.sqrt(dt_solve),
+                #size=(self.time_steps, self.paths, self.batches)
+                size=(time_steps_solve, self.paths)
+                )
         #print("thoretical variance original Z", 1/self.time_steps)
         #print("variance original Z", np.mean(np.var(self.z, axis=1)))
         #print("thoretical variance new Z", 1/time_steps_solve)
