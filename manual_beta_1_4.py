@@ -197,7 +197,6 @@ class Distribution:
                 sparse=False,
                 indexing='ij'
                 )
-                
         covariance = 0.5*(
                 np.abs(x_grid)**(2*self.hurst) +
                 np.abs(y_grid)**(2*self.hurst) - 
@@ -271,7 +270,8 @@ class Euler:
         self.z = rng.normal(
                 loc=0.0,
                 scale=np.sqrt(self.dt),
-                size=(self.time_steps, self.paths, self.batches)
+                #size=(self.time_steps, self.paths, self.batches)
+                size=(self.time_steps, self.paths)
                 )
         self.time_grid = self.generate_time_grid()
 
@@ -302,8 +302,8 @@ class Euler:
         z_orig = self.z
         #dt_z = self.dt
         dt_z = self.generate_dt(time_steps_dt=time_steps_z)
-        z_coarse = np.zeros(shape = (time_steps_z, self.paths, self.batches))
-
+        #z_coarse = np.zeros(shape = (time_steps_z, self.paths, self.batches))
+        z_coarse = np.zeros(shape = (time_steps_z, self.paths))
 
         n_z = int(np.shape(z_orig)[0] / time_steps_z)
         
@@ -313,11 +313,11 @@ class Euler:
             temp = z_orig.reshape(
                     time_steps_z, 
                     n_z,
-                    #np.shape(z_orig)[0]//time_steps_z,
-                    self.paths, 
-                    self.batches
+                    self.paths
+                    #, 
+                    #self.batches
                     )
-            z_coarse = np.sum(temp, axis=1)*dt_z
+            z_coarse = np.sum(temp, axis=1)
 
         return z_coarse
 
@@ -348,38 +348,40 @@ class Euler:
         drift = drift if drift  \
                 is not None else self.drift_list[-1]
 
-        y = np.zeros(shape=(time_steps_solve, self.paths, self.batches))
-        y[0, :, :] = self.y0
-        #self.y[0, :] = self.y0
+        #y = np.zeros(shape=(time_steps_solve, self.paths, self.batches))
+        y = np.zeros(shape=(time_steps_solve, self.paths))
+        #y[0, :, :] = self.y0
+        y[0, :] = self.y0
         
         for i in range(time_steps_solve - 1):
-            #self.y[i+1, :] = self.y[i, :] \
-            y[i+1, :, :] = y[i, :, :] \
+            #y[i+1, :, :] = y[i, :, :] \
+            y[i+1, :] = y[i, :] \
                     + drift(
                             t = time_grid_solve[i],
-                            x = y[i, :, :], 
-                            #x = self.y[i, :], 
+                            #x = y[i, :, :], 
+                            x = y[i, :], 
                             m = time_steps_solve
                             )*dt_solve \
-                    + z_solve[i+1, :, :]
-                    #+ z_solve[i+1, :]
+                    + z_solve[i+1, :]
+                    #+ z_solve[i+1, :, :]
         return y
 
     def b(self, t, x, m):
-        return 5*x
+        return 1.5*x
 
     def rate (self, show_plot=False, save_plot=False):
-        error = np.zeros(shape=(self.approximations, self.batches))
+        error = np.zeros(shape=(self.approximations, self.paths))
+        #error = np.zeros(shape=(self.approximations))
         x_axis = np.zeros(self.approximations)
         #m = self.time_steps
         #dist = Distribution(hurst=self.h, limit=self.l, points=self.bp, time_steps=self.time_steps, self.approximations=approximations)
         
         ##### Tests for the function used in each step
-        #x_test = np.linspace(-15, 15, 50)
-        #plt.figure()
-        #plt.title("dist function real")
-        #plt.plot(self.drift_list[-1](t=1, x=x_test, m=1))
-        #plt.show()
+        x_test = np.linspace(-15, 15, 50)
+        plt.figure()
+        plt.title("dist function real")
+        plt.plot(self.drift_list[-1](t=1, x=x_test, m=1))
+        plt.show()
 
         #real_solution = self.solve(time_steps_solve=self.time_steps, drift=self.drift_list[-1])
         # Test with known SDE
@@ -401,10 +403,10 @@ class Euler:
             delta = (self.time_end - self.time_start)/m
             print("delta t = ", delta)
 
-            #plt.figure()
-            #plt.title("dist function approx 2^%d" % (i+2))
-            #plt.plot(self.drift_list[i](t=1, x=x_test, m=1))
-            #plt.show()
+            plt.figure()
+            plt.title("dist function approx 2^%d" % (i+2))
+            plt.plot(self.drift_list[i](t=1, x=x_test, m=1))
+            plt.show()
 
             #soln = self.solve(time_steps_solve = m, drift=self.drift_list[i])
             soln = self.solve(time_steps_solve = m, drift=self.b)
@@ -416,17 +418,19 @@ class Euler:
             # To get the coarse real solution we divide the original length
             # by the new desired length,
             # then we use that to  select that amount of elements
-            real_solution_coarse = real_solution[::int(2**length_solution/m), :, :]
+            #real_solution_coarse = real_solution[::int(2**length_solution/m), :, :]
+            #real_solution_coarse = real_solution[::int(2**length_solution/m), :]
             
             #print("shape real soln = ", np.shape(real_solution_coarse)[0])
             #print("shape appr soln = ", np.shape(soln)[0])
             plt.figure()
             plt.title("comparison")
-            plt.plot(real_solution_coarse[:,1,1])
-            plt.plot(soln[:,1,1])
+            #plt.plot(real_solution_coarse[:,1])
+            plt.plot(np.linspace(0,1,self.time_steps),real_solution[:,1])
+            plt.plot(np.linspace(0,1,m),soln[:,1])
             plt.show()
 
-            #error[i, :] = np.amax(
+            #error[i] = np.amax(
             #                np.mean(
             #                    np.abs(
             #                        np.subtract(real_solution_coarse, soln)
@@ -436,31 +440,35 @@ class Euler:
             #                axis = 0
             #                )
 
-            error[i, :] = np.mean(
-                                np.abs(
-                                    np.subtract(real_solution_coarse, soln)
-                                    ),
-                                axis = 1
-                                )[-1,:]
+            #error[i, :] = np.mean(
+            #                    np.abs(
+            #                        np.subtract(real_solution_coarse, soln)
+            #                        ),
+            #                    axis = 1
+            #                    )[-1,:]
+            error[i, :] = np.abs(real_solution[-1, :] - soln[-1, :])
             x_axis[i] = delta
 
+        #print(error)
         #error_ic = np.zeros(shape=(2, self.approximations))
         error_ic = np.zeros(shape=(self.approximations))
         for i in range(self.approximations):
-            error_var = np.var(error[i, :])
+            error_mean = np.mean(error[i, :])
+            error_var = (1/self.paths)*np.sum((error[i,:] - error_mean)**2)
+            #error_var = np.var(error[i, :])
             error_sqrt = np.sqrt(error_var/self.batches)
-            error_m = np.mean(error[i, :])
+            #error_m = np.mean(error[i, :])
             #error_ic[0, i] = error_m - 1.96*error_sqrt
             #error_ic[1, i] = error_m + 1.96*error_sqrt
             #error_ic[0, i] = - 1.96*error_sqrt
             #error_ic[1, i] = + 1.96*error_sqrt
             error_ic[i] = 1.96*error_sqrt
 
-        error_mean = np.mean(error, axis=1)
+        error_meanv = np.mean(error, axis=1)
 
         reg = np.ones(self.approximations)
         A = np.vstack([np.log2(x_axis), reg]).T
-        y_reg = np.log2(error_mean[:, np.newaxis])
+        y_reg = np.log2(error_meanv[:, np.newaxis])
         rate, intersection = np.linalg.lstsq(A, y_reg, rcond=None)[0]
 
         """
@@ -482,7 +490,7 @@ class Euler:
                 x=np.log2(x_axis),
                 #y=error_mean,
                 #y=np.log10(error_mean),
-                y=np.log2(error_mean),
+                y=np.log2(error_meanv),
                 #yerr=np.log10(error_ic),
                 yerr=error_ic,
                 label="Error",
@@ -561,7 +569,7 @@ y = Euler(
         time_steps = M,
         paths = 100,
         batches = 50,
-        approximations = 5,
+        approximations = 4,
         y0 = 1
         )
 
