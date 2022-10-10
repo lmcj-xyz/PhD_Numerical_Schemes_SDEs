@@ -449,7 +449,7 @@ class Euler:
             #m = (2**(length_solution-i-1))
             # 2^(i+2) because we want the approximations starting with
             # 2^2 time steps
-            m = 2**(i+4) # JP: changed here from i+2 to i+0
+            m = 2**(i+5) # JP: changed here from i+2 to i+0
             delta = (self.time_end - self.time_start)/m
             #############
             #print("m = ", m)
@@ -638,7 +638,7 @@ M = 2**12
 beta = 0.25
 h = 1 - beta
 l = 10
-def_points_bn = 6
+def_points_bn = 5
 
 # Euler approximation
 y = Euler(
@@ -650,7 +650,7 @@ y = Euler(
         time_steps = M,
         paths = 100,
         batches = 50,
-        approximations = 4,
+        approximations = 5,
         y0 = 1
         )
 
