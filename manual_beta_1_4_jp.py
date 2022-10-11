@@ -638,7 +638,7 @@ M = 2**12
 beta = 0.25
 h = 1 - beta
 l = 10
-def_points_bn = 5
+def_points_bn = 6
 
 # Euler approximation
 y = Euler(

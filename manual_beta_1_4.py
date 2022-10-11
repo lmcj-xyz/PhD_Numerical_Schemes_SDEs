@@ -30,6 +30,12 @@ class Distribution:
                 stop = limit,
                 num = points
                 )
+        self.fbm_grid = np.linspace(
+                start = 1/self.points,
+                stop = 2*limit,
+                num = points
+                )
+        
         self.length_grid = self.grid.shape[0]
 
         self.fbm_path = self.fbm()
@@ -184,7 +190,7 @@ class Distribution:
 
         #plt.figure()
         #plt.title("dist function real")
-        #plt.plot(self.func_real_solution(t=1, x=x_test, m=self.t_real_solution))
+        #plt.plot(self.func_list[-1](t=1, x=x_test, m=self.t_real_solution))
         #plt.show()
 
 ############################### METHODS
@@ -192,8 +198,8 @@ class Distribution:
 
     def fbm(self):
         x_grid, y_grid = np.meshgrid(
-                self.grid, 
-                self.grid, 
+                self.fbm_grid, 
+                self.fbm_grid, 
                 sparse=False,
                 indexing='ij'
                 )
@@ -281,7 +287,8 @@ class Euler:
         # From the index 0 to approximations-1
         # we have the drift for the approximations
         # the last index, or -1 is the drift of the real solution
-        self.drift_list = Distribution(hurst=self.h, limit=self.l, points=self.bp, time_steps=self.time_steps, approximations=self.approximations).func_list
+        self.dist = Distribution(hurst=self.h, limit=self.l, points=self.bp, time_steps=self.time_steps, approximations=self.approximations)
+        self.drift_list = self.dist.func_list
         ############# TESTS ##################
         # Print the length of the list of function
         #print("drift list elements = ", len(self.drift_list))
@@ -447,7 +454,7 @@ class Euler:
             #m = (2**(length_solution-i-1))
             # 2^(i+2) because we want the approximations starting with
             # 2^2 time steps
-            m = 2**(i+2)
+            m = 2**(i+5)
             delta = (self.time_end - self.time_start)/m
             #############
             #print("m = ", m)
@@ -536,9 +543,9 @@ class Euler:
         error_ic = np.zeros(shape=(self.approximations))
         for i in range(self.approximations):
             error_mean = np.mean(error[i, :])
-            error_mean_log = np.log2(error_mean)
-            #error_var = (1/self.paths)*np.sum((error[i,:] - error_mean)**2)
-            error_var = (1/self.paths)*np.sum((np.log2(error[i,:]) - error_mean_log)**2)
+            #error_mean_log = np.log2(error_mean)
+            error_var = np.sum((error[i,:] - error_mean)**2/self.paths)
+            #error_var = np.sum((np.log2(error[i,:]) - error_mean)**2/self.paths)
             #error_var = np.var(error[i, :])
             error_sqrt = np.sqrt(error_var/self.paths)
             error_ic[i] = 1.96*error_sqrt
@@ -571,7 +578,7 @@ class Euler:
         plt.errorbar(
                 x=np.log2(x_axis),
                 y=np.log2(error_meanv),
-                yerr=error_ic,
+                yerr=[np.log2(error_meanv) - np.log2(error_meanv - error_ic), np.log2(error_meanv + error_ic) - np.log2(error_meanv)],
                 label="Error",
                 ecolor="red"
                 )
@@ -626,7 +633,7 @@ st = time.process_time()
 #### the array of the dist coeff for so many points,
 #### if you have a very small variance then effectivelly you will have integration
 #### between points that are not defined
-M = 2**8
+M = 2**12
 # Instance of distributional coefficient
 #dist = Distribution(hurst=0.75, limit=5, points=10**2)
 
@@ -636,7 +643,7 @@ M = 2**8
 beta = 0.25
 h = 1 - beta
 l = 10
-def_points_bn = 10**2
+def_points_bn = 11
 
 # Euler approximation
 y = Euler(
@@ -648,7 +655,7 @@ y = Euler(
         time_steps = M,
         paths = 100,
         batches = 50,
-        approximations = 4,
+        approximations = 5,
         y0 = 1
         )
 
