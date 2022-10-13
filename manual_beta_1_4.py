@@ -33,6 +33,7 @@ class Distribution:
         self.fbm_grid = np.linspace(
                 start = 1/self.points,
                 stop = 2*limit,
+                #stop = 1,
                 num = points
                 )
         
@@ -53,10 +54,13 @@ class Distribution:
 
         # For the time steps of the approximations we compute the parameter
         # t of the heat kernel
-        self.t_heat = [np.sqrt(1/(k**(8/3))) for k in self.time_steps_array]
+        self.t_pow = 8/3
+        #self.t_heat = [np.sqrt(1/(k**(8/3))) for k in self.time_steps_array]
+        self.t_heat = [np.sqrt(1/(16**self.t_pow)) for k in self.time_steps_array]
         #print("t's approx", self.t_heat)
         # The same but for the real solution
-        self.t_real_solution = np.sqrt(1/(time_steps**(8/3)))
+        #self.t_real_solution = np.sqrt(1/(time_steps**(8/3)))
+        self.t_real_solution = np.sqrt(1/(16**self.t_pow))
         #print("t real", self.t_real_solution)
 
         self.df = [self.normal_differences(k) for k in self.t_heat]
@@ -211,6 +215,7 @@ class Distribution:
         g = rng.standard_normal(size=self.points)
         cholesky = np.linalg.cholesky(a=covariance)
         fbm_arr = np.matmul(cholesky, g)
+        fbm_arr = np.concatenate([np.zeros(1),fbm_arr])
         return fbm_arr
 
     def normal_differences(self, t_var):
@@ -218,8 +223,10 @@ class Distribution:
         delta = self.limit/self.length_grid
         const = -1/t_var**2
 
-        p = lambda u: const*(self.grid - u)*norm.pdf(self.grid, loc=u, scale=t_var)
+        p = lambda u: const*(self.grid + u)*norm.pdf(self.grid+u, loc=0, scale=t_var)
         diff_norm = quad_vec(p, -delta, delta)[0]
+        #p = lambda u: const*(self.grid - u)*norm.pdf(self.grid, loc=u, scale=t_var)
+        #diff_norm = quad_vec(p, -delta, delta)[0]
 
         return diff_norm
 
@@ -289,18 +296,33 @@ class Euler:
         # the last index, or -1 is the drift of the real solution
         self.dist = Distribution(hurst=self.h, limit=self.l, points=self.bp, time_steps=self.time_steps, approximations=self.approximations)
         self.drift_list = self.dist.func_list
+        self.array_list = self.dist.dist_array
+        self.array_real = self.dist.dist_array_real_solution
         ############# TESTS ##################
+        for i in self.array_list:
+            plt.figure()
+            plt.title("array approx dist")
+        ### The parameters t and m do not matter, they are kept to work with the generic scheme
+            plt.plot(i)
+            plt.show()
+            
+        plt.figure()
+        plt.title("array real dist")
+        plt.plot(self.array_real)
+        plt.show()
         # Print the length of the list of function
         #print("drift list elements = ", len(self.drift_list))
 
         # Plot the different distributional coefficient (depending on step size)
-        #self.x = np.linspace(-2, 2, 100)
+        self.x = np.linspace(-2, 2, 50)
         #
-        #for i in self.drift_list:
-        #    plt.figure()
+        for i in self.drift_list:
+            plt.figure()
+            plt.title("function")
         ### The parameters t and m do not matter, they are kept to work with the generic scheme
-        #    plt.plot(i( x = self.x, t = 3, m = 3))
-        #    plt.show()
+            plt.plot(i( x = self.x, t = 3, m = 3))
+            plt.show()
+        #^^^^^^^^^^^ TESTS ^^^^^^^^^^^^^^^^^^^
 
     def generate_dt (self, time_steps_dt = None):
         time_steps_dt = time_steps_dt if time_steps_dt \
@@ -441,10 +463,10 @@ class Euler:
         # IMPORTANT: Also uncomment and comment in the TESTS starting in LINE 468 as appropriate
         
         # Euler scheme with Distributional coefficient
-        #real_solution = self.solve(time_steps_solve=self.time_steps, drift=self.drift_list[-1])
+        real_solution = self.solve(time_steps_solve=self.time_steps, drift=self.drift_list[-1])
         
         # Euler scheme for known SDE given by function b in line 410
-        real_solution = self.solve(time_steps_solve=self.time_steps, drift=self.b)
+        #real_solution = self.solve(time_steps_solve=self.time_steps, drift=self.b)
         #^^^^^^^^^^^^ TESTS ^^^^^^^^^^^^^^^^^#
 
         #length_solution = int(np.log10(np.shape(real_solution)[0]))
@@ -454,7 +476,7 @@ class Euler:
             #m = (2**(length_solution-i-1))
             # 2^(i+2) because we want the approximations starting with
             # 2^2 time steps
-            m = 2**(i+5)
+            m = 2**(i+4)
             delta = (self.time_end - self.time_start)/m
             #############
             #print("m = ", m)
@@ -475,10 +497,10 @@ class Euler:
             ############# TESTS #################
             # IMPORTANT: Also uncomment as appropriate the tests starting in LINE 432
             # Approximation with distributional coefficient
-            #soln = self.solve(time_steps_solve = m, drift=self.drift_list[i])
+            soln = self.solve(time_steps_solve = m, drift=self.drift_list[i])
             
             # Approximation for known SDE with drift given by method b
-            soln = self.solve(time_steps_solve = m, drift=self.b)
+            #soln = self.solve(time_steps_solve = m, drift=self.b)
             #^^^^^^^^^^^^ TESTS ^^^^^^^^^^^^^^^^^#
 
             ##### Not necesary #####
@@ -642,8 +664,8 @@ M = 2**12
 # Distributional drift
 beta = 0.25
 h = 1 - beta
-l = 10
-def_points_bn = 11
+l = 3
+def_points_bn = 2*M
 
 # Euler approximation
 y = Euler(
@@ -653,9 +675,9 @@ y = Euler(
         #drift = bn,
         #diffusion = sigma,
         time_steps = M,
-        paths = 100,
+        paths = 1000,
         batches = 50,
-        approximations = 5,
+        approximations = 6,
         y0 = 1
         )
 
