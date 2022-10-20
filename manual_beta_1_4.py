@@ -55,12 +55,15 @@ class Distribution:
         # For the time steps of the approximations we compute the parameter
         # t of the heat kernel
         self.t_pow = 8/3
-        #self.t_heat = [np.sqrt(1/(k**(8/3))) for k in self.time_steps_array]
-        self.t_heat = [np.sqrt(1/(16**self.t_pow)) for k in self.time_steps_array]
+        self.t_heat = [np.sqrt(1/(k**(8/3))) for k in self.time_steps_array]
+        # The following line helps to test for the same function all the time
+        #self.t_heat = [np.sqrt(1/(16**self.t_pow)) for k in self.time_steps_array]
         #print("t's approx", self.t_heat)
+        
         # The same but for the real solution
-        #self.t_real_solution = np.sqrt(1/(time_steps**(8/3)))
-        self.t_real_solution = np.sqrt(1/(16**self.t_pow))
+        self.t_real_solution = np.sqrt(1/(time_steps**(8/3)))
+        # The following line helps to test for the same function all the time
+        #self.t_real_solution = np.sqrt(1/(16**self.t_pow))
         #print("t real", self.t_real_solution)
 
         self.df = [self.normal_differences(k) for k in self.t_heat]
@@ -299,28 +302,32 @@ class Euler:
         self.array_list = self.dist.dist_array
         self.array_real = self.dist.dist_array_real_solution
         ############# TESTS ##################
+        self.y_lim = [-10, 10]
         for i in self.array_list:
             plt.figure()
             plt.title("array approx dist")
         ### The parameters t and m do not matter, they are kept to work with the generic scheme
-            plt.plot(i)
+            plt.plot(np.linspace(-self.l, self.l, np.shape(i)[0]),i)
+            plt.ylim(self.y_lim)
             plt.show()
             
         plt.figure()
         plt.title("array real dist")
-        plt.plot(self.array_real)
+        plt.plot(np.linspace(-self.l, self.l, np.shape(self.array_real)[0]), self.array_real)
+        plt.ylim(self.y_lim)
         plt.show()
         # Print the length of the list of function
         #print("drift list elements = ", len(self.drift_list))
 
         # Plot the different distributional coefficient (depending on step size)
-        self.x = np.linspace(-2, 2, 50)
+        self.x = np.linspace(-3, 3, 50)
         #
         for i in self.drift_list:
             plt.figure()
             plt.title("function")
         ### The parameters t and m do not matter, they are kept to work with the generic scheme
-            plt.plot(i( x = self.x, t = 3, m = 3))
+            plt.plot(self.x, i(x = self.x, t = 3, m = 3))
+            plt.ylim(self.y_lim)
             plt.show()
         #^^^^^^^^^^^ TESTS ^^^^^^^^^^^^^^^^^^^
 
@@ -611,8 +618,8 @@ class Euler:
                 +str(rate)
                 +"\nProxy of solution: 2^"+str(length_solution)+" time steps"
                 )
-        plt.xlabel("Step size")
-        plt.ylabel("log(error)")
+        plt.xlabel("log2(step size)")
+        plt.ylabel("log2(error)")
         plt.legend()
 
         if show_plot == True:
@@ -655,7 +662,7 @@ st = time.process_time()
 #### the array of the dist coeff for so many points,
 #### if you have a very small variance then effectivelly you will have integration
 #### between points that are not defined
-M = 2**12
+M = 2**8
 # Instance of distributional coefficient
 #dist = Distribution(hurst=0.75, limit=5, points=10**2)
 
@@ -665,7 +672,7 @@ M = 2**12
 beta = 0.25
 h = 1 - beta
 l = 3
-def_points_bn = 2*M
+def_points_bn = M*int(np.ceil(M**(1/3)*2*l))
 
 # Euler approximation
 y = Euler(
@@ -677,7 +684,7 @@ y = Euler(
         time_steps = M,
         paths = 1000,
         batches = 50,
-        approximations = 6,
+        approximations = 4,
         y0 = 1
         )
 
