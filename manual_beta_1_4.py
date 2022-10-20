@@ -54,7 +54,7 @@ class Distribution:
 
         # For the time steps of the approximations we compute the parameter
         # t of the heat kernel
-        self.t_pow = 8/3
+        self.t_pow = 8/11
         self.t_heat = [np.sqrt(1/(k**(8/3))) for k in self.time_steps_array]
         # The following line helps to test for the same function all the time
         #self.t_heat = [np.sqrt(1/(16**self.t_pow)) for k in self.time_steps_array]
@@ -672,7 +672,8 @@ M = 2**8
 beta = 0.25
 h = 1 - beta
 l = 3
-def_points_bn = M*int(np.ceil(M**(1/3)*2*l))
+#def_points_bn = M*int(np.ceil(M**(1/3)*2*l))
+def_points_bn = M
 
 # Euler approximation
 y = Euler(
