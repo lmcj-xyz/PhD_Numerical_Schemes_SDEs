@@ -54,14 +54,14 @@ class Distribution:
 
         # For the time steps of the approximations we compute the parameter
         # t of the heat kernel
-        self.t_pow = 8/11
-        self.t_heat = [np.sqrt(1/(k**(8/3))) for k in self.time_steps_array]
+        self.t_pow = 0
+        self.t_heat = [np.sqrt(1/(k**(self.t_pow))) for k in self.time_steps_array]
         # The following line helps to test for the same function all the time
         #self.t_heat = [np.sqrt(1/(16**self.t_pow)) for k in self.time_steps_array]
         #print("t's approx", self.t_heat)
         
         # The same but for the real solution
-        self.t_real_solution = np.sqrt(1/(time_steps**(8/3)))
+        self.t_real_solution = np.sqrt(1/(time_steps**(self.t_pow)))
         # The following line helps to test for the same function all the time
         #self.t_real_solution = np.sqrt(1/(16**self.t_pow))
         #print("t real", self.t_real_solution)
@@ -662,7 +662,7 @@ st = time.process_time()
 #### the array of the dist coeff for so many points,
 #### if you have a very small variance then effectivelly you will have integration
 #### between points that are not defined
-M = 2**8
+M = 2**12
 # Instance of distributional coefficient
 #dist = Distribution(hurst=0.75, limit=5, points=10**2)
 
@@ -673,7 +673,7 @@ beta = 0.25
 h = 1 - beta
 l = 3
 #def_points_bn = M*int(np.ceil(M**(1/3)*2*l))
-def_points_bn = M
+def_points_bn = 2**8
 
 # Euler approximation
 y = Euler(
@@ -685,7 +685,7 @@ y = Euler(
         time_steps = M,
         paths = 1000,
         batches = 50,
-        approximations = 4,
+        approximations = 5,
         y0 = 1
         )
 
