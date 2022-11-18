@@ -54,7 +54,7 @@ class Distribution:
 
         # For the time steps of the approximations we compute the parameter
         # t of the heat kernel
-        self.t_pow = 0
+        self.t_pow = 8/11
         self.t_heat = [np.sqrt(1/(k**(self.t_pow))) for k in self.time_steps_array]
         # The following line helps to test for the same function all the time
         #self.t_heat = [np.sqrt(1/(16**self.t_pow)) for k in self.time_steps_array]
@@ -70,11 +70,14 @@ class Distribution:
         self.df_real_solution = self.normal_differences(self.t_real_solution)
         #self.df_dummy = [self.normal_differences(10^(-k)) for k in range(1, 10)]
 
+        #kk = 0
         #for i in self.df:
         #    plt.figure()
-        #    plt.title("df approx")
+        #    #plt.title("dF for fm = ", self.t_heat[kk])
+        #    plt.title("dF")
         #    plt.plot(i)
         #    plt.show()
+            #kk += 1
         #plt.figure()
         #plt.title("df real")
         #plt.plot(self.df_real_solution)
@@ -303,32 +306,32 @@ class Euler:
         self.array_real = self.dist.dist_array_real_solution
         ############# TESTS ##################
         self.y_lim = [-10, 10]
-        for i in self.array_list:
-            plt.figure()
-            plt.title("array approx dist")
+        #for i in self.array_list:
+        #    plt.figure()
+        #    plt.title("array approx dist")
         ### The parameters t and m do not matter, they are kept to work with the generic scheme
-            plt.plot(np.linspace(-self.l, self.l, np.shape(i)[0]),i)
-            plt.ylim(self.y_lim)
-            plt.show()
+        #    plt.plot(np.linspace(-self.l, self.l, np.shape(i)[0]),i)
+        #    plt.ylim(self.y_lim)
+        #    plt.show()
             
-        plt.figure()
-        plt.title("array real dist")
-        plt.plot(np.linspace(-self.l, self.l, np.shape(self.array_real)[0]), self.array_real)
-        plt.ylim(self.y_lim)
-        plt.show()
+        #plt.figure()
+        #plt.title("array real dist")
+        #plt.plot(np.linspace(-self.l, self.l, np.shape(self.array_real)[0]), self.array_real)
+        #plt.ylim(self.y_lim)
+        #plt.show()
         # Print the length of the list of function
         #print("drift list elements = ", len(self.drift_list))
 
         # Plot the different distributional coefficient (depending on step size)
         self.x = np.linspace(-3, 3, 50)
         #
-        for i in self.drift_list:
-            plt.figure()
-            plt.title("function")
+        #for i in self.drift_list:
+        #    plt.figure()
+        #    plt.title("function")
         ### The parameters t and m do not matter, they are kept to work with the generic scheme
-            plt.plot(self.x, i(x = self.x, t = 3, m = 3))
-            plt.ylim(self.y_lim)
-            plt.show()
+        #    plt.plot(self.x, i(x = self.x, t = 3, m = 3))
+        #    plt.ylim(self.y_lim)
+        #    plt.show()
         #^^^^^^^^^^^ TESTS ^^^^^^^^^^^^^^^^^^^
 
     def generate_dt (self, time_steps_dt = None):
@@ -533,14 +536,14 @@ class Euler:
             
             #print("shape real soln = ", np.shape(real_solution_coarse)[0])
             #print("shape appr soln = ", np.shape(soln)[0])
-            plt.figure()
-            plt.title("comparison")
+            #plt.figure()
+            #plt.title("comparison")
             #plt.plot(real_solution_coarse[:,1])
-            plt.plot(np.linspace(0,1,self.time_steps+1),real_solution[:,1])
-            plt.plot(np.linspace(0,1,m+1),soln[:,1])
+            #plt.plot(np.linspace(0,1,self.time_steps+1),real_solution[:,1])
+            #plt.plot(np.linspace(0,1,m+1),soln[:,1])
             #plt.plot(np.linspace(0,1,self.time_steps),real_solution[:,1])
             #plt.plot(np.linspace(0,1,m),soln[:,1])
-            plt.show()
+            #plt.show()
             #^^^^^^^^^^^^ TESTS ^^^^^^^^^^^^^^^^^#
 
             ### Not needed
