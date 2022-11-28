@@ -54,7 +54,7 @@ class Distribution:
 
         # For the time steps of the approximations we compute the parameter
         # t of the heat kernel
-        self.t_pow = 8/11
+        self.t_pow = 1/(2*(self.hurst-1/2)**2 + 2 - self.hurst)
         self.t_heat = [np.sqrt(1/(k**(self.t_pow))) for k in self.time_steps_array]
         # The following line helps to test for the same function all the time
         #self.t_heat = [np.sqrt(1/(16**self.t_pow)) for k in self.time_steps_array]
@@ -584,9 +584,9 @@ class Euler:
 
         error_meanv = np.mean(error, axis=1)
     
-        print("\t\tThe first pair below is for the minimum amount of time steps\n\t\twhile the last is for the maximum")
-        print("upper limit IC: ", np.log2(error_meanv) + error_ic)
-        print("lower limit IC: ", np.log2(error_meanv) - error_ic)
+        #print("\t\tThe first pair below is for the minimum amount of time steps\n\t\twhile the last is for the maximum")
+        #print("upper limit IC: ", np.log2(error_meanv) + error_ic)
+        #print("lower limit IC: ", np.log2(error_meanv) - error_ic)
 
         ### Linear regression to compute rate of convergence
         reg = np.ones(self.approximations)
@@ -659,7 +659,7 @@ class Euler:
 ## Euler scheme for distributional coefficient in C^1/4
 
 st = time.process_time()
-
+################################################################################
 # Time steps
 #### Careful with the time steps, remember that you only define
 #### the array of the dist coeff for so many points,
@@ -671,40 +671,55 @@ M = 2**12
 
 # n(m) = m^(8/3)
 
-# Distributional drift
-beta = 0.25
-h = 1 - beta
-l = 3
-#def_points_bn = M*int(np.ceil(M**(1/3)*2*l))
-def_points_bn = 2**8
+e = 0.00001
+b1 = e
+b12 = 1/64
+b11 = 1/32
+b2 = 1/16
+b3 = 2/16
+b4 = 3/16
+b5 = 5/16 - e
 
-# Euler approximation
-y = Euler(
-        h = h,
-        l = l,
-        bp = def_points_bn,
-        #drift = bn,
-        #diffusion = sigma,
-        time_steps = M,
-        paths = 1000,
-        batches = 50,
-        approximations = 5,
-        y0 = 1
-        )
-
-# Solution
-#y.plot_solution(paths_plot=3, save_plot=False)
-
-# Rate of convergence
-#error, rate = y.rate(show_plot = True, save_plot = False)
-error, ic, error_mean, rate = y.rate(show_plot = True, save_plot = False)
-#print("error array = \n", error)
-#print("IC = \n", ic)
-#print("shape IC = \n", np.shape(ic))
-#print("error array mean = \n", error_mean)
-print("rate =", rate)
-#print("error shape = ", np.shape(error))
-
+import csv
+with open('rates.csv', 'w', newline='') as csvfile:
+    ratewriter = csv.writer(csvfile, delimiter=' ',
+                            quotechar='|', quoting=csv.QUOTE_MINIMAL)
+    for i in range(100):
+        # Distributional drift
+        beta = b5
+        h = 1 - beta
+        l = 3
+        #def_points_bn = M*int(np.ceil(M**(1/3)*2*l))
+        def_points_bn = 2**8
+        
+        # Euler approximation
+        y = Euler(
+                h = h,
+                l = l,
+                bp = def_points_bn,
+                #drift = bn,
+                #diffusion = sigma,
+                time_steps = M,
+                paths = 10000,
+                batches = 50,
+                approximations = 5,
+                y0 = 1
+                )
+        
+        # Solution
+        #y.plot_solution(paths_plot=3, save_plot=False)
+        
+        # Rate of convergence
+        #error, rate = y.rate(show_plot = True, save_plot = False)
+        error, ic, error_mean, rate = y.rate(show_plot = False, save_plot = False)
+        #print("error array = \n", error)
+        #print("IC = \n", ic)
+        #print("shape IC = \n", np.shape(ic))
+        #print("error array mean = \n", error_mean)
+        print("rate =", rate)
+        ratewriter.writerow(rate)
+    #print("error shape = ", np.shape(error))
+    
 ################################################################################
 et = time.process_time()
 print("time: ", et-st)
