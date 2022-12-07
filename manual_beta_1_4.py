@@ -606,7 +606,7 @@ class Euler:
         plt.ylabel("log(error)")
         plt.legend()
         """
-        rate_plot = plt.figure()
+        rate_plot = plt.figure(dpi=500)
         plt.errorbar(
                 x=np.log2(x_axis),
                 y=np.log2(error_meanv),
@@ -621,8 +621,8 @@ class Euler:
                 +str(rate)
                 +"\nProxy of solution: 2^"+str(length_solution)+" time steps"
                 )
-        plt.xlabel("log2(step size)")
-        plt.ylabel("log2(error)")
+        plt.xlabel("\log_2(step size)")
+        plt.ylabel("\log_2(error)")
         plt.legend()
 
         if show_plot == True:
@@ -678,8 +678,9 @@ b11 = 1/32
 b2 = 1/16
 b3 = 2/16
 b4 = 3/16
-b5 = 5/16 - e
+b5 = 4/16 - e
 
+"""
 import csv
 with open('rates.csv', 'w', newline='') as csvfile:
     ratewriter = csv.writer(csvfile, delimiter=' ',
@@ -719,6 +720,39 @@ with open('rates.csv', 'w', newline='') as csvfile:
         print("rate =", rate)
         ratewriter.writerow(rate)
     #print("error shape = ", np.shape(error))
+"""
+# Distributional drift
+beta = b1
+h = 1 - beta
+l = 3
+#def_points_bn = M*int(np.ceil(M**(1/3)*2*l))
+def_points_bn = 2**8
+        
+# Euler approximation
+y = Euler(
+    h = h,
+    l = l,
+    bp = def_points_bn,
+    #drift = bn,
+    #diffusion = sigma,
+    time_steps = M,
+    paths = 10000,
+    batches = 50,
+    approximations = 5,
+    y0 = 1
+    )
+        
+# Solution
+#y.plot_solution(paths_plot=3, save_plot=False)
+        
+# Rate of convergence
+#error, rate = y.rate(show_plot = True, save_plot = False)
+error, ic, error_mean, rate = y.rate(show_plot = False, save_plot = False)
+#print("error array = \n", error)
+#print("IC = \n", ic)
+#print("shape IC = \n", np.shape(ic))
+#print("error array mean = \n", error_mean)
+print("rate =", rate)
     
 ################################################################################
 et = time.process_time()
