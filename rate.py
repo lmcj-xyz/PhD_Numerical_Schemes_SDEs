@@ -62,6 +62,7 @@ plt.xlabel(r"$\beta$")
 plt.ylabel("Rate of convergence")
 plt.plot(range(1, 8), rate_discrete, marker="x", label="Theoretical rate")
 plt.legend()
+plt.grid()
 plt.savefig("empirical_rate_bp.png")
 plt.show()
 #%%
