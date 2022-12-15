@@ -32,8 +32,11 @@ beta5 = 1/16
 beta6 = 1/8
 beta7 = 1/4 - epsilon
 
-mfunct1 = - Abs(x)**(1 - beta1)
-mfunct2 = - Abs(x)**(1 - beta2)
+#mfunct1 = - Abs(x)**(1 - beta1)
+#mfunct2 = - Abs(x)**(1 - beta2)
+
+mfunct1 = - (1 - x)**(1 - beta1)
+mfunct2 = - (1 - x)**(1 - beta2)
 
 plot(mfunct1, xlim=[-10, 10])
 plot(mfunct2, xlim=[-10, 10])

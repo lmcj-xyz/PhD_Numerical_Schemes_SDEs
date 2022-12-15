@@ -39,7 +39,8 @@ class Distribution:
         
         self.length_grid = self.grid.shape[0]
 
-        self.fbm_path = self.fbm()
+        #self.fbm_path = self.fbm()
+        self.fbm_path = np.sign(1 - self.grid)*np.power(np.abs(1 - self.grid), 1-4/16)#*((1-self.grid)/np.abs(1-self.grid))
 
         # To compute the parameter t of the heat kernel
         self.pow_time_steps = int(np.log2(time_steps))
@@ -679,7 +680,6 @@ b2 = 1/16
 b3 = 2/16
 b4 = 3/16
 b5 = 4/16 - e
-
 """
 import csv
 with open('rates.csv', 'w', newline='') as csvfile:
@@ -687,7 +687,7 @@ with open('rates.csv', 'w', newline='') as csvfile:
                             quotechar='|', quoting=csv.QUOTE_MINIMAL)
     for i in range(100):
         # Distributional drift
-        beta = b5
+        beta = b1
         h = 1 - beta
         l = 3
         #def_points_bn = M*int(np.ceil(M**(1/3)*2*l))
@@ -721,8 +721,9 @@ with open('rates.csv', 'w', newline='') as csvfile:
         ratewriter.writerow(rate)
     #print("error shape = ", np.shape(error))
 """
+
 # Distributional drift
-beta = b1
+beta = b2
 h = 1 - beta
 l = 3
 #def_points_bn = M*int(np.ceil(M**(1/3)*2*l))
@@ -753,6 +754,7 @@ error, ic, error_mean, rate = y.rate(show_plot = False, save_plot = False)
 #print("shape IC = \n", np.shape(ic))
 #print("error array mean = \n", error_mean)
 print("rate =", rate)
+
     
 ################################################################################
 et = time.process_time()
