@@ -744,7 +744,7 @@ y = Euler(
     )
         
 # Solution
-#y.plot_solution(paths_plot=3, save_plot=False)
+y.plot_solution(paths_plot=1, save_plot=False)
         
 # Rate of convergence
 #error, rate = y.rate(show_plot = True, save_plot = False)
