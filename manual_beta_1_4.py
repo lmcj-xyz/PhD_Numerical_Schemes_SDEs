@@ -40,7 +40,8 @@ class Distribution:
         self.length_grid = self.grid.shape[0]
 
         #self.fbm_path = self.fbm()
-        self.fbm_path = np.sign(1 - self.grid)*np.power(np.abs(1 - self.grid), 1-4/16)#*((1-self.grid)/np.abs(1-self.grid))
+        self.fbm_path = 0.01*np.sign(1 - self.grid)*np.power(np.abs(1 - self.grid), 1-4/16)#*((1-self.grid)/np.abs(1-self.grid))
+        #self.fbm_path = 0.01*np.sign(1 - self.grid)*np.power(np.abs(1 - self.grid), self.hurst)#*((1-self.grid)/np.abs(1-self.grid))
 
         # To compute the parameter t of the heat kernel
         self.pow_time_steps = int(np.log2(time_steps))
@@ -723,7 +724,7 @@ with open('rates.csv', 'w', newline='') as csvfile:
 """
 
 # Distributional drift
-beta = b2
+beta = b1
 h = 1 - beta
 l = 3
 #def_points_bn = M*int(np.ceil(M**(1/3)*2*l))
@@ -744,7 +745,7 @@ y = Euler(
     )
         
 # Solution
-y.plot_solution(paths_plot=1, save_plot=False)
+y.plot_solution(paths_plot=5, save_plot=False)
         
 # Rate of convergence
 #error, rate = y.rate(show_plot = True, save_plot = False)
