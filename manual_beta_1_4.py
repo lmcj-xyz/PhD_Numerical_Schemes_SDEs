@@ -39,8 +39,8 @@ class Distribution:
         
         self.length_grid = self.grid.shape[0]
 
-        #self.fbm_path = self.fbm()
-        self.fbm_path = 0.01*np.sign(1 - self.grid)*np.power(np.abs(1 - self.grid), 1-4/16)#*((1-self.grid)/np.abs(1-self.grid))
+        self.fbm_path = self.fbm()
+        #self.fbm_path = 0.01*np.sign(1 - self.grid)*np.power(np.abs(1 - self.grid), 1-4/16)#*((1-self.grid)/np.abs(1-self.grid))
         #self.fbm_path = 0.01*np.sign(1 - self.grid)*np.power(np.abs(1 - self.grid), self.hurst)#*((1-self.grid)/np.abs(1-self.grid))
 
         # To compute the parameter t of the heat kernel
@@ -675,20 +675,22 @@ M = 2**12
 
 e = 0.00001
 b1 = e
+b14 = 1/256
+b13 = 1/128
 b12 = 1/64
 b11 = 1/32
 b2 = 1/16
 b3 = 2/16
 b4 = 3/16
 b5 = 4/16 - e
-"""
+
 import csv
 with open('rates.csv', 'w', newline='') as csvfile:
     ratewriter = csv.writer(csvfile, delimiter=' ',
                             quotechar='|', quoting=csv.QUOTE_MINIMAL)
     for i in range(100):
         # Distributional drift
-        beta = b1
+        beta = b14
         h = 1 - beta
         l = 3
         #def_points_bn = M*int(np.ceil(M**(1/3)*2*l))
@@ -760,3 +762,4 @@ print("rate =", rate)
 ################################################################################
 et = time.process_time()
 print("time: ", et-st)
+"""
