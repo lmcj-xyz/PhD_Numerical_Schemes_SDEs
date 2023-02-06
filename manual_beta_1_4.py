@@ -683,6 +683,10 @@ b2 = 1/16
 b3 = 2/16
 b4 = 3/16
 b5 = 4/16 - e
+b51 = 5/16
+b52 = 6/16
+b53 = 7/16
+b6 = 1/2 - e
 
 import csv
 with open('rates.csv', 'w', newline='') as csvfile:
@@ -690,7 +694,7 @@ with open('rates.csv', 'w', newline='') as csvfile:
                             quotechar='|', quoting=csv.QUOTE_MINIMAL)
     for i in range(100):
         # Distributional drift
-        beta = b14
+        beta = b53
         h = 1 - beta
         l = 3
         #def_points_bn = M*int(np.ceil(M**(1/3)*2*l))
