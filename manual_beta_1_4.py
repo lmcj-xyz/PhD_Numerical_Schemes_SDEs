@@ -480,7 +480,11 @@ class Euler:
         # Euler scheme for known SDE given by function b in line 410
         #real_solution = self.solve(time_steps_solve=self.time_steps, drift=self.b)
         #^^^^^^^^^^^^ TESTS ^^^^^^^^^^^^^^^^^#
-
+        
+        # Terminal time solution to compute errors between consecutive approximations
+        terminal_time = np.zeros(shape=(self.approximations, self.paths))
+        
+        
         #length_solution = int(np.log10(np.shape(real_solution)[0]))
         length_solution = int(np.log2(np.shape(real_solution)[0]))
         for i in range(self.approximations):
@@ -570,11 +574,14 @@ class Euler:
             ### Computation of the error for the approximation i for all paths
             ### of the approximation and all paths of the "real solution"
             error[i, :] = np.abs(real_solution[-1, :] - soln[-1, :])
+            terminal_time[i, :] = soln[-1, :]
             x_axis[i] = delta
 
         #print(error)
         #error_ic = np.zeros(shape=(2, self.approximations))
         error_ic = np.zeros(shape=(self.approximations))
+        error_inter_approx = np.zeros(shape=(self.approximations))
+    
         for i in range(self.approximations):
             error_mean = np.mean(error[i, :])
             #error_mean_log = np.log2(error_mean)
@@ -583,9 +590,13 @@ class Euler:
             #error_var = np.var(error[i, :])
             error_sqrt = np.sqrt(error_var/self.paths)
             error_ic[i] = 1.96*error_sqrt
+            if(i == self.approximations-1):
+                error_inter_approx[i] = np.mean(np.abs(real_solution[-1, :] - terminal_time[i]))
+            else:
+                error_inter_approx[i] = np.mean(np.abs(terminal_time[i+1] - terminal_time[i]))
 
         error_meanv = np.mean(error, axis=1)
-    
+        
         #print("\t\tThe first pair below is for the minimum amount of time steps\n\t\twhile the last is for the maximum")
         #print("upper limit IC: ", np.log2(error_meanv) + error_ic)
         #print("lower limit IC: ", np.log2(error_meanv) - error_ic)
@@ -640,7 +651,7 @@ class Euler:
                     '_rate'
                     )
 
-        return error, error_ic, error_mean, rate#, np.log10(error), np.log10(x_axis)
+        return error, error_ic, error_mean, rate, error_inter_approx #, np.log10(error), np.log10(x_axis)
 
     # no modificado para batches
     def plot_solution (self, paths_plot, save_plot = False):
@@ -667,7 +678,7 @@ st = time.process_time()
 #### the array of the dist coeff for so many points,
 #### if you have a very small variance then effectivelly you will have integration
 #### between points that are not defined
-M = 2**12
+M = 2**14
 # Instance of distributional coefficient
 #dist = Distribution(hurst=0.75, limit=5, points=10**2)
 
@@ -682,12 +693,13 @@ b11 = 1/32
 b2 = 1/16
 b3 = 2/16
 b4 = 3/16
-b5 = 4/16 - e
+b5 = 4/16
 b51 = 5/16
 b52 = 6/16
 b53 = 7/16
 b6 = 1/2 - e
 
+"""
 import csv
 with open('rates.csv', 'w', newline='') as csvfile:
     ratewriter = csv.writer(csvfile, delimiter=' ',
@@ -730,7 +742,7 @@ with open('rates.csv', 'w', newline='') as csvfile:
 """
 
 # Distributional drift
-beta = b1
+beta = b6
 h = 1 - beta
 l = 3
 #def_points_bn = M*int(np.ceil(M**(1/3)*2*l))
@@ -746,24 +758,24 @@ y = Euler(
     time_steps = M,
     paths = 10000,
     batches = 50,
-    approximations = 5,
+    approximations = 10,
     y0 = 1
     )
         
 # Solution
-y.plot_solution(paths_plot=5, save_plot=False)
+#y.plot_solution(paths_plot=5, save_plot=False)
         
 # Rate of convergence
 #error, rate = y.rate(show_plot = True, save_plot = False)
-error, ic, error_mean, rate = y.rate(show_plot = False, save_plot = False)
+error, ic, error_mean, rate, inter_error = y.rate(show_plot = False, save_plot = False)
 #print("error array = \n", error)
 #print("IC = \n", ic)
 #print("shape IC = \n", np.shape(ic))
 #print("error array mean = \n", error_mean)
 print("rate =", rate)
+print("rate =", inter_error)
 
     
 ################################################################################
 et = time.process_time()
 print("time: ", et-st)
-"""
