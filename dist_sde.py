@@ -540,16 +540,17 @@ class Euler:
             ### Compared with the approximation with fewer time steps
             ### Just for illustrative purposes
             
-            #print("shape real soln = ", np.shape(real_solution_coarse)[0])
-            #print("shape appr soln = ", np.shape(soln)[0])
-            #plt.figure()
-            #plt.title("comparison")
+            print("terminal time real soln = ", real_solution[-1, 1])
+            print("terminal time appr soln = ", soln[-1, 1])
+            plt.figure()
+            plt.title("comparison")
             #plt.plot(real_solution_coarse[:,1])
-            #plt.plot(np.linspace(0,1,self.time_steps+1),real_solution[:,1])
-            #plt.plot(np.linspace(0,1,m+1),soln[:,1])
+            plt.plot(np.linspace(0,1,self.time_steps+1),real_solution[:,1], label="real solution")
+            plt.plot(np.linspace(0,1,m+1),soln[:,1], label="approximation")
+            plt.legend()
             #plt.plot(np.linspace(0,1,self.time_steps),real_solution[:,1])
             #plt.plot(np.linspace(0,1,m),soln[:,1])
-            #plt.show()
+            plt.show()
             #^^^^^^^^^^^^ TESTS ^^^^^^^^^^^^^^^^^#
 
             ### Not needed
@@ -591,9 +592,9 @@ class Euler:
             error_sqrt = np.sqrt(error_var/self.paths)
             error_ic[i] = 1.96*error_sqrt
             if(i == self.approximations-1):
-                error_inter_approx[i] = np.mean(np.abs(real_solution[-1, :] - terminal_time[i]))
+                error_inter_approx[i] = np.mean(np.abs(real_solution[-1, :] - terminal_time[i, :]),axis=0)
             else:
-                error_inter_approx[i] = np.mean(np.abs(terminal_time[i+1] - terminal_time[i]))
+                error_inter_approx[i] = np.mean(np.abs(terminal_time[i+1, :] - terminal_time[i, :]),axis=0)
 
         error_meanv = np.mean(error, axis=1)
         
@@ -773,7 +774,10 @@ error, ic, error_mean, rate, inter_error = y.rate(show_plot = False, save_plot =
 #print("shape IC = \n", np.shape(ic))
 #print("error array mean = \n", error_mean)
 print("rate =", rate)
-print("rate =", inter_error)
+print("error between approximations =", inter_error)
+plt.figure()
+plt.plot(inter_error)
+plt.show()
 
     
 ################################################################################
