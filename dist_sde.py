@@ -130,7 +130,7 @@ class Distribution:
                 # Limit is half the length of the interval [-limit, limit]
                 # therefore, if delta x is the separation between x
                 # limit/length_grid = (delta x) / 2 is half of it
-                delta = self.limit/self.length_grid
+                delta = self.limit/(self.length_grid-1) # it includes the -1 because the grid has both ends
                 #print([(i - delta <= x)*(x < i + delta) for i in self.grid])
                 # this function must be piecewise linear, not constant
                 return np.piecewise(
@@ -193,17 +193,18 @@ class Distribution:
         #print(type(self.func_real_solution))
 
         ##### Test to see the functions created
-        #x_test = np.linspace(-1, 1, 50)
-        #for i in range(approximations+1):
-        #    plt.figure()
-        #    plt.title("dist function approx 2^%d time steps" % (i+2))
-        #    plt.plot(self.func_list[i](t=1, x=x_test, m=1))
-        #    plt.show()
+        print(len(self.func_list))
+        x_test = np.linspace(-4, 4, 500)
+        for i in range(approximations+1):
+            plt.figure()
+            plt.title("dist function approx 2^%d time steps" % (i+4))
+            plt.plot(x_test, self.func_list[i](t=1, x=x_test, m=1))
+            plt.show()
 
-        #plt.figure()
-        #plt.title("dist function real")
-        #plt.plot(self.func_list[-1](t=1, x=x_test, m=self.t_real_solution))
-        #plt.show()
+        plt.figure()
+        plt.title("dist function real")
+        plt.plot(x_test, self.func_list[-1](t=1, x=x_test, m=self.t_real_solution))
+        plt.show()
 
 ############################### METHODS
 
@@ -342,7 +343,7 @@ class Euler:
         time_start_dt = self.time_start
         time_end_dt = self.time_end
 
-        dt_generated = (time_end_dt - time_start_dt) / time_steps_dt
+        dt_generated = (time_end_dt - time_start_dt) / (time_steps_dt-1)
         return dt_generated
     
     def generate_time_grid (self, time_steps_grid = None):
@@ -540,11 +541,11 @@ class Euler:
             ### Compared with the approximation with fewer time steps
             ### Just for illustrative purposes
             
-            print("terminal time real soln = ", real_solution[-1, 1])
-            print("terminal time appr soln = ", soln[-1, 1])
+            #print("terminal time real soln = ", real_solution[-1, 1])
+            #print("terminal time appr soln = ", soln[-1, 1])
             plt.figure()
             plt.title("comparison")
-            #plt.plot(real_solution_coarse[:,1])
+            ##plt.plot(real_solution_coarse[:,1])
             plt.plot(np.linspace(0,1,self.time_steps+1),real_solution[:,1], label="real solution")
             plt.plot(np.linspace(0,1,m+1),soln[:,1], label="approximation")
             plt.legend()
@@ -576,6 +577,7 @@ class Euler:
             ### of the approximation and all paths of the "real solution"
             error[i, :] = np.abs(real_solution[-1, :] - soln[-1, :])
             terminal_time[i, :] = soln[-1, :]
+            #np.concatenate((terminal_time, real_solution[-1, :]), axis=0)
             x_axis[i] = delta
 
         #print(error)
@@ -583,7 +585,7 @@ class Euler:
         error_ic = np.zeros(shape=(self.approximations))
         error_inter_approx = np.zeros(shape=(self.approximations))
     
-        for i in range(self.approximations):
+        for i in range(self.approximations-1):
             error_mean = np.mean(error[i, :])
             #error_mean_log = np.log2(error_mean)
             error_var = np.sum((error[i,:] - error_mean)**2/self.paths)
@@ -591,6 +593,8 @@ class Euler:
             #error_var = np.var(error[i, :])
             error_sqrt = np.sqrt(error_var/self.paths)
             error_ic[i] = 1.96*error_sqrt
+            
+            #error_inter_approx[i] = np.mean(np.abs(terminal_time[i+1, :] - terminal_time[i, :]),axis=0)
             if(i == self.approximations-1):
                 error_inter_approx[i] = np.mean(np.abs(real_solution[-1, :] - terminal_time[i, :]),axis=0)
             else:
@@ -775,7 +779,7 @@ error, ic, error_mean, rate, inter_error = y.rate(show_plot = False, save_plot =
 #print("error array mean = \n", error_mean)
 print("rate =", rate)
 print("error between approximations =", inter_error)
-plt.figure()
+plt.figure(dpi=500)
 plt.plot(inter_error)
 plt.show()
 

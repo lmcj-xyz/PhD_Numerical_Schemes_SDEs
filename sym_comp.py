@@ -41,3 +41,10 @@ mfunct2 = sign(1-x) * Abs(1 - x)**(1 - beta2)
 plot(mfunct1, xlim=[-10, 10])
 plot(mfunct2, xlim=[-10, 10])
 
+#%%
+b = 1/4
+n = 1/((1/2 - b)**2 + b + 1)
+m = symbols('m')
+M = 20
+bound = 2*M*m**(n/2)
+plot(bound, xlim=[2**4, 2**14])
