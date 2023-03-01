@@ -11,30 +11,10 @@ from numpy.random import default_rng
 rng = default_rng()
 from scipy.integrate import quad_vec
 from scipy.stats import norm
+import time
 
-#%%
-# QOL parameters
-plt.rcParams['figure.dpi'] = 500
-
-#%%
-# Variables to modify for the scheme
-hurst = 0.75
-time_steps_max = 2**10
-time_steps_approx1 = 2**8
-time_steps_approx2 = 2**6
-time_steps_approx3 = 2**9
-
-# Variables to create fBm
-points_x = 2**4
-half_support = 3
-x_grid = np.linspace(
-        start = -half_support,
-        stop = half_support,
-        num = points_x
-        )
-
-#%% 
-# Creation of fBm
+#%% fbm func
+# Fractional Brownian motion (fBm) creation function
 def fbm(hurst, points_x, half_support):
     fbm_grid = np.linspace(
             start = 1/points_x,
@@ -58,25 +38,18 @@ def fbm(hurst, points_x, half_support):
     fbm_arr = np.matmul(cholesky, g)
     fbm_arr = np.concatenate([np.zeros(1),fbm_arr])
     return fbm_arr
-#%%
-# Create an array of fBm
-fbm_array = fbm(hurst, points_x, half_support)
 
-#%%
-# Plot fBm
-fbm_fig = plt.figure('fbm')
-plt.plot(fbm_array)
-plt.show()
 
-#%%
-# Function for heat parameter
+#%% heat parameter func
+# Heat kernel parameter creation based on time steps of the Euler scheme
 def heat_param(time_steps, hurst):
     eta = 1/(2*(hurst-1/2)**2 + 2 - hurst)
     param = np.sqrt(1/(time_steps**(eta)))
     return param
 
-#%%
-# Create function for convolution
+#%% normal differences func
+# Creation of the drift by convoluting fBm with the 
+# derivative of the heat kernel
 def normal_differences(sqrt_heat_parameter):
     diff_norm = np.zeros(shape=points_x)
     delta = half_support/points_x
@@ -87,14 +60,105 @@ def normal_differences(sqrt_heat_parameter):
 
     return diff_norm
 
+#%% drift func
+# Drift coefficient as a piecewise function created out of an array
+def drift_func(x, drift_array, grid, points, delta):
+    return np.piecewise(
+        x, 
+        [(i - delta <= x)*(x < i + delta) for i in grid], 
+        [drift_array[i] for i in range(points)]
+        )
+
+
+#%% coarse noise func
+# Coarse noise
+def coarse_noise(z, time_steps, sample_paths):
+    z_coarse = np.zeros(shape = (time_steps, sample_paths))
+    q = int(np.shape(z)[0] / time_steps)
+    if q == 1:
+        z_coarse = z
+    else:
+        temp = z.reshape(time_steps, q, sample_paths)
+        z_coarse = np.sum(temp, axis=1)
+    return z_coarse
+
+
+#%% sde solver func
+# Euler scheme solver
+def solve(
+        y0, 
+        drift_array, 
+        z, 
+        time_start, 
+        time_end, 
+        time_steps, 
+        sample_paths,
+        grid,
+        points,
+        delta
+        ):
+    y = np.zeros(shape=(time_steps+1, sample_paths))
+    dt = (time_end - time_start)/(time_steps-1)
+    y[0, :] = y0
+    for i in range(time_steps):
+        y[i+1, :] = y[i, :] \
+                + drift_func(
+                        x=y[i, :], 
+                        drift_array=drift_array,
+                        grid=grid,
+                        points=points,
+                        delta=delta
+                        )*dt \
+                    + z[i, :]
+    return y
+
+#%%
+##########
+# Usage of the functions above to solve multiple SDEs
+# and compute convergence rate of approximations
+##########
+
+# QOL parameters
+plt.rcParams['figure.dpi'] = 500
+
+# Variables to modify for the scheme
+epsilon = 10e-6
+beta = 1/16
+hurst = 1 - beta
+time_steps_max = 2**10
+time_steps_approx1 = 2**4
+time_steps_approx2 = 2**5
+time_steps_approx3 = 2**6
+time_steps_approx4 = 2**7
+time_steps_approx5 = 2**8
+
+# Variables to create fBm
+points_x = 2**8
+half_support = 3
+x_grid = np.linspace(start = -half_support, stop = half_support, num = points_x)
+
+# Create an array of fBm
+fbm_array = fbm(hurst, points_x, half_support)
+
+#%%
+##### OPTIONAL #####
+# Plot fBm
+fbm_fig = plt.figure('fbm')
+plt.plot(fbm_array)
+plt.show()
+
 #%%
 # Create a dF
 df_array_real = normal_differences(np.sqrt(heat_param(time_steps_max, hurst)))
 df_array1 = normal_differences(np.sqrt(heat_param(time_steps_approx1, hurst)))
 df_array2 = normal_differences(np.sqrt(heat_param(time_steps_approx2, hurst)))
 df_array3 = normal_differences(np.sqrt(heat_param(time_steps_approx3, hurst)))
+df_array4 = normal_differences(np.sqrt(heat_param(time_steps_approx4, hurst)))
+df_array5 = normal_differences(np.sqrt(heat_param(time_steps_approx5, hurst)))
 
-#%% Plot dF
+#%%
+##### OPTIONAL #####
+# Plot dF
 df_fig = plt.figure('df')
 plt.plot(df_array_real, label="df real solution")
 plt.plot(df_array1, label="df approximation 1")
@@ -109,8 +173,11 @@ drift_array_real = np.convolve(fbm_array, df_array_real, 'same')
 drift_array1 = np.convolve(fbm_array, df_array1, 'same')
 drift_array2 = np.convolve(fbm_array, df_array2, 'same')
 drift_array3 = np.convolve(fbm_array, df_array3, 'same')
+drift_array4 = np.convolve(fbm_array, df_array4, 'same')
+drift_array5 = np.convolve(fbm_array, df_array5, 'same')
 
 #%%
+##### OPTIONAL #####
 # Plot drift
 drift_fig = plt.figure('drift')
 plt.plot(drift_array_real, label="drift real solution")
@@ -121,33 +188,32 @@ plt.legend()
 plt.show()
 
 #%%
-# Define a piecewise function out of the array
+# Distance between points in grid for x
 delta_x = half_support/(points_x-1)
-def drift_func(x, dd):
-    return np.piecewise(
-        x, 
-        [(i - delta_x <= x)*(x < i + delta_x) for i in x_grid], 
-        [dd[i] for i in range(points_x)]
-        )
+
+# Evaluate and plot some drift functions
+support = np.linspace(-half_support, half_support, 2**8)
+
+eval_real = drift_func(support, drift_array_real, x_grid, points_x, delta_x)
+eval1 = drift_func(support, drift_array1, x_grid, points_x, delta_x)
+eval2 = drift_func(support, drift_array2, x_grid, points_x, delta_x)
+eval3 = drift_func(support, drift_array3, x_grid, points_x, delta_x)
+eval4 = drift_func(support, drift_array4, x_grid, points_x, delta_x)
+eval5 = drift_func(support, drift_array5, x_grid, points_x, delta_x)
 
 #%%
-# Evaluate and plot some drift functions
-x2 = np.linspace(-half_support, half_support, 2**8)
-eval_real = drift_func(x2, drift_array_real)
-eval1 = drift_func(x2, drift_array1)
-eval2 = drift_func(x2, drift_array2)
-eval3 = drift_func(x2, drift_array3)
+##### OPTIONAL #####
 drift_func_fig = plt.figure('driftfunc')
-plt.plot(x2, eval_real, label="real solution drift function")
-plt.plot(x2, eval1, label="approximation 1 drift function")
-plt.plot(x2, eval2, label="approximation 2 drift function")
-plt.plot(x2, eval3, label="approximation 3 drift function")
+plt.plot(support, eval_real, label="real solution drift function")
+plt.plot(support, eval1, label="approximation 1 drift function")
+plt.plot(support, eval2, label="approximation 2 drift function")
+plt.plot(support, eval3, label="approximation 3 drift function")
 plt.grid()
 plt.legend()
 plt.show()
 
 #%%
-# Euler scheme
+# Parameter for Euler scheme
 y0 = 1
 sample_paths = 10**1
 time_start = 0
@@ -156,90 +222,94 @@ time_end = 1
 dt_real = (time_end - time_start)/(time_steps_max-1)
 time_grid_real = np.linspace(time_start + dt_real, time_end, time_steps_max)
 time_grid_real0 = np.insert(time_grid_real, 0, 0)
-z_real = rng.normal(
-        loc=0.0,
-        scale=np.sqrt(dt_real),
-        size=(time_steps_max, sample_paths)
-        )
-
-# Make a coarser Z
-def coarse_noise(z, time_steps):
-    z_coarse = np.zeros(shape = (time_steps, sample_paths))
-    q = int(np.shape(z)[0] / time_steps)
-    if q == 1:
-        z_coarse = z
-    else:
-        temp = z.reshape(
-                time_steps, 
-                q,
-                sample_paths
-                )
-        z_coarse = np.sum(temp, axis=1)
-    return z_coarse
+z_real = rng.normal(loc=0.0, scale=np.sqrt(dt_real), size=(time_steps_max, sample_paths))
 
 # Parameters for approximation 1
-dt_approx1 = (time_end - time_start)/(time_steps_approx1-1)
+dt_approx1 = (time_end - time_start)/(time_steps_approx1 - 1)
 time_grid_approx1 = np.linspace(time_start + dt_approx1, time_end, time_steps_approx1)
 time_grid_approx10 = np.insert(time_grid_approx1, 0, 0)
-z_approx1 = coarse_noise(z_real, time_steps_approx1)
+z_approx1 = coarse_noise(z_real, time_steps_approx1, sample_paths)
 
 # Parameters for approximation 2
-dt_approx2 = (time_end - time_start)/(time_steps_approx2-1)
+dt_approx2 = (time_end - time_start)/(time_steps_approx2 - 1)
 time_grid_approx2 = np.linspace(time_start + dt_approx2, time_end, time_steps_approx2)
 time_grid_approx20 = np.insert(time_grid_approx2, 0, 0)
-z_approx2 = coarse_noise(z_real, time_steps_approx2)
+z_approx2 = coarse_noise(z_real, time_steps_approx2, sample_paths)
 
 # Parameters for approximation 3
-dt_approx3 = (time_end - time_start)/(time_steps_approx3-1)
+dt_approx3 = (time_end - time_start)/(time_steps_approx3 - 1)
 time_grid_approx3 = np.linspace(time_start + dt_approx3, time_end, time_steps_approx3)
 time_grid_approx30 = np.insert(time_grid_approx3, 0, 0)
-z_approx3 = coarse_noise(z_real, time_steps_approx3)
+z_approx3 = coarse_noise(z_real, time_steps_approx3, sample_paths)
 
+# Parameters for approximation 4
+dt_approx4 = (time_end - time_start)/(time_steps_approx4 - 1)
+time_grid_approx4 = np.linspace(time_start + dt_approx4, time_end, time_steps_approx4)
+time_grid_approx40 = np.insert(time_grid_approx4, 0, 0)
+z_approx4 = coarse_noise(z_real, time_steps_approx4, sample_paths)
 
-# Euler scheme function
-def solve(y0, drift_array, z, time_steps, sample_paths):
-    y = np.zeros(shape=(time_steps+1, sample_paths))
-    y[0, :] = y0
-    for i in range(time_steps):
-        y[i+1, :] = y[i, :] \
-                + drift_func(
-                        x = y[i, :], 
-                        dd = drift_array
-                        )*dt_real \
-                    + z[i, :]
-    return y
+# Parameters for approximation 5
+dt_approx5 = (time_end - time_start)/(time_steps_approx5 - 1)
+time_grid_approx5 = np.linspace(time_start + dt_approx5, time_end, time_steps_approx5)
+time_grid_approx50 = np.insert(time_grid_approx5, 0, 0)
+z_approx5 = coarse_noise(z_real, time_steps_approx5, sample_paths)
 
 #%%
+##### OPTIONAL #####
+# Visualize coarse noises
+coarse_fig = plt.figure()
+plt.plot(time_grid_approx4, z_approx4[:,0], label="approximation")
+plt.plot(time_grid_real, z_real[:,0], label="real solution")
+plt.legend()
+plt.show()
+
+#%%%
 # Solve an SDE
-real_solution = solve(y0, drift_array1, z_real, time_steps_max, sample_paths)
-approx1 = solve(y0, drift_array1, z_approx1, time_steps_approx1, sample_paths)
-approx2 = solve(y0, drift_array2, z_approx2, time_steps_approx2, sample_paths)
-approx3 = solve(y0, drift_array3, z_approx3, time_steps_approx3, sample_paths)
+st = time.process_time()
+real_solution = solve(y0, drift_array1, z_real, time_start, time_end, time_steps_max, sample_paths, x_grid, points_x, delta_x)
+approx1 = solve(y0, drift_array1, z_approx1, time_start, time_end, time_steps_approx1, sample_paths, x_grid, points_x, delta_x)
+approx2 = solve(y0, drift_array2, z_approx2, time_start, time_end, time_steps_approx2, sample_paths, x_grid, points_x, delta_x)
+approx3 = solve(y0, drift_array3, z_approx3, time_start, time_end, time_steps_approx3, sample_paths, x_grid, points_x, delta_x)
+approx4 = solve(y0, drift_array4, z_approx4, time_start, time_end, time_steps_approx4, sample_paths, x_grid, points_x, delta_x)
+approx5 = solve(y0, drift_array5, z_approx5, time_start, time_end, time_steps_approx5, sample_paths, x_grid, points_x, delta_x)
+et = time.process_time()
+rt = et - st
 
-#%%
+#%% plot SDE
+##### OPTIONAL #####
 # Plot solution to SDE
 emreal_fig = plt.figure('emreal_fig')
-plt.plot(time_grid_real0, real_solution)
+plt.plot(time_grid_real0, real_solution[:, 0:3])
 plt.title("real solution")
 plt.show()
 
 em1_fig = plt.figure('em2_fig')
-plt.plot(time_grid_approx10, approx1)
+plt.plot(time_grid_approx10, approx1[:, 0:3])
 plt.title("approximation 1")
 plt.show()
 
-
 em2_fig = plt.figure('em2_fig')
-plt.plot(time_grid_approx20, approx2)
+plt.plot(time_grid_approx20, approx2[:, 0:3])
 plt.title("approximation 2")
 plt.show()
 
 em3_fig = plt.figure('em3_fig')
-plt.plot(time_grid_approx30, approx3)
+plt.plot(time_grid_approx30, approx3[:, 0:3])
 plt.title("approximation 3")
 plt.show()
 
+em4_fig = plt.figure('em4_fig')
+plt.plot(time_grid_approx40, approx4[:, 0:3])
+plt.title("approximation 4")
+plt.show()
+
+em5_fig = plt.figure('em5_fig')
+plt.plot(time_grid_approx50, approx5[:, 0:3])
+plt.title("approximation 5")
+plt.show()
+
 #%%
+##### OPTIONAL #####
 # Comparing single sample paths of different approximations
 emssp_fig = plt.figure('emssp_fig')
 plt.plot(time_grid_real0, real_solution[:, 0], label="real solution")
@@ -249,6 +319,21 @@ plt.plot(time_grid_approx30, approx3[:, 0], label="approximation 3")
 plt.title("single sample path comparison")
 plt.legend()
 plt.show()
+#%%
+# Computation of errors at terminal time
+error = np.zeros(shape=(5, sample_paths))
+error[0, :] = np.abs(real_solution[-1, :] - approx1[-1, :])
+error[1, :] = np.abs(real_solution[-1, :] - approx2[-1, :])
+error[2, :] = np.abs(real_solution[-1, :] - approx3[-1, :])
+error[3, :] = np.abs(real_solution[-1, :] - approx4[-1, :])
+error[4, :] = np.abs(real_solution[-1, :] - approx5[-1, :])
+
+strong_error = np.mean(error, axis=1)
+
+rate_fig = plt.figure('rate_fig')
+plt.semilogy(strong_error, marker='o')
+plt.show()
+
 
 
 
