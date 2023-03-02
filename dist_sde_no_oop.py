@@ -123,7 +123,7 @@ plt.rcParams['figure.dpi'] = 500
 
 # Variables to modify for the scheme
 epsilon = 10e-6
-beta = 1/16
+beta = 1/2
 hurst = 1 - beta
 time_steps_max = 2**10
 time_steps_approx1 = 2**4
@@ -176,6 +176,7 @@ drift_array3 = np.convolve(fbm_array, df_array3, 'same')
 drift_array4 = np.convolve(fbm_array, df_array4, 'same')
 drift_array5 = np.convolve(fbm_array, df_array5, 'same')
 
+
 #%%
 ##### OPTIONAL #####
 # Plot drift
@@ -192,7 +193,7 @@ plt.show()
 delta_x = half_support/(points_x-1)
 
 # Evaluate and plot some drift functions
-support = np.linspace(-half_support, half_support, 2**8)
+support = np.linspace(-half_support, half_support, points_x)
 
 eval_real = drift_func(support, drift_array_real, x_grid, points_x, delta_x)
 eval1 = drift_func(support, drift_array1, x_grid, points_x, delta_x)
@@ -210,6 +211,31 @@ plt.plot(support, eval2, label="approximation 2 drift function")
 plt.plot(support, eval3, label="approximation 3 drift function")
 plt.grid()
 plt.legend()
+plt.show()
+
+#%%
+# Convolute deterministic functions with dF and plot for testing purposes
+# Create a deterministic function for testing
+square = x_grid**2
+cube = x_grid**3
+sine = np.sin(x_grid)
+# Create dF, you can change ts to see different parameters of the heat kernel
+ts = 2**10
+df_array_det = normal_differences(np.sqrt(heat_param(ts, hurst)))
+# Convolute
+square_conv = np.convolve(square, df_array_det, 'same')
+cube_conv = np.convolve(cube, df_array_det, 'same')
+sine_conv = np.convolve(sine, df_array_det, 'same')
+# Plot; comment out whatever
+det_fig = plt.figure('det_fig')
+plt.plot(support, square_conv, label="derivative of square: linear")
+plt.plot(support, support, label="linear function")
+plt.plot(support, cube_conv, label="derivative of cube: square")
+plt.plot(support, support**2, label="square function")
+plt.plot(support, sine_conv, label="derivative of sin: cos")
+plt.plot(support, np.cos(support), label="cos function")
+plt.legend()
+plt.ylim([-5, 5])
 plt.show()
 
 #%%
@@ -321,14 +347,14 @@ plt.legend()
 plt.show()
 #%%
 # Computation of errors at terminal time
-error = np.zeros(shape=(5, sample_paths))
-error[0, :] = np.abs(real_solution[-1, :] - approx1[-1, :])
-error[1, :] = np.abs(real_solution[-1, :] - approx2[-1, :])
-error[2, :] = np.abs(real_solution[-1, :] - approx3[-1, :])
-error[3, :] = np.abs(real_solution[-1, :] - approx4[-1, :])
-error[4, :] = np.abs(real_solution[-1, :] - approx5[-1, :])
+pathwise_error = np.zeros(shape=(5, sample_paths))
+pathwise_error[0, :] = np.abs(real_solution[-1, :] - approx1[-1, :])
+pathwise_error[1, :] = np.abs(real_solution[-1, :] - approx2[-1, :])
+pathwise_error[2, :] = np.abs(real_solution[-1, :] - approx3[-1, :])
+pathwise_error[3, :] = np.abs(real_solution[-1, :] - approx4[-1, :])
+pathwise_error[4, :] = np.abs(real_solution[-1, :] - approx5[-1, :])
 
-strong_error = np.mean(error, axis=1)
+strong_error = np.mean(pathwise_error, axis=1)
 
 rate_fig = plt.figure('rate_fig')
 plt.semilogy(strong_error, marker='o')

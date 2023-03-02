@@ -193,18 +193,18 @@ class Distribution:
         #print(type(self.func_real_solution))
 
         ##### Test to see the functions created
-        print(len(self.func_list))
-        x_test = np.linspace(-4, 4, 500)
-        for i in range(approximations+1):
-            plt.figure()
-            plt.title("dist function approx 2^%d time steps" % (i+4))
-            plt.plot(x_test, self.func_list[i](t=1, x=x_test, m=1))
-            plt.show()
+        #print(len(self.func_list))
+        #x_test = np.linspace(-4, 4, 500)
+        #for i in range(approximations+1):
+        #    plt.figure()
+        #    plt.title("dist function approx 2^%d time steps" % (i+4))
+        #    plt.plot(x_test, self.func_list[i](t=1, x=x_test, m=1))
+        #    plt.show()
 
-        plt.figure()
-        plt.title("dist function real")
-        plt.plot(x_test, self.func_list[-1](t=1, x=x_test, m=self.t_real_solution))
-        plt.show()
+        #plt.figure()
+        #plt.title("dist function real")
+        #plt.plot(x_test, self.func_list[-1](t=1, x=x_test, m=self.t_real_solution))
+        #plt.show()
 
 ############################### METHODS
 
