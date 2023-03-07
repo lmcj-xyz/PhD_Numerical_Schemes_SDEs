@@ -26,7 +26,7 @@ plt.rcParams['figure.dpi'] = 500
 
 # Variables to modify for the scheme
 epsilon = 10e-6
-beta = 1/2
+beta = 1/4
 hurst = 1 - beta
 time_steps_max = 2**10
 time_steps_approx1 = 2**4
@@ -50,7 +50,7 @@ fbm_array = fbm(hurst, points_x, half_support)
 
 # Parameter for Euler scheme
 y0 = 1
-sample_paths = 10**2
+sample_paths = 10**5
 time_start = 0
 time_end = 1
 
@@ -177,5 +177,60 @@ consecutive_error_fig = plt.figure('consecutive_error_fig')
 plt.title("error between consecutive approximations")
 plt.semilogy(consecutive_strong_error, marker='o')
 plt.show()
+
+#%%
+path = 9
+plt.figure('paths')
+plt.plot(t0_real, real_solution[:,path])
+plt.plot(t0_a1,         approx1[:,path])
+plt.plot(t0_a2,         approx2[:,path])
+plt.plot(t0_a3,         approx3[:,path])
+plt.plot(t0_a4,         approx4[:,path])
+plt.plot(t0_a5,         approx5[:,path])
+plt.show()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
