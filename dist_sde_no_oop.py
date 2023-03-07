@@ -55,7 +55,11 @@ def normal_differences(sqrt_heat_parameter, points_x, x_grid, half_support):
     delta = half_support/points_x
     const = -1/sqrt_heat_parameter**2
 
-    p = lambda u: const*(x_grid + u)*norm.pdf(x_grid+u, loc=0, scale=sqrt_heat_parameter)
+    p = lambda u: const*(x_grid + u)*norm.pdf(
+        x_grid+u,
+        loc=0,
+        scale=sqrt_heat_parameter
+        )
     diff_norm = quad_vec(p, -delta, delta)[0]
 
     return diff_norm

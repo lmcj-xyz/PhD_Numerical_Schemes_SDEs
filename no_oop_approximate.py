@@ -5,7 +5,6 @@ Created on Mon Mar  6 14:15:08 2023
 @author: mmlmcj
 """
 
-
 import numpy as np
 import matplotlib.pyplot as plt
 from numpy.random import default_rng
@@ -40,7 +39,11 @@ time_steps_approx5 = 2**8
 points_x = 2**8
 half_support = 3
 delta_x = half_support/(points_x-1)
-x_grid = np.linspace(start = -half_support, stop = half_support, num = points_x)
+x_grid = np.linspace(
+    start = -half_support,
+    stop = half_support, 
+    num = points_x
+    )
 
 # Create an array of fBm
 fbm_array = fbm(hurst, points_x, half_support)
@@ -53,7 +56,11 @@ time_end = 1
 
 # Parameters for real solution
 delta_t = (time_end - time_start)/(time_steps_max-1)
-z = rng.normal(loc=0.0, scale=np.sqrt(delta_t), size=(time_steps_max, sample_paths))
+z = rng.normal(
+    loc=0.0,
+    scale=np.sqrt(delta_t),
+    size=(time_steps_max, sample_paths)
+    )
 
 # Computation of approximations with function approximate
 real_solution, t_real, t0_real = approximate(

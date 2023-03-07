@@ -40,7 +40,9 @@ time_steps_approx5 = 2**8
 points_x = 2**8
 half_support = 3
 delta_x = half_support/(points_x-1)
-x_grid = np.linspace(start = -half_support, stop = half_support, num = points_x)
+x_grid = np.linspace(
+    start = -half_support, stop = half_support, num = points_x
+    )
 
 # Create an array of fBm
 fbm_array = fbm(hurst, points_x, half_support)
@@ -54,12 +56,25 @@ plt.show()
 
 #%%
 # Create a dF
-df_array_real = normal_differences(np.sqrt(heat_param(time_steps_max, hurst)), points_x, x_grid, half_support)
-df_array1 = normal_differences(np.sqrt(heat_param(time_steps_approx1, hurst)), points_x, x_grid, half_support)
-df_array2 = normal_differences(np.sqrt(heat_param(time_steps_approx2, hurst)), points_x, x_grid, half_support)
-df_array3 = normal_differences(np.sqrt(heat_param(time_steps_approx3, hurst)), points_x, x_grid, half_support)
-df_array4 = normal_differences(np.sqrt(heat_param(time_steps_approx4, hurst)), points_x, x_grid, half_support)
-df_array5 = normal_differences(np.sqrt(heat_param(time_steps_approx5, hurst)), points_x, x_grid, half_support)
+df_array_real = normal_differences(
+    np.sqrt(heat_param(time_steps_max, hurst)),
+    points_x, x_grid, half_support
+    )
+df_array1 = normal_differences(
+    np.sqrt(heat_param(time_steps_approx1, hurst)), 
+    points_x, x_grid, half_support)
+df_array2 = normal_differences(
+    np.sqrt(heat_param(time_steps_approx2, hurst)),
+    points_x, x_grid, half_support)
+df_array3 = normal_differences(
+    np.sqrt(heat_param(time_steps_approx3, hurst)),
+    points_x, x_grid, half_support)
+df_array4 = normal_differences(
+    np.sqrt(heat_param(time_steps_approx4, hurst)),
+    points_x, x_grid, half_support)
+df_array5 = normal_differences(
+    np.sqrt(heat_param(time_steps_approx5, hurst)),
+    points_x, x_grid, half_support)
 
 #%%
 ##### OPTIONAL #####
@@ -126,7 +141,9 @@ cube = x_grid**3
 sine = np.sin(x_grid)
 # Create dF, you can change ts to see different parameters of the heat kernel
 ts = 2**10
-df_array_det = normal_differences(np.sqrt(heat_param(ts, hurst)), points_x, x_grid, half_support)
+df_array_det = normal_differences(
+    np.sqrt(heat_param(ts, hurst)), points_x, x_grid, half_support
+    )
 # Convolute
 square_conv = np.convolve(square, df_array_det, 'same')
 cube_conv = np.convolve(cube, df_array_det, 'same')
@@ -155,35 +172,46 @@ time_end = 1
 dt_real = (time_end - time_start)/(time_steps_max-1)
 time_grid_real = np.linspace(time_start + dt_real, time_end, time_steps_max)
 time_grid_real0 = np.insert(time_grid_real, 0, 0)
-z_real = rng.normal(loc=0.0, scale=np.sqrt(dt_real), size=(time_steps_max, sample_paths))
+z_real = rng.normal(
+    loc=0.0, scale=np.sqrt(dt_real), size=(time_steps_max, sample_paths))
 
 # Parameters for approximation 1
 dt_approx1 = (time_end - time_start)/(time_steps_approx1 - 1)
-time_grid_approx1 = np.linspace(time_start + dt_approx1, time_end, time_steps_approx1)
+time_grid_approx1 = np.linspace(
+    time_start + dt_approx1, time_end, time_steps_approx1
+    )
 time_grid_approx10 = np.insert(time_grid_approx1, 0, 0)
 z_approx1 = coarse_noise(z_real, time_steps_approx1, sample_paths)
 
 # Parameters for approximation 2
 dt_approx2 = (time_end - time_start)/(time_steps_approx2 - 1)
-time_grid_approx2 = np.linspace(time_start + dt_approx2, time_end, time_steps_approx2)
+time_grid_approx2 = np.linspace(
+    time_start + dt_approx2, time_end, time_steps_approx2
+    )
 time_grid_approx20 = np.insert(time_grid_approx2, 0, 0)
 z_approx2 = coarse_noise(z_real, time_steps_approx2, sample_paths)
 
 # Parameters for approximation 3
 dt_approx3 = (time_end - time_start)/(time_steps_approx3 - 1)
-time_grid_approx3 = np.linspace(time_start + dt_approx3, time_end, time_steps_approx3)
+time_grid_approx3 = np.linspace(
+    time_start + dt_approx3, time_end, time_steps_approx3
+    )
 time_grid_approx30 = np.insert(time_grid_approx3, 0, 0)
 z_approx3 = coarse_noise(z_real, time_steps_approx3, sample_paths)
 
 # Parameters for approximation 4
 dt_approx4 = (time_end - time_start)/(time_steps_approx4 - 1)
-time_grid_approx4 = np.linspace(time_start + dt_approx4, time_end, time_steps_approx4)
+time_grid_approx4 = np.linspace(
+    time_start + dt_approx4, time_end, time_steps_approx4
+    )
 time_grid_approx40 = np.insert(time_grid_approx4, 0, 0)
 z_approx4 = coarse_noise(z_real, time_steps_approx4, sample_paths)
 
 # Parameters for approximation 5
 dt_approx5 = (time_end - time_start)/(time_steps_approx5 - 1)
-time_grid_approx5 = np.linspace(time_start + dt_approx5, time_end, time_steps_approx5)
+time_grid_approx5 = np.linspace(
+    time_start + dt_approx5, time_end, time_steps_approx5
+    )
 time_grid_approx50 = np.insert(time_grid_approx5, 0, 0)
 z_approx5 = coarse_noise(z_real, time_steps_approx5, sample_paths)
 
@@ -199,12 +227,78 @@ plt.show()
 #%%%
 # Solve an SDE
 st = time.process_time()
-real_solution = solve(y0, drift_array1, z_real, time_start, time_end, time_steps_max, sample_paths, x_grid, points_x, delta_x)
-approx1 = solve(y0, drift_array1, z_approx1, time_start, time_end, time_steps_approx1, sample_paths, x_grid, points_x, delta_x)
-approx2 = solve(y0, drift_array2, z_approx2, time_start, time_end, time_steps_approx2, sample_paths, x_grid, points_x, delta_x)
-approx3 = solve(y0, drift_array3, z_approx3, time_start, time_end, time_steps_approx3, sample_paths, x_grid, points_x, delta_x)
-approx4 = solve(y0, drift_array4, z_approx4, time_start, time_end, time_steps_approx4, sample_paths, x_grid, points_x, delta_x)
-approx5 = solve(y0, drift_array5, z_approx5, time_start, time_end, time_steps_approx5, sample_paths, x_grid, points_x, delta_x)
+real_solution = solve(
+    y0,
+    drift_array1,
+    z_real,
+    time_start,
+    time_end,
+    time_steps_max,
+    sample_paths,
+    x_grid,
+    points_x,
+    delta_x
+    )
+approx1 = solve(
+    y0, 
+    drift_array1,
+    z_approx1,
+    time_start,
+    time_end,
+    time_steps_approx1,
+    sample_paths,
+    x_grid,
+    points_x,
+    delta_x
+    )
+approx2 = solve(
+    y0,
+    drift_array2,
+    z_approx2,
+    time_start,
+    time_end,
+    time_steps_approx2,
+    sample_paths,
+    x_grid,
+    points_x,
+    delta_x
+    )
+approx3 = solve(
+    y0,
+    drift_array3,
+    z_approx3,
+    time_start,
+    time_end,
+    time_steps_approx3,
+    sample_paths,
+    x_grid,
+    points_x,
+    delta_x
+    )
+approx4 = solve(
+    y0,
+    drift_array4,
+    z_approx4,
+    time_start,
+    time_end,
+    time_steps_approx4,
+    sample_paths,
+    x_grid,
+    points_x,
+    delta_x
+    )
+approx5 = solve(
+    y0,
+    drift_array5,
+    z_approx5,
+    time_start,
+    time_end,
+    time_steps_approx5,
+    sample_paths,
+    x_grid,
+    points_x,
+    delta_x
+    )
 et = time.process_time()
 rt = et - st
 
