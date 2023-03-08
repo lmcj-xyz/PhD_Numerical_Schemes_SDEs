@@ -3,6 +3,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 from scipy.stats import norm
 
+plt.rcParams['figure.dpi'] = 500
+
 # Time steps
 M = 2**8
 
