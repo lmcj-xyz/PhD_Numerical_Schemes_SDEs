@@ -10,7 +10,9 @@ import numpy as np
 from numpy.random import default_rng
 import matplotlib.pyplot as plt
 seed = 123456
-rng = default_rng(seed)
+rng = default_rng()
+plt.rcParams['figure.dpi'] = 500
+
 
 #%% Functions
 def mu_func(x):
@@ -74,6 +76,11 @@ tsp4 = 2**8
 
 # Solutions
 time, dt, solution = euler(mu_func, sigma_func, z, y0, sp, ts, te, t_steps)
+bm = np.cumsum(z, axis=0)
+rsolution = np.zeros(shape=(t_steps+1, sp))
+rsolution[0, :] = y0
+for i in range(t_steps):
+    rsolution[i+1, :] = y0*np.exp((2.5 - 0.5*0.5**2)*time[i+1] + 0.5*bm[i])
 ta1, dt1, approx1 = euler(mu_func, sigma_func, z, y0, sp, ts, te, tsp1)
 ta2, dt2, approx2 = euler(mu_func, sigma_func, z, y0, sp, ts, te, tsp2)
 ta3, dt3, approx3 = euler(mu_func, sigma_func, z, y0, sp, ts, te, tsp3)
@@ -82,7 +89,7 @@ ta4, dt4, approx4 = euler(mu_func, sigma_func, z, y0, sp, ts, te, tsp4)
 #%% Plots of a single path
 path = 0
 plt.figure('Single sample path')
-plt.plot(time,  solution[:, path], label="Real solution")
+plt.plot(time,  rsolution[:, path], label="Real solution")
 plt.plot(ta1,    approx1[:, path], label="Approximation 1")
 plt.plot(ta2,    approx2[:, path], label="Approximation 2")
 plt.plot(ta3,    approx3[:, path], label="Approximation 3")
@@ -92,10 +99,10 @@ plt.show()
 
 #%% Rate of convergence
 pathwise_error = np.zeros(shape=(4, sp))
-pathwise_error[0,:] = np.abs(solution[-1, :] - approx1[-1, :])
-pathwise_error[1,:] = np.abs(solution[-1, :] - approx2[-1, :])
-pathwise_error[2,:] = np.abs(solution[-1, :] - approx3[-1, :])
-pathwise_error[3,:] = np.abs(solution[-1, :] - approx4[-1, :])
+pathwise_error[0,:] = np.abs(rsolution[-1, :] - approx1[-1, :])
+pathwise_error[1,:] = np.abs(rsolution[-1, :] - approx2[-1, :])
+pathwise_error[2,:] = np.abs(rsolution[-1, :] - approx3[-1, :])
+pathwise_error[3,:] = np.abs(rsolution[-1, :] - approx4[-1, :])
 
 strong_error = np.zeros(4)
 strong_error[0] = np.mean(pathwise_error[0, :])
@@ -107,11 +114,26 @@ strong_error[3] = np.mean(pathwise_error[3, :])
 reg = np.ones(4)
 x_axis = np.array([dt1, dt2, dt3, dt4])
 A = np.vstack([x_axis, reg]).T
-y_reg = np.log2(strong_error[:, np.newaxis])
+y_reg = strong_error[:, np.newaxis]
 rate, intersection = np.linalg.lstsq(A, y_reg, rcond=None)[0]
 
+#%%
 plt.figure('Rate of convergence')
-plt.semilogy(x_axis, strong_error)
+plt.loglog(x_axis, strong_error)
+plt.loglog(x_axis, intersection+x_axis*rate)
+plt.show()
+
+#%% Error between consecutive approximations
+pw_error_consecutive = np.zeros(shape=(3, sp))
+pw_error_consecutive[0, :] = np.abs(approx2[-1, :] - approx1[-1, :])
+pw_error_consecutive[1, :] = np.abs(approx3[-1, :] - approx2[-1, :])
+pw_error_consecutive[2, :] = np.abs(approx4[-1, :] - approx3[-1, :])
+
+consecutive_strong_error = np.mean(pw_error_consecutive, axis=1)
+
+consecutive_error_fig = plt.figure('consecutive_error_fig')
+plt.title("error between consecutive approximations")
+plt.semilogy(consecutive_strong_error, marker='o')
 plt.show()
 
 
