@@ -36,7 +36,7 @@ def fbm(hurst, points_x, half_support):
     g = rng.standard_normal(size=points_x)
     cholesky = np.linalg.cholesky(a=covariance)
     fbm_arr = np.matmul(cholesky, g)
-    fbm_arr = np.concatenate([np.zeros(1),fbm_arr])
+    #fbm_arr = np.concatenate([np.zeros(1),fbm_arr])
     return fbm_arr
 
 

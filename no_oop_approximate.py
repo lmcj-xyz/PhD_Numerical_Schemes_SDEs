@@ -15,7 +15,7 @@ import time
 
 from dist_sde_no_oop import *
 
-#%%
+#%% euler scheme
 ##########
 # Usage of the functions above to solve multiple SDEs
 # and compute convergence rate of approximations
@@ -26,7 +26,7 @@ plt.rcParams['figure.dpi'] = 500
 
 # Variables to modify for the scheme
 epsilon = 10e-6
-beta = 1/4
+beta = 1/2 - epsilon
 hurst = 1 - beta
 time_steps_max = 2**10
 time_steps_approx1 = 2**4
@@ -147,7 +147,7 @@ approx5, t_a5, t0_a5 = approximate(
     delta_x=delta_x,
     half_support=half_support)
 
-#%%
+#%% strong error
 # Computation of errors at terminal time
 pathwise_error = np.zeros(shape=(5, sample_paths))
 pathwise_error[0, :] = np.abs(real_solution[-1, :] - approx1[-1, :])
@@ -158,12 +158,8 @@ pathwise_error[4, :] = np.abs(real_solution[-1, :] - approx5[-1, :])
 
 strong_error = np.mean(pathwise_error, axis=1)
 
-rate_fig = plt.figure('rate_fig')
-plt.title("strong error")
-plt.semilogy(strong_error, marker='o')
-plt.show()
 
-#%%
+#%% consecutive error
 # Errors between consecutive approximations
 pw_error_consecutive = np.zeros(shape=(4, sample_paths))
 pw_error_consecutive[0, :] = np.abs(approx2[-1, :] - approx1[-1, :])
@@ -173,12 +169,30 @@ pw_error_consecutive[3, :] = np.abs(approx5[-1, :] - approx4[-1, :])
 
 consecutive_strong_error = np.mean(pw_error_consecutive, axis=1)
 
-consecutive_error_fig = plt.figure('consecutive_error_fig')
-plt.title("error between consecutive approximations")
-plt.semilogy(consecutive_strong_error, marker='o')
+#%%
+# Several plots
+
+#%% strong error plot
+rate_fig = plt.figure('rate_fig')
+plt.title("strong error")
+plt.semilogy(strong_error, marker='o')
 plt.show()
 
-#%%
+#%% consecutive error plot
+consecutive_error_fig = plt.figure('consecutive_error_fig')
+plt.title("error between consecutive approximations")
+plt.semilogy(strong_error, marker='o')
+plt.show()
+
+#%% both errors plot
+both_error_fig = plt.figure('both_error_fig')
+plt.title("errors")
+plt.semilogy(strong_error, marker='o', label='strong error')
+plt.semilogy([0.5, 1.5, 2.5, 3.5],consecutive_strong_error, marker='o', label='error between consecutive approximations')
+plt.legend()
+plt.show()
+
+#%% one sample path
 path = 9
 plt.figure('paths')
 plt.plot(t0_real, real_solution[:,path])
