@@ -4,16 +4,20 @@ Created on Mon Mar  6 14:15:08 2023
 
 @author: mmlmcj
 """
-
+#%%
 import numpy as np
 import matplotlib.pyplot as plt
 from numpy.random import default_rng
 rng = default_rng()
 from scipy.integrate import quad_vec
-from scipy.stats import norm
+from scipy.stats import norm, linregress
 import time
 
 from dist_sde_no_oop import *
+
+# QOL parameters
+plt.rcParams['figure.dpi'] = 500
+
 
 #%% euler scheme
 ##########
@@ -21,14 +25,11 @@ from dist_sde_no_oop import *
 # and compute convergence rate of approximations
 ##########
 
-# QOL parameters
-plt.rcParams['figure.dpi'] = 500
-
 # Variables to modify for the scheme
 epsilon = 10e-6
-beta = 1/2 - epsilon
+beta = epsilon
 hurst = 1 - beta
-time_steps_max = 2**10
+time_steps_max = 2**12
 time_steps_approx1 = 2**4
 time_steps_approx2 = 2**5
 time_steps_approx3 = 2**6
@@ -36,8 +37,8 @@ time_steps_approx4 = 2**7
 time_steps_approx5 = 2**8
 
 # Variables to create fBm
-points_x = 2**8
-half_support = 3
+points_x = 2**10
+half_support = 10
 delta_x = half_support/(points_x-1)
 x_grid = np.linspace(
     start = -half_support,
@@ -50,7 +51,7 @@ fbm_array = fbm(hurst, points_x, half_support)
 
 # Parameter for Euler scheme
 y0 = 1
-sample_paths = 10**5
+sample_paths = 10**4
 time_start = 0
 time_end = 1
 
@@ -63,7 +64,7 @@ z = rng.normal(
     )
 
 # Computation of approximations with function approximate
-real_solution, t_real, t0_real = approximate(
+real_solution, t_real, t0_real, drift_real = approximate(
     fbm=fbm_array, 
     time_steps=time_steps_max, 
     hurst=hurst, 
@@ -77,7 +78,7 @@ real_solution, t_real, t0_real = approximate(
     delta_x=delta_x,
     half_support=half_support)
 
-approx1, t_a1, t0_a1 = approximate(
+approx1, t_a1, t0_a1, drift1 = approximate(
     fbm=fbm_array, 
     time_steps=time_steps_approx1, 
     hurst=hurst, 
@@ -91,7 +92,7 @@ approx1, t_a1, t0_a1 = approximate(
     delta_x=delta_x,
     half_support=half_support)
 
-approx2, t_a2, t0_a2 = approximate(
+approx2, t_a2, t0_a2, drift2 = approximate(
     fbm=fbm_array, 
     time_steps=time_steps_approx2, 
     hurst=hurst, 
@@ -105,7 +106,7 @@ approx2, t_a2, t0_a2 = approximate(
     delta_x=delta_x,
     half_support=half_support)
 
-approx3, t_a3, t0_a3 = approximate(
+approx3, t_a3, t0_a3, drift3 = approximate(
     fbm=fbm_array, 
     time_steps=time_steps_approx3, 
     hurst=hurst, 
@@ -119,7 +120,7 @@ approx3, t_a3, t0_a3 = approximate(
     delta_x=delta_x,
     half_support=half_support)
 
-approx4, t_a4, t0_a4 = approximate(
+approx4, t_a4, t0_a4, drift4 = approximate(
     fbm=fbm_array, 
     time_steps=time_steps_approx4, 
     hurst=hurst, 
@@ -133,7 +134,7 @@ approx4, t_a4, t0_a4 = approximate(
     delta_x=delta_x,
     half_support=half_support)
 
-approx5, t_a5, t0_a5 = approximate(
+approx5, t_a5, t0_a5, drift5 = approximate(
     fbm=fbm_array, 
     time_steps=time_steps_approx5, 
     hurst=hurst, 
@@ -159,7 +160,7 @@ pathwise_error[4, :] = np.abs(real_solution[-1, :] - approx5[-1, :])
 strong_error = np.mean(pathwise_error, axis=1)
 
 
-#%% consecutive error
+#%% consecutive strong error
 # Errors between consecutive approximations
 pw_error_consecutive = np.zeros(shape=(4, sample_paths))
 pw_error_consecutive[0, :] = np.abs(approx2[-1, :] - approx1[-1, :])
@@ -168,6 +169,31 @@ pw_error_consecutive[2, :] = np.abs(approx4[-1, :] - approx3[-1, :])
 pw_error_consecutive[3, :] = np.abs(approx5[-1, :] - approx4[-1, :])
 
 consecutive_strong_error = np.mean(pw_error_consecutive, axis=1)
+
+#%% consecutive weak error
+# Errors between consecutive approximations
+pw_error_consecutive_bias = np.zeros(shape=(4, sample_paths))
+pw_error_consecutive_bias[0, :] = approx2[-1, :] - approx1[-1, :]
+pw_error_consecutive_bias[1, :] = approx3[-1, :] - approx2[-1, :]
+pw_error_consecutive_bias[2, :] = approx4[-1, :] - approx3[-1, :]
+pw_error_consecutive_bias[3, :] = approx5[-1, :] - approx4[-1, :]
+
+consecutive_weak_error = np.mean(pw_error_consecutive_bias, axis=1)
+
+#%% rate of convergence
+deltas = [(time_end - time_start)/time_steps_approx1,
+          (time_end - time_start)/time_steps_approx2,
+          (time_end - time_start)/time_steps_approx3,
+          (time_end - time_start)/time_steps_approx4,
+          (time_end - time_start)/time_steps_approx5] 
+
+log_strong_error = np.log10(strong_error)
+log_deltas = np.log10(deltas)
+
+reg = linregress(log_deltas, log_strong_error)
+rate = reg.slope
+intersection = reg.intercept
+print(rate)
 
 #%%
 # Several plots
@@ -186,11 +212,13 @@ plt.show()
 
 #%% both errors plot
 both_error_fig = plt.figure('both_error_fig')
-plt.title("errors")
+plt.title("errors for beta=%.5f \n rate = %f" % (beta, rate))
 plt.semilogy(strong_error, marker='o', label='strong error')
 plt.semilogy([0.5, 1.5, 2.5, 3.5],consecutive_strong_error, marker='o', label='error between consecutive approximations')
+plt.semilogy([0.5, 1.5, 2.5, 3.5],np.abs(consecutive_weak_error), marker='o', label='bias between consecutive approximations')
 plt.legend()
 plt.show()
+
 
 #%% one sample path
 path = 9

@@ -4,7 +4,7 @@ Created on Tue Feb 28 14:09:33 2023
 
 @author: mmlmcj
 """
-#%%
+#%% libraries
 import numpy as np
 import matplotlib.pyplot as plt
 from numpy.random import default_rng
@@ -44,7 +44,8 @@ def fbm(hurst, points_x, half_support):
 # Heat kernel parameter creation based on time steps of the Euler scheme
 def heat_param(time_steps, hurst):
     eta = 1/(2*(hurst-1/2)**2 + 2 - hurst)
-    param = np.sqrt(1/(time_steps**(eta)))
+    #param = np.sqrt(1/(time_steps**(eta)))
+    param = 1/(time_steps**(eta))
     return param
 
 #%% normal differences func
@@ -154,4 +155,4 @@ def approximate(
         points_x, 
         delta_x
         )
-    return solution, time_grid, time_grid0
+    return solution, time_grid, time_grid0, drift_array
