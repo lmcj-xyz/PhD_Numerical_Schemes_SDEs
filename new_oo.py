@@ -11,7 +11,7 @@ import matplotlib.pyplot as plt
 import math as m
 rng = np.random.default_rng()
 #%% fBm class
-class FBM:
+class FractionalBrownianMotion:
     def __init__(self, hurst: float, points: int):
         self.hurst = hurst
         self.points = points
@@ -64,7 +64,7 @@ class BrownianMotion:
             raise ValueError("Impossible to lower the resolution of the Brownian motion if the new time steps are more than the maximum time steps.\nTry a smaller number!")
 
 #%%
-fbm_object = FBM(hurst=0.75, points=2**9)
+fbm_object = FractionalBrownianMotion(hurst=0.75, points=2**9)
 fbm_object.plot()
 fbm_path = fbm_object.fbm.copy()
 
