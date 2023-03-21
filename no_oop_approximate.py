@@ -27,7 +27,7 @@ plt.rcParams['figure.dpi'] = 500
 
 # Variables to modify for the scheme
 epsilon = 10e-6
-beta = epsilon
+beta = 1/8
 hurst = 1 - beta
 time_steps_max = 2**12
 time_steps_approx1 = 2**4
@@ -50,7 +50,7 @@ x_grid = np.linspace(
 fbm_array = fbm(hurst, points_x, half_support)
 
 # Parameter for Euler scheme
-y0 = 1
+y0 = 3
 sample_paths = 10**4
 time_start = 0
 time_end = 1
@@ -149,36 +149,47 @@ approx5, t_a5, t0_a5, drift5 = approximate(
     half_support=half_support)
 
 #%% strong error
-# Computation of errors at terminal time
-pathwise_error = np.zeros(shape=(5, sample_paths))
-pathwise_error[0, :] = np.abs(real_solution[-1, :] - approx1[-1, :])
-pathwise_error[1, :] = np.abs(real_solution[-1, :] - approx2[-1, :])
-pathwise_error[2, :] = np.abs(real_solution[-1, :] - approx3[-1, :])
-pathwise_error[3, :] = np.abs(real_solution[-1, :] - approx4[-1, :])
-pathwise_error[4, :] = np.abs(real_solution[-1, :] - approx5[-1, :])
+# Computation of strong errors at terminal time
+pw_strong_error = np.zeros(shape=(5, sample_paths))
+pw_strong_error[0, :] = np.abs(real_solution[-1, :] - approx1[-1, :])
+pw_strong_error[1, :] = np.abs(real_solution[-1, :] - approx2[-1, :])
+pw_strong_error[2, :] = np.abs(real_solution[-1, :] - approx3[-1, :])
+pw_strong_error[3, :] = np.abs(real_solution[-1, :] - approx4[-1, :])
+pw_strong_error[4, :] = np.abs(real_solution[-1, :] - approx5[-1, :])
 
-strong_error = np.mean(pathwise_error, axis=1)
+strong_error = np.mean(pw_strong_error, axis=1)
 
+#%% weak error
+# Computation of weak errors at terminal time
+pw_weak_error = np.zeros(shape=(5, sample_paths))
+pw_weak_error[0, :] = real_solution[-1, :] - approx1[-1, :]
+pw_weak_error[1, :] = real_solution[-1, :] - approx2[-1, :]
+pw_weak_error[2, :] = real_solution[-1, :] - approx3[-1, :]
+pw_weak_error[3, :] = real_solution[-1, :] - approx4[-1, :]
+pw_weak_error[4, :] = real_solution[-1, :] - approx5[-1, :]
+
+weak_error = np.abs(np.mean(pw_weak_error, axis=1))
 
 #%% consecutive strong error
 # Errors between consecutive approximations
-pw_error_consecutive = np.zeros(shape=(4, sample_paths))
-pw_error_consecutive[0, :] = np.abs(approx2[-1, :] - approx1[-1, :])
-pw_error_consecutive[1, :] = np.abs(approx3[-1, :] - approx2[-1, :])
-pw_error_consecutive[2, :] = np.abs(approx4[-1, :] - approx3[-1, :])
-pw_error_consecutive[3, :] = np.abs(approx5[-1, :] - approx4[-1, :])
+pw_consecutive_error = np.zeros(shape=(4, sample_paths))
+pw_consecutive_error[0, :] = np.abs(approx2[-1, :] - approx1[-1, :])
+pw_consecutive_error[1, :] = np.abs(approx3[-1, :] - approx2[-1, :])
+pw_consecutive_error[2, :] = np.abs(approx4[-1, :] - approx3[-1, :])
+pw_consecutive_error[3, :] = np.abs(approx5[-1, :] - approx4[-1, :])
 
-consecutive_strong_error = np.mean(pw_error_consecutive, axis=1)
+consecutive_strong_error = np.mean(pw_consecutive_error, axis=1)
 
 #%% consecutive weak error
 # Errors between consecutive approximations
-pw_error_consecutive_bias = np.zeros(shape=(4, sample_paths))
-pw_error_consecutive_bias[0, :] = approx2[-1, :] - approx1[-1, :]
-pw_error_consecutive_bias[1, :] = approx3[-1, :] - approx2[-1, :]
-pw_error_consecutive_bias[2, :] = approx4[-1, :] - approx3[-1, :]
-pw_error_consecutive_bias[3, :] = approx5[-1, :] - approx4[-1, :]
+pw_consecutive_bias = np.zeros(shape=(4, sample_paths))
+pw_consecutive_bias[0, :] = approx2[-1, :] - approx1[-1, :]
+pw_consecutive_bias[1, :] = approx3[-1, :] - approx2[-1, :]
+pw_consecutive_bias[2, :] = approx4[-1, :] - approx3[-1, :]
+pw_consecutive_bias[3, :] = approx5[-1, :] - approx4[-1, :]
 
-consecutive_weak_error = np.mean(pw_error_consecutive_bias, axis=1)
+consecutive_bias = np.mean(pw_consecutive_bias, axis=1)
+consecutive_weak_error = np.abs(consecutive_bias)
 
 #%% rate of convergence
 deltas = [(time_end - time_start)/time_steps_approx1,
@@ -188,15 +199,20 @@ deltas = [(time_end - time_start)/time_steps_approx1,
           (time_end - time_start)/time_steps_approx5] 
 
 log_strong_error = np.log10(strong_error)
+log_weak_error = np.log10(weak_error)
 log_deltas = np.log10(deltas)
 
-reg = linregress(log_deltas, log_strong_error)
-rate = reg.slope
-intersection = reg.intercept
-print(rate)
+reg_strong = linregress(log_deltas, log_strong_error)
+rate_strong = reg_strong.slope
+intersection_strong = reg_strong.intercept
+print(rate_strong)
 
-#%%
-# Several plots
+reg_weak = linregress(log_deltas, log_weak_error)
+rate_weak = reg_weak.slope
+intersection_weak = reg_weak.intercept
+print(rate_weak)
+
+#%% Several plots
 
 #%% strong error plot
 rate_fig = plt.figure('rate_fig')
@@ -210,12 +226,13 @@ plt.title("error between consecutive approximations")
 plt.semilogy(strong_error, marker='o')
 plt.show()
 
-#%% both errors plot
+ #%% all errors plot
 both_error_fig = plt.figure('both_error_fig')
-plt.title("errors for beta=%.5f \n rate = %f" % (beta, rate))
+plt.title("errors for beta=%.5f \n strong error rate = %f \n weak error rate = %f" % (beta, rate_strong, rate_weak))
 plt.semilogy(strong_error, marker='o', label='strong error')
-plt.semilogy([0.5, 1.5, 2.5, 3.5],consecutive_strong_error, marker='o', label='error between consecutive approximations')
-plt.semilogy([0.5, 1.5, 2.5, 3.5],np.abs(consecutive_weak_error), marker='o', label='bias between consecutive approximations')
+plt.semilogy(weak_error, marker='o', label='weak error')
+plt.semilogy([0.5, 1.5, 2.5, 3.5], consecutive_strong_error, marker='o', label='error between consecutive approximations')
+plt.semilogy([0.5, 1.5, 2.5, 3.5], consecutive_weak_error, marker='o', label='bias between consecutive approximations')
 plt.legend()
 plt.show()
 
@@ -230,6 +247,12 @@ plt.plot(t0_a3,         approx3[:,path])
 plt.plot(t0_a4,         approx4[:,path])
 plt.plot(t0_a5,         approx5[:,path])
 plt.show()
+
+#%% histograms
+fig, ax = plt.subplots()
+ax.hist(real_solution[1,:], bins=30)
+ax.hist(approx1[1,:], bins=30)
+ax.show()
 
 
 
