@@ -102,9 +102,9 @@ class DistributionalDrift:
         self.points = points
         self.grid = grid
         self.half_support = half_support
-        self.drift_array = np.convolve(self.fbm, self.kernel, 'same')
         self.delta = self.half_support/self.points
-        self.kernel = self.kernel()
+        self.kernel_array = self.kernel()
+        self.drift_array = np.convolve(self.fbm, self.kernel_array, 'same')
         
     def kernel(self):
         kernel = np.zeros_like(self.grid)
@@ -132,26 +132,55 @@ class EulerMaruyama:
                  time_end: float,
                  initial_condition: float, 
                  brownian_motion: np.ndarray,
+                 drift
                  ):
         
         self.time_steps = time_steps
         self.y0 = initial_condition
         self.bm = brownian_motion
+        self.time_steps = time_steps
+        self.time_start = time_start
+        self.time_end = time_end
+        self.sample_paths = self.bm.shape[1]
+        self.drift = drift
+        
+        self.y = self.solve()
+        
+    def solve(self):
+        y = np.zeros(shape=(self.time_steps+1, self.sample_paths))
+        dt = (self.time_end - self.time_start)/(self.time_steps-1)
+        y[0, :] = self.y0
+        for i in range(time_steps):
+            y[i+1, :] = y[i, :] + self.drift(x=y[i, :])*dt + self.bm[i, :]
+        return y
 #%%
 hurst = 0.75
 points = 2**9
-time_steps = 2**14
+time_steps = 2**5
 half_support = 10
 grid = np.linspace(-half_support, half_support, points)
+grid2x5 = np.linspace(-half_support, half_support, 2**5)
+t0 = 0
+t1 = 1
+sp = 3
+y0 = 1
 
 fbm_object = FractionalBrownianMotion(hurst=hurst, points=points)
 fbm_object.plot()
 fbm_path = fbm_object.fbm.copy()
 
-brownian_motion = brownian_motion_object = BrownianMotion(time_steps=2**4, initial_time=0, final_time=1, paths=3)
+brownian_motion = BrownianMotion(time_steps=time_steps, initial_time=t0, final_time=t1, paths=sp)
 brownian_motion.lower_resolution(new_time_steps=2**4)
 brownian_motion.bm
 type(brownian_motion.lower_resolution(new_time_steps=2**3)) # See type
 np.shape(brownian_motion.lower_resolution(new_time_steps=2**8)) # Raise an error
 
 drift = DistributionalDrift(fbm_path, hurst, time_steps, points, grid, half_support)
+drift_array = drift.drift_array
+drift_function = drift.drift(grid)
+drift_function_2x5 = drift.drift(grid2x5)
+
+solution1 = EulerMaruyama(time_steps=time_steps, time_start=t0, time_end=t1, initial_condition=y0, brownian_motion=brownian_motion.bm, drift=drift.drift)
+solution2 = EulerMaruyama(time_steps=2**4, time_start=t0, time_end=t1, initial_condition=y0, brownian_motion=brownian_motion.lower_resolution(2**4), drift=drift.drift)
+paths_solution1 = solution1.y
+paths_solution2 = solution2.y
