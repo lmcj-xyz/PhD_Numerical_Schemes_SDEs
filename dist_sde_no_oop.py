@@ -11,6 +11,7 @@ from numpy.random import default_rng
 rng = default_rng()
 from scipy.integrate import quad_vec
 from scipy.stats import norm
+import math as m
 import time
 
 #%% fbm func
@@ -51,7 +52,8 @@ def heat_param(time_steps, hurst):
 #%% normal differences func
 # Creation of the drift by convoluting fBm with the 
 # derivative of the heat kernel
-def normal_differences(sqrt_heat_parameter, points_x, x_grid, half_support):
+def normal_differences(heat_parameter, points_x, x_grid, half_support):
+    sqrt_heat_parameter = m.sqrt(heat_parameter)
     diff_norm = np.zeros(shape=points_x)
     delta = half_support/points_x
     const = -1/sqrt_heat_parameter**2
@@ -133,7 +135,8 @@ def approximate(
         delta_x,
         half_support):
     df = normal_differences(
-        np.sqrt(heat_param(time_steps, hurst)), 
+        #np.sqrt(heat_param(time_steps, hurst)), 
+        9/11, # testing with a fixed heat kernel parameter
         points_x, 
         x_grid, 
         half_support

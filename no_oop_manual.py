@@ -57,23 +57,23 @@ plt.show()
 #%%
 # Create a dF
 df_array_real = normal_differences(
-    np.sqrt(heat_param(time_steps_max, hurst)),
+    heat_param(time_steps_max, hurst),
     points_x, x_grid, half_support
     )
 df_array1 = normal_differences(
-    np.sqrt(heat_param(time_steps_approx1, hurst)), 
+    heat_param(time_steps_approx1, hurst), 
     points_x, x_grid, half_support)
 df_array2 = normal_differences(
-    np.sqrt(heat_param(time_steps_approx2, hurst)),
+    heat_param(time_steps_approx2, hurst),
     points_x, x_grid, half_support)
 df_array3 = normal_differences(
-    np.sqrt(heat_param(time_steps_approx3, hurst)),
+    heat_param(time_steps_approx3, hurst),
     points_x, x_grid, half_support)
 df_array4 = normal_differences(
-    np.sqrt(heat_param(time_steps_approx4, hurst)),
+    heat_param(time_steps_approx4, hurst),
     points_x, x_grid, half_support)
 df_array5 = normal_differences(
-    np.sqrt(heat_param(time_steps_approx5, hurst)),
+    heat_param(time_steps_approx5, hurst),
     points_x, x_grid, half_support)
 
 #%%

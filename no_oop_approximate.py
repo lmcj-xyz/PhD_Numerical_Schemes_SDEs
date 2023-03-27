@@ -27,7 +27,7 @@ plt.rcParams['figure.dpi'] = 500
 
 # Variables to modify for the scheme
 epsilon = 10e-6
-beta = 1/8
+beta = 3/16
 hurst = 1 - beta
 time_steps_max = 2**12
 time_steps_approx1 = 2**4
@@ -214,6 +214,16 @@ print(rate_weak)
 
 #%% Several plots
 
+#%% all errors plot
+both_error_fig = plt.figure('both_error_fig')
+plt.title("errors for beta=%.5f \n strong error rate = %f \n weak error rate = %f" % (beta, rate_strong, rate_weak))
+plt.semilogy(strong_error, marker='o', label='strong error')
+plt.semilogy(weak_error, marker='o', label='weak error')
+plt.semilogy([0.5, 1.5, 2.5, 3.5], consecutive_strong_error, marker='o', label='error between consecutive approximations')
+plt.semilogy([0.5, 1.5, 2.5, 3.5], consecutive_weak_error, marker='o', label='bias between consecutive approximations')
+plt.legend()
+plt.show()
+
 #%% strong error plot
 rate_fig = plt.figure('rate_fig')
 plt.title("strong error")
@@ -225,17 +235,6 @@ consecutive_error_fig = plt.figure('consecutive_error_fig')
 plt.title("error between consecutive approximations")
 plt.semilogy(strong_error, marker='o')
 plt.show()
-
- #%% all errors plot
-both_error_fig = plt.figure('both_error_fig')
-plt.title("errors for beta=%.5f \n strong error rate = %f \n weak error rate = %f" % (beta, rate_strong, rate_weak))
-plt.semilogy(strong_error, marker='o', label='strong error')
-plt.semilogy(weak_error, marker='o', label='weak error')
-plt.semilogy([0.5, 1.5, 2.5, 3.5], consecutive_strong_error, marker='o', label='error between consecutive approximations')
-plt.semilogy([0.5, 1.5, 2.5, 3.5], consecutive_weak_error, marker='o', label='bias between consecutive approximations')
-plt.legend()
-plt.show()
-
 
 #%% one sample path
 path = 9
@@ -252,7 +251,8 @@ plt.show()
 fig, ax = plt.subplots()
 ax.hist(real_solution[1,:], bins=30)
 ax.hist(approx1[1,:], bins=30)
-ax.show()
+plt.show()
+
 
 
 
