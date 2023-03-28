@@ -136,7 +136,7 @@ def approximate(
         half_support):
     df = normal_differences(
         #np.sqrt(heat_param(time_steps, hurst)), 
-        9/11, # testing with a fixed heat kernel parameter
+        15/11, # for testing with a fixed heat kernel parameter
         points_x, 
         x_grid, 
         half_support
