@@ -5,7 +5,13 @@ Created on Mon Mar  6 14:13:37 2023
 @author: mmlmcj
 """
 
-#%%
+#%% delete variables
+# To delete variables at the start in case we to reclaim need memory
+from IPython import get_ipython
+ipython = get_ipython()
+ipython.magic("%reset")
+
+#%% packages and parameters
 import numpy as np
 import matplotlib.pyplot as plt
 from numpy.random import default_rng
@@ -31,16 +37,16 @@ plt.rcParams['figure.dpi'] = 500
 epsilon = 10e-6
 beta = 3/16
 hurst = 1 - beta
-time_steps_max = 2**18
-time_steps_approx1 = 2**11
-time_steps_approx2 = 2**12
-time_steps_approx3 = 2**13
-time_steps_approx4 = 2**14
-time_steps_approx5 = 2**15
+time_steps_max = 2**13
+time_steps_approx1 = 2**4
+time_steps_approx2 = 2**5
+time_steps_approx3 = 2**6
+time_steps_approx4 = 2**7
+time_steps_approx5 = 2**8
 
 # Variables to create fBm
 points_x = 2**8
-half_support = 3
+half_support = 10
 delta_x = half_support/(points_x-1)
 x_grid = np.linspace(
     start = -half_support, stop = half_support, num = points_x
@@ -48,6 +54,12 @@ x_grid = np.linspace(
 
 # Create an array of fBm
 fbm_array = fbm(hurst, points_x, half_support)
+
+# Euler scheme
+y0 = 1
+sample_paths = 10**5
+time_start = 0
+time_end = 1
 
 #%% ##### OPTIONAL #####
 # Plot fBm
@@ -58,8 +70,7 @@ plt.show()
 #%% Create a dF
 df_array_real = normal_differences(
     np.sqrt(heat_param(time_steps_max, hurst)),
-    points_x, x_grid, half_support
-    )
+    points_x, x_grid, half_support)
 df_array1 = normal_differences(
     np.sqrt(heat_param(time_steps_approx1, hurst)), 
     points_x, x_grid, half_support)
@@ -128,7 +139,8 @@ plt.grid()
 plt.legend()
 plt.show()
 
-#%% Convolute deterministic functions with dF and plot for testing purposes
+#%% #### OPTIONAL ####
+# Convolute deterministic functions with dF and plot for testing purposes
 # Create a deterministic function for testing
 square = x_grid**2
 cube = x_grid**3
@@ -160,19 +172,13 @@ plt.legend()
 #plt.ylim([-5, 5])
 plt.show()
 
-#%% Parameters for Euler scheme
-y0 = 1
-sample_paths = 10**1
-time_start = 0
-time_end = 1
-
 #%% Parameters for solution/approximations
 # Parameters for real solution
 dt_real = (time_end - time_start)/(time_steps_max-1)
 time_grid_real = np.linspace(time_start + dt_real, time_end, time_steps_max)
 time_grid_real0 = np.insert(time_grid_real, 0, 0)
-z_real = rng.normal(
-    loc=0.0, scale=np.sqrt(dt_real), size=(time_steps_max, sample_paths))
+z_real = rng.normal(loc=0.0, scale=np.sqrt(dt_real), 
+                    size=(time_steps_max, sample_paths))
 
 # Parameters for approximation 1
 dt_approx1 = (time_end - time_start)/(time_steps_approx1 - 1)
