@@ -26,19 +26,16 @@ plt.rcParams['figure.dpi'] = 500
 # and compute convergence rate of approximations
 ##########
 
-# QOL parameters
-plt.rcParams['figure.dpi'] = 500
-
 # Variables to modify for the scheme
 epsilon = 10e-6
 beta = 1/2
 hurst = 1 - beta
-time_steps_max = 2**10
-time_steps_approx1 = 2**4
-time_steps_approx2 = 2**5
-time_steps_approx3 = 2**6
-time_steps_approx4 = 2**7
-time_steps_approx5 = 2**8
+time_steps_max = 2**18
+time_steps_approx1 = 2**8
+time_steps_approx2 = 2**9
+time_steps_approx3 = 2**10
+time_steps_approx4 = 2**11
+time_steps_approx5 = 2**12
 
 # Variables to create fBm
 points_x = 2**8
@@ -51,8 +48,7 @@ x_grid = np.linspace(
 # Create an array of fBm
 fbm_array = fbm(hurst, points_x, half_support)
 
-#%%
-##### OPTIONAL #####
+#%% ##### OPTIONAL #####
 # Plot fBm
 fbm_fig = plt.figure('fbm')
 plt.plot(fbm_array)
@@ -80,8 +76,7 @@ df_array5 = normal_differences(
     np.sqrt(heat_param(time_steps_approx5, hurst)),
     points_x, x_grid, half_support)
 
-#%%
-##### OPTIONAL #####
+#%% ##### OPTIONAL #####
 # Plot dF
 df_fig = plt.figure('df')
 plt.plot(df_array_real, label="df real solution")
@@ -101,8 +96,7 @@ drift_array4 = np.convolve(fbm_array, df_array4, 'same')
 drift_array5 = np.convolve(fbm_array, df_array5, 'same')
 
 
-#%%
-##### OPTIONAL #####
+#%% ##### OPTIONAL #####
 # Plot drift
 drift_fig = plt.figure('drift')
 plt.plot(drift_array_real, label="drift real solution")
@@ -126,8 +120,7 @@ eval3 = drift_func(support, drift_array3, x_grid, points_x, delta_x)
 eval4 = drift_func(support, drift_array4, x_grid, points_x, delta_x)
 eval5 = drift_func(support, drift_array5, x_grid, points_x, delta_x)
 
-#%%
-##### OPTIONAL #####
+#%% ##### OPTIONAL #####
 drift_func_fig = plt.figure('driftfunc')
 plt.plot(support, eval_real, label="real solution drift function")
 plt.plot(support, eval1, label="approximation 1 drift function")
@@ -145,8 +138,14 @@ cube = x_grid**3
 sine = np.sin(x_grid)
 # Create dF, you can change ts to see different parameters of the heat kernel
 ts = 2**10
+points_x_test = 2**8
+x_grid_test = np.linspace(
+    start = -half_support, stop = half_support, num = points_x
+    )
 df_array_det = normal_differences(
-    np.sqrt(heat_param(ts, hurst)), points_x, x_grid, half_support
+    np.sqrt(heat_param(time_steps_approx1, hurst)), 
+    #1/10**4,
+    points_x_test, x_grid_test, half_support
     )
 # Convolute
 square_conv = np.convolve(square, df_array_det, 'same')
@@ -155,13 +154,13 @@ sine_conv = np.convolve(sine, df_array_det, 'same')
 # Plot; comment out whatever
 det_fig = plt.figure('det_fig')
 plt.plot(support, square_conv, label="derivative of square: linear")
-plt.plot(support, support, label="linear function")
+plt.plot(support, 2*support, label="linear function")
 plt.plot(support, cube_conv, label="derivative of cube: square")
-plt.plot(support, support**2, label="square function")
+plt.plot(support, 3*support**2, label="square function")
 plt.plot(support, sine_conv, label="derivative of sin: cos")
 plt.plot(support, np.cos(support), label="cos function")
 plt.legend()
-plt.ylim([-5, 5])
+#plt.ylim([-5, 5])
 plt.show()
 
 #%%
@@ -220,8 +219,7 @@ time_grid_approx5 = np.linspace(
 time_grid_approx50 = np.insert(time_grid_approx5, 0, 0)
 z_approx5 = coarse_noise(z_real, time_steps_approx5, sample_paths)
 
-#%%
-##### OPTIONAL #####
+#%% ##### OPTIONAL #####
 # Visualize coarse noises
 coarse_fig = plt.figure()
 plt.plot(time_grid_approx4, z_approx4[:,0], label="approximation")
@@ -307,8 +305,7 @@ approx5 = solve(
 et = time.process_time()
 rt = et - st
 
-#%% plot SDE
-##### OPTIONAL #####
+#%% plot SDE ##### OPTIONAL #####
 # Plot solution to SDE
 emreal_fig = plt.figure('emreal_fig')
 plt.plot(time_grid_real0, real_solution[:, 0:3])
@@ -340,8 +337,7 @@ plt.plot(time_grid_approx50, approx5[:, 0:3])
 plt.title("approximation 5")
 plt.show()
 
-#%%
-##### OPTIONAL #####
+#%% ##### OPTIONAL #####
 # Comparing single sample paths of different approximations
 emssp_fig = plt.figure('emssp_fig')
 plt.plot(time_grid_real0, real_solution[:, 0], label="real solution")
@@ -363,8 +359,7 @@ pathwise_error[4, :] = np.abs(real_solution[-1, :] - approx5[-1, :])
 
 strong_error = np.mean(pathwise_error, axis=1)
 
-#%%
-##### OPTIONAL #####
+#%% ##### OPTIONAL #####
 # Plot of strong error
 rate_fig = plt.figure('rate_fig')
 plt.semilogy(strong_error, marker='o')
@@ -433,7 +428,7 @@ rate_weak = reg_weak.slope
 intersection_weak = reg_weak.intercept
 print(rate_weak)
 
-#%% Several plots
+#%% Several plots ##### OPTIONAL #####
 
 #%% all errors plot
 both_error_fig = plt.figure('both_error_fig')
