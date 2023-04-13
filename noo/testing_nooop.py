@@ -35,15 +35,16 @@ plt.show()
 i = 2*m.sqrt(1/(time_steps_approx2**(12/11)))
 density = ((x_grid < i) & (x_grid > -i)).sum()
 #%% max and min in sample paths
-max_soln_perc = (real_solution.max(axis=0) > 6).sum()/10000*100
-min_soln_perc = (real_solution.min(axis=0) < 0).sum()/10000*100
+max_soln_perc = (real_solution.max(axis=0) > 6).sum()
+min_soln_perc = (real_solution.min(axis=0) < 0).sum()
 #%% plot fbm and der
+drift_array_real_total = np.convolve(fbm_array, df_array_real)
 plt.figure()
 plt.plot(fbm_array)
 plt.plot(drift_array_real)
-plt.plot(drift_array1)
-plt.plot(drift_array3)
-plt.ylim([-5, 10])
+#plt.plot(drift_array1)
+#plt.plot(drift_array3)
+#plt.ylim([-5, 10])
 plt.show()
 
 #%%

@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+#-*- coding: utf-8 -*-
 """
 Created on Mon Mar  6 14:15:08 2023
 
@@ -53,7 +53,7 @@ x_grid = np.linspace(
 fbm_array = fbm(hurst, points_x, half_support)
 
 #%% using stored fbm
-#fbm_array = np.load("fbm_bad_result.npy")
+fbm_array = np.load("fbm1.npy")
 
 #%%
 # Parameter for Euler scheme
