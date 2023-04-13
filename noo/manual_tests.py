@@ -26,16 +26,17 @@ plt.rcParams['figure.dpi'] = 500
 # and compute convergence rate of approximations
 ##########
 
+#%% some parameters
 # Variables to modify for the scheme
 epsilon = 10e-6
-beta = 1/2
+beta = 3/16
 hurst = 1 - beta
 time_steps_max = 2**18
-time_steps_approx1 = 2**8
-time_steps_approx2 = 2**9
-time_steps_approx3 = 2**10
-time_steps_approx4 = 2**11
-time_steps_approx5 = 2**12
+time_steps_approx1 = 2**11
+time_steps_approx2 = 2**12
+time_steps_approx3 = 2**13
+time_steps_approx4 = 2**14
+time_steps_approx5 = 2**15
 
 # Variables to create fBm
 points_x = 2**8
@@ -54,8 +55,7 @@ fbm_fig = plt.figure('fbm')
 plt.plot(fbm_array)
 plt.show()
 
-#%%
-# Create a dF
+#%% Create a dF
 df_array_real = normal_differences(
     np.sqrt(heat_param(time_steps_max, hurst)),
     points_x, x_grid, half_support
@@ -86,8 +86,7 @@ plt.plot(df_array3, label="df approximation 3")
 plt.legend()
 plt.show()
 
-#%%
-# Create drift by convolution
+#%% Create drift by convolution
 drift_array_real = np.convolve(fbm_array, df_array_real, 'same')
 drift_array1 = np.convolve(fbm_array, df_array1, 'same')
 drift_array2 = np.convolve(fbm_array, df_array2, 'same')
@@ -106,8 +105,7 @@ plt.plot(drift_array3, label="drift approximation 3")
 plt.legend()
 plt.show()
 
-#%%
-# Distance between points in grid for x
+#%% Distance between points in grid for x
 delta_x = half_support/(points_x-1)
 
 # Evaluate and plot some drift functions
@@ -130,8 +128,7 @@ plt.grid()
 plt.legend()
 plt.show()
 
-#%%
-# Convolute deterministic functions with dF and plot for testing purposes
+#%% Convolute deterministic functions with dF and plot for testing purposes
 # Create a deterministic function for testing
 square = x_grid**2
 cube = x_grid**3
@@ -163,15 +160,13 @@ plt.legend()
 #plt.ylim([-5, 5])
 plt.show()
 
-#%%
-# Parameters for Euler scheme
+#%% Parameters for Euler scheme
 y0 = 1
 sample_paths = 10**1
 time_start = 0
 time_end = 1
 
-#%%
-# Parameters for solution/approximations
+#%% Parameters for solution/approximations
 # Parameters for real solution
 dt_real = (time_end - time_start)/(time_steps_max-1)
 time_grid_real = np.linspace(time_start + dt_real, time_end, time_steps_max)
@@ -227,8 +222,7 @@ plt.plot(time_grid_real, z_real[:,0], label="real solution")
 plt.legend()
 plt.show()
 
-#%%%
-# Solve an SDE
+#%%% Solve an SDE by Euler scheme
 st = time.process_time()
 real_solution = solve(
     y0,
@@ -348,8 +342,7 @@ plt.title("single sample path comparison")
 plt.legend()
 plt.show()
 
-#%%
-# Computation of strong errors at terminal time
+#%% Computation of strong errors at terminal time
 pathwise_error = np.zeros(shape=(5, sample_paths))
 pathwise_error[0, :] = np.abs(real_solution[-1, :] - approx1[-1, :])
 pathwise_error[1, :] = np.abs(real_solution[-1, :] - approx2[-1, :])
