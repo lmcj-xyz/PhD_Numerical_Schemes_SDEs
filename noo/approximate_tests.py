@@ -13,7 +13,7 @@ from scipy.integrate import quad_vec
 from scipy.stats import norm, linregress
 import time
 
-from dist_sde_no_oop import *
+from dist_sdes import *
 
 # QOL parameters
 plt.rcParams['figure.dpi'] = 500

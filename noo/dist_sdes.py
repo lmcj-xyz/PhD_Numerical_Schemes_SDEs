@@ -121,6 +121,8 @@ def solve(
 
 #%%
 # Create solutions/approximations
+# This will be tested in approximate_tests.py
+# To test each one of the functions above separately use manual_tests.py
 def approximate(
         fbm, 
         time_steps, 
