@@ -6,7 +6,7 @@ Created on Mon Mar  6 14:13:37 2023
 """
 
 #%% delete variables
-# To delete variables at the start in case we to reclaim need memory
+# To delete variables at the start in case we need to reclaim need memory
 from IPython import get_ipython
 ipython = get_ipython()
 ipython.magic("%reset")
@@ -24,7 +24,6 @@ from dist_sdes import *
 
 # QOL parameters
 plt.rcParams['figure.dpi'] = 500
-
 
 #%%
 ##########
