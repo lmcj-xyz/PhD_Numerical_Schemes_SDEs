@@ -140,6 +140,28 @@ def gen_solve(
                     + diffusion(t = i, x=y[i, :])*z[i, :]
     return y
 
+#%% mckean-vlasov sde solver func
+# Euler scheme solver for a generic McKean-Vlasov SDE
+def mv_solve(
+        y0, 
+        drift,
+        diffusion,
+        z, 
+        time_start, 
+        time_end, 
+        time_steps, 
+        sample_paths
+        ):
+    y = np.zeros(shape=(time_steps+1, sample_paths))
+    dt = (time_end - time_start)/(time_steps-1)
+    y[0, :] = y0
+    for i in range(time_steps):
+        nu = 1# use the KDE from scikit learn
+        y[i+1, :] = y[i, :] \
+                + drift(t = i, x=y[i, :], law=nu(y[i,:]))*dt \
+                    + diffusion(t = i, x=y[i, :], law=nu(y[i,:]))*z[i, :]
+    return y
+
 #%%
 # Create solutions/approximations
 # This will be tested in approximate_tests.py
