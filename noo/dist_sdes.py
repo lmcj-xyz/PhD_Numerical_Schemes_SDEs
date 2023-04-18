@@ -91,7 +91,7 @@ def coarse_noise(z, time_steps, sample_paths):
 
 
 #%% sde solver func
-# Euler scheme solver
+# Euler scheme solver for the distributional drift
 def solve(
         y0, 
         drift_array, 
@@ -117,6 +117,27 @@ def solve(
                         delta=delta
                         )*dt \
                     + z[i, :]
+    return y
+
+#%% generic sde solver func
+# Euler scheme solver for a generic SDE
+def gen_solve(
+        y0, 
+        drift,
+        diffusion,
+        z, 
+        time_start, 
+        time_end, 
+        time_steps, 
+        sample_paths
+        ):
+    y = np.zeros(shape=(time_steps+1, sample_paths))
+    dt = (time_end - time_start)/(time_steps-1)
+    y[0, :] = y0
+    for i in range(time_steps):
+        y[i+1, :] = y[i, :] \
+                + drift(t = i, x=y[i, :])*dt \
+                    + diffusion(t = i, x=y[i, :])*z[i, :]
     return y
 
 #%%
