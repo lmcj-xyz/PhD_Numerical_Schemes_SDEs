@@ -7,9 +7,9 @@ Created on Mon Mar  6 14:13:37 2023
 
 #%% delete variables
 # To delete variables at the start in case we need to reclaim need memory
-from IPython import get_ipython
-ipython = get_ipython()
-ipython.magic("%reset")
+#from IPython import get_ipython
+#ipython = get_ipython()
+#ipython.magic("%reset")
 
 #%% packages and parameters
 import numpy as np
@@ -20,7 +20,7 @@ from scipy.integrate import quad_vec
 from scipy.stats import norm, linregress
 import time
 
-from dist_sdes import *
+from dsdes import *
 
 # QOL parameters
 plt.rcParams['figure.dpi'] = 500

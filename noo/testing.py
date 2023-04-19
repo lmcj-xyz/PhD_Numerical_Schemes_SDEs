@@ -13,7 +13,7 @@ from scipy.integrate import quad_vec
 from scipy.stats import norm
 import time
 
-from dist_sde_no_oop import *
+from dsdes import *
 #%%
 fbm_trajectory = fbm(0.55, 2**8, 5)
 drift = np.convolve(fbm_trajectory, df, 'same')
