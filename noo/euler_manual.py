@@ -34,9 +34,9 @@ plt.rcParams['figure.dpi'] = 500
 #%% some parameters
 # Variables to modify for the scheme
 epsilon = 10e-6
-beta = 3/16
+beta = 1/2
 hurst = 1 - beta
-time_steps_max = 2**13
+time_steps_max = 2**10
 time_steps_approx1 = 2**4
 time_steps_approx2 = 2**5
 time_steps_approx3 = 2**6
@@ -50,9 +50,16 @@ delta_x = half_support/(points_x-1)
 x_grid = np.linspace(
     start = -half_support, stop = half_support, num = points_x
     )
+# For the Brownian bridge
+x_grid0 = np.linspace(
+    start = 0, stop =2*half_support, num = points_x
+    )
 
 # Create an array of fBm
 fbm_array = fbm(hurst, points_x, half_support)
+
+# fBm "bridge"
+bridge_array = bridge(fbm_array, x_grid0)
 
 # Euler scheme
 y0 = 1
@@ -63,7 +70,10 @@ time_end = 1
 #%% ##### OPTIONAL #####
 # Plot fBm
 fbm_fig = plt.figure('fbm')
-plt.plot(fbm_array)
+plt.plot(fbm_array, label='fbm')
+plt.plot(bridge_array, label='brownian bridge')
+plt.grid(linestyle='--', axis='y', linewidth=0.5)
+plt.legend()
 plt.show()
 
 #%% Create a dF

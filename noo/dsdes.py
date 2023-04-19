@@ -35,11 +35,16 @@ def fbm(hurst, points_x, half_support):
             np.abs(x_grid - y_grid)**(2*hurst)
             )
     g = rng.standard_normal(size=points_x)
+    #g_bridge = g - (fbm_grid/half_support)*g[-1]
     cholesky = np.linalg.cholesky(a=covariance)
+    #fbm_arr = np.matmul(cholesky, g_bridge)
     fbm_arr = np.matmul(cholesky, g)
     #fbm_arr = np.concatenate([np.zeros(1),fbm_arr])
     return fbm_arr
 
+#%% bridge func
+def bridge(f, grid):
+    return f - (f[-1]/grid[-1])*grid    
 
 #%% heat parameter func
 # Heat kernel parameter creation based on time steps of the Euler scheme

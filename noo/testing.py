@@ -173,3 +173,29 @@ plt.plot(t1, x)
 plt.plot(t2, y)
 plt.grid()
 plt.show()
+
+#%%
+t0 = 0
+t1 = 1
+ts = 2**6
+tg = np.linspace(t0, t1, ts+1)
+dt = (t1-t0)/(ts-1)
+bm = np.insert(rng.normal(loc=0.0, scale=np.sqrt(dt), size=ts), 0, 0)
+bb = bridge(bm, tg)
+h = 0.1
+fbma = np.insert(fbm(h, ts, t1/2), 0, 0)
+fbb = bridge(fbma, tg)
+#%%
+plt.figure()
+plt.plot(tg, bm, label="brownian motion")
+plt.plot(tg, bb, label="brownian bridge")
+plt.grid(linestyle='--', axis='y', linewidth=0.5)
+plt.legend()
+plt.show()
+#%%
+plt.figure()
+plt.plot(tg, fbma, label="fractional brownian motion")
+plt.plot(tg, fbb, label="fractional brownian bridge")
+plt.grid(linestyle='--', axis='y', linewidth=0.5)
+plt.legend()
+plt.show()
