@@ -124,6 +124,35 @@ def solve(
                     + z[i, :]
     return y
 
+#%% sde solver func without matrix
+# Euler scheme solver for the distributional drift
+def solves(
+        y0, 
+        drift_array, 
+        z, 
+        time_start, 
+        time_end, 
+        time_steps, 
+        sample_paths,
+        grid,
+        points,
+        delta
+        ):
+    y = np.zeros(shape=(1, sample_paths))
+    dt = (time_end - time_start)/(time_steps-1)
+    y[0, :] = y0
+    for i in range(time_steps):
+        y[0, :] = y[0, :] \
+                + drift_func(
+                        x=y[0, :], 
+                        drift_array=drift_array,
+                        grid=grid,
+                        points=points,
+                        delta=delta
+                        )*dt \
+                    + z[i, :]
+    return y
+
 #%% generic sde solver func
 # Euler scheme solver for a generic SDE
 def gen_solve(

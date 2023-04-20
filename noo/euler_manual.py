@@ -36,7 +36,7 @@ plt.rcParams['figure.dpi'] = 500
 epsilon = 10e-6
 beta = 1/2
 hurst = 1 - beta
-time_steps_max = 2**10
+time_steps_max = 2**12
 time_steps_approx1 = 2**4
 time_steps_approx2 = 2**5
 time_steps_approx3 = 2**6
@@ -106,14 +106,21 @@ plt.plot(df_array3, label="df approximation 3")
 plt.legend()
 plt.show()
 
-#%% Create drift by convolution
-drift_array_real = np.convolve(fbm_array, df_array_real, 'same')
-drift_array1 = np.convolve(fbm_array, df_array1, 'same')
-drift_array2 = np.convolve(fbm_array, df_array2, 'same')
-drift_array3 = np.convolve(fbm_array, df_array3, 'same')
-drift_array4 = np.convolve(fbm_array, df_array4, 'same')
-drift_array5 = np.convolve(fbm_array, df_array5, 'same')
+#%% Create drift by convolution with the bridge
+drift_array_real = np.convolve(bridge_array, df_array_real, 'same')
+drift_array1 = np.convolve(bridge_array, df_array1, 'same')
+drift_array2 = np.convolve(bridge_array, df_array2, 'same')
+drift_array3 = np.convolve(bridge_array, df_array3, 'same')
+drift_array4 = np.convolve(bridge_array, df_array4, 'same')
+drift_array5 = np.convolve(bridge_array, df_array5, 'same')
 
+#%% Create drift by convolution with the fBm
+#drift_array_real = np.convolve(fbm_array, df_array_real, 'same')
+#drift_array1 = np.convolve(fbm_array, df_array1, 'same')
+#drift_array2 = np.convolve(fbm_array, df_array2, 'same')
+#drift_array3 = np.convolve(fbm_array, df_array3, 'same')
+#drift_array4 = np.convolve(fbm_array, df_array4, 'same')
+#drift_array5 = np.convolve(fbm_array, df_array5, 'same')
 
 #%% ##### OPTIONAL #####
 # Plot drift
@@ -131,6 +138,7 @@ delta_x = half_support/(points_x-1)
 # Evaluate and plot some drift functions
 support = np.linspace(-half_support, half_support, points_x)
 
+#%% ########OPTIONAL##########
 eval_real = drift_func(support, drift_array_real, x_grid, points_x, delta_x)
 eval1 = drift_func(support, drift_array1, x_grid, points_x, delta_x)
 eval2 = drift_func(support, drift_array2, x_grid, points_x, delta_x)
@@ -239,7 +247,7 @@ plt.show()
 
 #%%% Solve an SDE by Euler scheme
 st = time.process_time()
-real_solution = solve(
+real_solution = solves(
     y0,
     drift_array_real,
     z_real,
@@ -251,7 +259,7 @@ real_solution = solve(
     points_x,
     delta_x
     )
-approx1 = solve(
+approx1 = solves(
     y0, 
     drift_array1,
     z_approx1,
@@ -263,7 +271,7 @@ approx1 = solve(
     points_x,
     delta_x
     )
-approx2 = solve(
+approx2 = solves(
     y0,
     drift_array2,
     z_approx2,
@@ -275,7 +283,7 @@ approx2 = solve(
     points_x,
     delta_x
     )
-approx3 = solve(
+approx3 = solves(
     y0,
     drift_array3,
     z_approx3,
@@ -287,7 +295,7 @@ approx3 = solve(
     points_x,
     delta_x
     )
-approx4 = solve(
+approx4 = solves(
     y0,
     drift_array4,
     z_approx4,
@@ -299,7 +307,7 @@ approx4 = solve(
     points_x,
     delta_x
     )
-approx5 = solve(
+approx5 = solves(
     y0,
     drift_array5,
     z_approx5,
@@ -314,7 +322,7 @@ approx5 = solve(
 et = time.process_time()
 rt = et - st
 
-#%% plot SDE ##### OPTIONAL #####
+#%% plot SDE ##### OPTIONAL ##### this doesn't make sense when using "solves"
 # Plot solution to SDE
 emreal_fig = plt.figure('emreal_fig')
 plt.plot(time_grid_real0, real_solution[:, 0:3])
@@ -366,12 +374,6 @@ pathwise_error[3, :] = np.abs(real_solution[-1, :] - approx4[-1, :])
 pathwise_error[4, :] = np.abs(real_solution[-1, :] - approx5[-1, :])
 
 strong_error = np.mean(pathwise_error, axis=1)
-
-#%% ##### OPTIONAL #####
-# Plot of strong error
-rate_fig = plt.figure('rate_fig')
-plt.semilogy(strong_error, marker='o')
-plt.show()
 
 #%% weak error
 # Computation of weak errors at terminal time
@@ -477,6 +479,13 @@ plt.show()
 fig, ax = plt.subplots()
 ax.hist(real_solution[1,:], bins=30)
 ax.hist(approx1[1,:], bins=30)
+plt.show()
+
+
+#%% ##### OPTIONAL #####
+# Plot of strong error
+rate_fig = plt.figure('rate_fig')
+plt.semilogy(strong_error, marker='o')
 plt.show()
 
 
