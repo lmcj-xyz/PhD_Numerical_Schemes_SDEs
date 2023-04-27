@@ -34,7 +34,7 @@ plt.rcParams['figure.dpi'] = 500
 #%% some parameters
 # Variables to modify for the scheme
 epsilon = 10e-6
-beta = 1/2
+beta = 1/4
 hurst = 1 - beta
 time_steps_max = 2**12
 time_steps_approx1 = 2**4
@@ -374,6 +374,15 @@ pathwise_error[3, :] = np.abs(real_solution[-1, :] - approx4[-1, :])
 pathwise_error[4, :] = np.abs(real_solution[-1, :] - approx5[-1, :])
 
 strong_error = np.mean(pathwise_error, axis=1)
+# error bars
+a = 5
+seci = np.zeros(shape=a)
+for i in range(a):
+    seci[i] = 1.96*np.sqrt(
+        np.sum(
+            (pathwise_error[i, :] - strong_error[i])**2/(sample_paths-1)
+            )/sample_paths
+        )
 
 #%% weak error
 # Computation of weak errors at terminal time
@@ -387,6 +396,15 @@ pw_weak_error[4, :] = real_solution[-1, :] - approx5[-1, :]
 #pw_weak_error[6, :] = real_solution[-1, :] - approx7[-1, :]
 
 weak_error = np.abs(np.mean(pw_weak_error, axis=1))
+# error bars
+a = 5
+weci = np.zeros(shape=a)
+for i in range(a):
+    weci[i] = 1.96*np.sqrt(
+        np.sum(
+            (pw_weak_error[i, :] - weak_error[i])**2/(sample_paths-1)
+            )/sample_paths
+        )
 
 #%% consecutive strong error
 # Errors between consecutive approximations
@@ -399,6 +417,15 @@ pw_consecutive_error[3, :] = np.abs(approx5[-1, :] - approx4[-1, :])
 #pw_consecutive_error[5, :] = np.abs(approx7[-1, :] - approx6[-1, :])
 
 consecutive_strong_error = np.mean(pw_consecutive_error, axis=1)
+# error bars
+b = 4
+cseci = np.zeros(shape=b)
+for i in range(b):
+    cseci[i] = 1.96*np.sqrt(
+        np.sum(
+            (pw_consecutive_error[i, :] - consecutive_strong_error[i])**2/(sample_paths-1)
+            )/sample_paths
+        )
 
 #%% consecutive weak error
 # Bias between consecutive approximations
@@ -412,6 +439,15 @@ pw_consecutive_bias[3, :] = approx5[-1, :] - approx4[-1, :]
 
 consecutive_bias = np.mean(pw_consecutive_bias, axis=1)
 consecutive_weak_error = np.abs(consecutive_bias)
+# error bars
+b = 4
+cweci = np.zeros(shape=b)
+for i in range(b):
+    cweci[i] = 1.96*np.sqrt(
+        np.sum(
+            (pw_consecutive_bias[i, :] - consecutive_weak_error[i])**2/(sample_paths-1)
+            )/sample_paths
+        )
 
 #%% rate of convergence
 deltas = [(time_end - time_start)/time_steps_approx1,
@@ -443,12 +479,13 @@ print(rate_weak)
 #%% all errors plot
 both_error_fig = plt.figure('both_error_fig')
 plt.title("errors for beta=%.5f \n strong error rate = %f \n weak error rate = %f" % (beta, rate_strong, rate_weak))
-plt.semilogy(strong_error, marker='o', label='strong error')
-plt.semilogy(weak_error, marker='o', label='weak error')
-plt.semilogy([0.5, 1.5, 2.5, 3.5], consecutive_strong_error, marker='o', label='error between consecutive approximations')
-plt.semilogy([0.5, 1.5, 2.5, 3.5], consecutive_weak_error, marker='o', label='bias between consecutive approximations')
+plt.errorbar([0, 1, 2, 3, 4], strong_error, yerr=seci, marker='.', label='strong error')
+plt.errorbar([0, 1, 2, 3, 4], weak_error, yerr=weci, marker='.', label='weak error')
+plt.errorbar([0.5, 1.5, 2.5, 3.5], consecutive_strong_error, yerr=cseci, marker='.', label='error between consecutive approximations')
+plt.errorbar([0.5, 1.5, 2.5, 3.5], consecutive_weak_error, yerr=cweci, marker='.', label='bias between consecutive approximations')
 #plt.semilogy([0.5, 1.5, 2.5, 3.5, 4.5, 5.5], consecutive_strong_error, marker='o', label='error between consecutive approximations')
 #plt.semilogy([0.5, 1.5, 2.5, 3.5, 4.5, 5.5], consecutive_weak_error, marker='o', label='bias between consecutive approximations')
+plt.yscale('log')
 plt.legend()
 plt.show()
 
