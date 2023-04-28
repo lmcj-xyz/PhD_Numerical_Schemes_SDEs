@@ -51,7 +51,8 @@ def bridge(f, grid):
 def heat_param(time_steps, hurst):
     eta = 1/(2*(hurst-1/2)**2 + 2 - hurst)
     #param = np.sqrt(1/(time_steps**(eta)))
-    param = 1/(time_steps**(eta))
+    #param = 1/(time_steps**(eta))
+    param = 2/(time_steps**(eta))
     return param
 
 #%% normal differences func

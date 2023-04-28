@@ -34,7 +34,7 @@ plt.rcParams['figure.dpi'] = 500
 #%% some parameters
 # Variables to modify for the scheme
 epsilon = 10e-6
-beta = 1/4
+beta = 1/8
 hurst = 1 - beta
 time_steps_max = 2**12
 time_steps_approx1 = 2**4
@@ -70,8 +70,8 @@ time_end = 1
 #%% ##### OPTIONAL #####
 # Plot fBm
 fbm_fig = plt.figure('fbm')
-plt.plot(fbm_array, label='fbm')
-plt.plot(bridge_array, label='brownian bridge')
+#plt.plot(fbm_array, label='fbm')
+plt.plot(x_grid, bridge_array, label='brownian bridge')
 plt.grid(linestyle='--', axis='y', linewidth=0.5)
 plt.legend()
 plt.show()
@@ -125,10 +125,10 @@ drift_array5 = np.convolve(bridge_array, df_array5, 'same')
 #%% ##### OPTIONAL #####
 # Plot drift
 drift_fig = plt.figure('drift')
-plt.plot(drift_array_real, label="drift real solution")
-plt.plot(drift_array1, label="drift approximation 1")
-plt.plot(drift_array2, label="drift approximation 2")
-plt.plot(drift_array3, label="drift approximation 3")
+plt.plot(x_grid, drift_array_real, label="drift real solution")
+plt.plot(x_grid, drift_array1, label="drift approximation 1")
+plt.plot(x_grid, drift_array2, label="drift approximation 2")
+plt.plot(x_grid, drift_array3, label="drift approximation 3")
 plt.legend()
 plt.show()
 
@@ -148,10 +148,11 @@ eval5 = drift_func(support, drift_array5, x_grid, points_x, delta_x)
 
 #%% ##### OPTIONAL #####
 drift_func_fig = plt.figure('driftfunc')
+plt.plot(support, bridge_array, label="fbm")
 plt.plot(support, eval_real, label="real solution drift function")
-plt.plot(support, eval1, label="approximation 1 drift function")
-plt.plot(support, eval2, label="approximation 2 drift function")
-plt.plot(support, eval3, label="approximation 3 drift function")
+#plt.plot(support, eval1, label="approximation 1 drift function")
+#plt.plot(support, eval2, label="approximation 2 drift function")
+#plt.plot(support, eval3, label="approximation 3 drift function")
 plt.grid()
 plt.legend()
 plt.show()
@@ -378,11 +379,7 @@ strong_error = np.mean(pathwise_error, axis=1)
 a = 5
 seci = np.zeros(shape=a)
 for i in range(a):
-    seci[i] = 1.96*np.sqrt(
-        np.sum(
-            (pathwise_error[i, :] - strong_error[i])**2/(sample_paths-1)
-            )/sample_paths
-        )
+    seci[i] = 1.96*np.sqrt(np.sum((pathwise_error[i, :] - strong_error[i])**2/(sample_paths-1))/sample_paths)
 
 #%% weak error
 # Computation of weak errors at terminal time
@@ -479,10 +476,10 @@ print(rate_weak)
 #%% all errors plot
 both_error_fig = plt.figure('both_error_fig')
 plt.title("errors for beta=%.5f \n strong error rate = %f \n weak error rate = %f" % (beta, rate_strong, rate_weak))
-plt.errorbar([0, 1, 2, 3, 4], strong_error, yerr=seci, marker='.', label='strong error')
-plt.errorbar([0, 1, 2, 3, 4], weak_error, yerr=weci, marker='.', label='weak error')
-plt.errorbar([0.5, 1.5, 2.5, 3.5], consecutive_strong_error, yerr=cseci, marker='.', label='error between consecutive approximations')
-plt.errorbar([0.5, 1.5, 2.5, 3.5], consecutive_weak_error, yerr=cweci, marker='.', label='bias between consecutive approximations')
+plt.errorbar([0, 1, 2, 3, 4], strong_error, yerr=seci, marker='', linewidth=1, label='strong error')
+plt.errorbar([0, 1, 2, 3, 4], weak_error, yerr=weci, marker='', linewidth=1, label='weak error')
+plt.errorbar([0.5, 1.5, 2.5, 3.5], consecutive_strong_error, yerr=cseci, marker='', linewidth=1, label='error between consecutive approximations')
+plt.errorbar([0.5, 1.5, 2.5, 3.5], consecutive_weak_error, yerr=cweci, marker='', linewidth=1, label='bias between consecutive approximations')
 #plt.semilogy([0.5, 1.5, 2.5, 3.5, 4.5, 5.5], consecutive_strong_error, marker='o', label='error between consecutive approximations')
 #plt.semilogy([0.5, 1.5, 2.5, 3.5, 4.5, 5.5], consecutive_weak_error, marker='o', label='bias between consecutive approximations')
 plt.yscale('log')
@@ -525,7 +522,16 @@ rate_fig = plt.figure('rate_fig')
 plt.semilogy(strong_error, marker='o')
 plt.show()
 
-
+#%% ##### OPTIONAL #####
+# Printing errors and CIs
+print(strong_error)
+print(seci)
+print(weak_error)
+print(weci)
+print(consecutive_strong_error)
+print(cseci)
+print(consecutive_bias)
+print(cweci)
 
 
 
