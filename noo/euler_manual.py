@@ -114,7 +114,7 @@ drift_array3 = np.convolve(bridge_array, df_array3, 'same')
 drift_array4 = np.convolve(bridge_array, df_array4, 'same')
 drift_array5 = np.convolve(bridge_array, df_array5, 'same')
 
-#%% Create drift by convolution with the fBm
+#%% ##### OPTIONAL ##### Create drift by convolution with the fBm
 #drift_array_real = np.convolve(fbm_array, df_array_real, 'same')
 #drift_array1 = np.convolve(fbm_array, df_array1, 'same')
 #drift_array2 = np.convolve(fbm_array, df_array2, 'same')
