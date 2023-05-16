@@ -36,12 +36,12 @@ plt.rcParams['figure.dpi'] = 500
 epsilon = 10e-6
 beta = 1/8
 hurst = 1 - beta
-time_steps_max = 2**12
-time_steps_approx1 = 2**4
-time_steps_approx2 = 2**5
-time_steps_approx3 = 2**6
-time_steps_approx4 = 2**7
-time_steps_approx5 = 2**8
+time_steps_max = 2**19
+time_steps_approx1 = 2**8
+time_steps_approx2 = 2**9
+time_steps_approx3 = 2**10
+time_steps_approx4 = 2**11
+time_steps_approx5 = 2**12
 
 # Variables to create fBm
 points_x = 2**8
@@ -63,14 +63,14 @@ bridge_array = bridge(fbm_array, x_grid0)
 
 # Euler scheme
 y0 = 1
-sample_paths = 10**5
+sample_paths = 10**4
 time_start = 0
 time_end = 1
 
 #%% ##### OPTIONAL #####
 # Plot fBm
 fbm_fig = plt.figure('fbm')
-#plt.plot(fbm_array, label='fbm')
+plt.plot(x_grid, fbm_array, label='fbm')
 plt.plot(x_grid, bridge_array, label='brownian bridge')
 plt.grid(linestyle='--', axis='y', linewidth=0.5)
 plt.legend()
@@ -78,31 +78,39 @@ plt.show()
 
 #%% Create a dF
 df_array_real = normal_differences(
-    np.sqrt(heat_param(time_steps_max, hurst)),
+    #np.sqrt(heat_param(time_steps_max, hurst)),
+    heat_param(time_steps_max, hurst),
     points_x, x_grid, half_support)
 df_array1 = normal_differences(
-    np.sqrt(heat_param(time_steps_approx1, hurst)), 
+    #np.sqrt(heat_param(time_steps_approx1, hurst)), 
+    heat_param(time_steps_approx1, hurst), 
     points_x, x_grid, half_support)
 df_array2 = normal_differences(
-    np.sqrt(heat_param(time_steps_approx2, hurst)),
+    #np.sqrt(heat_param(time_steps_approx2, hurst)),
+    heat_param(time_steps_approx2, hurst),
     points_x, x_grid, half_support)
 df_array3 = normal_differences(
-    np.sqrt(heat_param(time_steps_approx3, hurst)),
+    #np.sqrt(heat_param(time_steps_approx3, hurst)),
+    heat_param(time_steps_approx3, hurst),
     points_x, x_grid, half_support)
 df_array4 = normal_differences(
-    np.sqrt(heat_param(time_steps_approx4, hurst)),
+    #np.sqrt(heat_param(time_steps_approx4, hurst)),
+    heat_param(time_steps_approx4, hurst),
     points_x, x_grid, half_support)
 df_array5 = normal_differences(
-    np.sqrt(heat_param(time_steps_approx5, hurst)),
+    #np.sqrt(heat_param(time_steps_approx5, hurst)),
+    heat_param(time_steps_approx5, hurst),
     points_x, x_grid, half_support)
 
 #%% ##### OPTIONAL #####
 # Plot dF
 df_fig = plt.figure('df')
-plt.plot(df_array_real, label="df real solution")
-plt.plot(df_array1, label="df approximation 1")
-plt.plot(df_array2, label="df approximation 2")
-plt.plot(df_array3, label="df approximation 3")
+plt.plot(x_grid, df_array_real, label="df real solution")
+plt.plot(x_grid, df_array1, label="df approximation 1")
+plt.plot(x_grid, df_array2, label="df approximation 2")
+plt.plot(x_grid, df_array3, label="df approximation 3")
+plt.plot(x_grid, df_array4, label="df approximation 4")
+plt.plot(x_grid, df_array5, label="df approximation 5")
 plt.legend()
 plt.show()
 
@@ -204,7 +212,7 @@ time_grid_approx1 = np.linspace(
     time_start + dt_approx1, time_end, time_steps_approx1
     )
 time_grid_approx10 = np.insert(time_grid_approx1, 0, 0)
-z_approx1 = coarse_noise(z_real, time_steps_approx1, sample_paths)
+#z_approx1 = coarse_noise(z_real, time_steps_approx1, sample_paths)
 
 # Parameters for approximation 2
 dt_approx2 = (time_end - time_start)/(time_steps_approx2 - 1)
@@ -212,7 +220,7 @@ time_grid_approx2 = np.linspace(
     time_start + dt_approx2, time_end, time_steps_approx2
     )
 time_grid_approx20 = np.insert(time_grid_approx2, 0, 0)
-z_approx2 = coarse_noise(z_real, time_steps_approx2, sample_paths)
+#z_approx2 = coarse_noise(z_real, time_steps_approx2, sample_paths)
 
 # Parameters for approximation 3
 dt_approx3 = (time_end - time_start)/(time_steps_approx3 - 1)
@@ -220,7 +228,7 @@ time_grid_approx3 = np.linspace(
     time_start + dt_approx3, time_end, time_steps_approx3
     )
 time_grid_approx30 = np.insert(time_grid_approx3, 0, 0)
-z_approx3 = coarse_noise(z_real, time_steps_approx3, sample_paths)
+#z_approx3 = coarse_noise(z_real, time_steps_approx3, sample_paths)
 
 # Parameters for approximation 4
 dt_approx4 = (time_end - time_start)/(time_steps_approx4 - 1)
@@ -228,7 +236,7 @@ time_grid_approx4 = np.linspace(
     time_start + dt_approx4, time_end, time_steps_approx4
     )
 time_grid_approx40 = np.insert(time_grid_approx4, 0, 0)
-z_approx4 = coarse_noise(z_real, time_steps_approx4, sample_paths)
+#z_approx4 = coarse_noise(z_real, time_steps_approx4, sample_paths)
 
 # Parameters for approximation 5
 dt_approx5 = (time_end - time_start)/(time_steps_approx5 - 1)
@@ -236,7 +244,7 @@ time_grid_approx5 = np.linspace(
     time_start + dt_approx5, time_end, time_steps_approx5
     )
 time_grid_approx50 = np.insert(time_grid_approx5, 0, 0)
-z_approx5 = coarse_noise(z_real, time_steps_approx5, sample_paths)
+#z_approx5 = coarse_noise(z_real, time_steps_approx5, sample_paths)
 
 #%% ##### OPTIONAL #####
 # Visualize coarse noises
@@ -263,7 +271,7 @@ real_solution = solves(
 approx1 = solves(
     y0, 
     drift_array1,
-    z_approx1,
+    z_real,
     time_start,
     time_end,
     time_steps_approx1,
@@ -275,7 +283,7 @@ approx1 = solves(
 approx2 = solves(
     y0,
     drift_array2,
-    z_approx2,
+    z_real,
     time_start,
     time_end,
     time_steps_approx2,
@@ -287,7 +295,7 @@ approx2 = solves(
 approx3 = solves(
     y0,
     drift_array3,
-    z_approx3,
+    z_real,
     time_start,
     time_end,
     time_steps_approx3,
@@ -299,7 +307,7 @@ approx3 = solves(
 approx4 = solves(
     y0,
     drift_array4,
-    z_approx4,
+    z_real,
     time_start,
     time_end,
     time_steps_approx4,
@@ -311,7 +319,7 @@ approx4 = solves(
 approx5 = solves(
     y0,
     drift_array5,
-    z_approx5,
+    z_real,
     time_start,
     time_end,
     time_steps_approx5,
@@ -476,12 +484,14 @@ print(rate_weak)
 #%% all errors plot
 both_error_fig = plt.figure('both_error_fig')
 plt.title("errors for beta=%.5f \n strong error rate = %f \n weak error rate = %f" % (beta, rate_strong, rate_weak))
-plt.errorbar([0, 1, 2, 3, 4], strong_error, yerr=seci, marker='', linewidth=1, label='strong error')
-plt.errorbar([0, 1, 2, 3, 4], weak_error, yerr=weci, marker='', linewidth=1, label='weak error')
-plt.errorbar([0.5, 1.5, 2.5, 3.5], consecutive_strong_error, yerr=cseci, marker='', linewidth=1, label='error between consecutive approximations')
-plt.errorbar([0.5, 1.5, 2.5, 3.5], consecutive_weak_error, yerr=cweci, marker='', linewidth=1, label='bias between consecutive approximations')
-#plt.semilogy([0.5, 1.5, 2.5, 3.5, 4.5, 5.5], consecutive_strong_error, marker='o', label='error between consecutive approximations')
-#plt.semilogy([0.5, 1.5, 2.5, 3.5, 4.5, 5.5], consecutive_weak_error, marker='o', label='bias between consecutive approximations')
+#plt.errorbar([0, 1, 2, 3, 4], strong_error, yerr=seci, marker='', linewidth=1, label='strong error')
+#plt.errorbar([0, 1, 2, 3, 4], weak_error, yerr=weci, marker='', linewidth=1, label='weak error')
+#plt.errorbar([0.5, 1.5, 2.5, 3.5], consecutive_strong_error, yerr=cseci, marker='', linewidth=1, label='error between consecutive approximations')
+#plt.errorbar([0.5, 1.5, 2.5, 3.5], consecutive_weak_error, yerr=cweci, marker='', linewidth=1, label='bias between consecutive approximations')
+plt.plot([0, 1, 2, 3, 4], strong_error, marker='o', label='strong error')
+plt.plot([0, 1, 2, 3, 4], weak_error, marker='o', label='weak error')
+plt.plot([0.5, 1.5, 2.5, 3.5], consecutive_strong_error, marker='o', label='error between consecutive approximations')
+plt.plot([0.5, 1.5, 2.5, 3.5], consecutive_weak_error, marker='o', label='bias between consecutive approximations')
 plt.yscale('log')
 plt.legend()
 plt.show()

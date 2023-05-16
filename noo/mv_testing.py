@@ -5,6 +5,9 @@ Created on Tue Apr 18 13:00:40 2023
 
 @author: lmcj
 """
+##### WARNING!!!!!!! #####
+##### TO RUN THIS YOU HAVE TO RUN euler_manual.py
+##### This is just a testing script
 #%%
 from sklearn.neighbors import KernelDensity
 import numpy as np
@@ -45,4 +48,26 @@ for i in range(time_steps):
     kde = KernelDensity(kernel="gaussian", bandwidth="scott").fit(y[i,:].reshape(-1, 1))
     y[i+1, :] = y[i, :] + 5*np.exp(kde.score_samples(y[i,:].reshape(-1, 1)))*dt + 5*z[i, :]
     #y[i+1, :] = y[i, :] - 5*dt + 0.5*z[i, :]
-
+#%% fbm kde
+fbm_newaxis = fbm_array[:, np.newaxis]
+fbm_kde_gaussian = KernelDensity(kernel="gaussian", bandwidth="scott").fit(fbm_newaxis)
+fbm_kde_tophat = KernelDensity(kernel="tophat", bandwidth="scott").fit(fbm_newaxis)
+fbm_kde_epanechnikov = KernelDensity(kernel="epanechnikov", bandwidth="scott").fit(fbm_newaxis)
+xx = np.linspace(-6, 1, 1000)[:, np.newaxis]
+fitting_gaussian = fbm_kde_gaussian.score_samples(xx)
+fitting_tophat = fbm_kde_tophat.score_samples(xx)
+fitting_epanechnikov = fbm_kde_epanechnikov.score_samples(xx)
+exp_fitting_gaussian = np.exp(fitting_gaussian)
+exp_fitting_tophat = np.exp(fitting_tophat)
+exp_fitting_epanechnikov = np.exp(fitting_epanechnikov)
+#%% little plot for fbm
+plt.figure()
+plt.plot(xx[:,0], exp_fitting_gaussian, label='kernel=gaussian')
+plt.plot(xx[:,0], exp_fitting_tophat, label='kernel=tophat')
+plt.plot(xx[:,0], exp_fitting_epanechnikov, label='kernel=epanechnikov')
+# density=True normalizes the weights
+# so we can use different amounts fro bins and compare
+# with the KDE
+plt.hist(fbm_array, density=True, bins=30, label='FBM histogram')
+plt.legend()
+plt.show()
