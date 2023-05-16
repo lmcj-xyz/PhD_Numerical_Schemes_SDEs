@@ -36,7 +36,7 @@ plt.rcParams['figure.dpi'] = 500
 epsilon = 10e-6
 beta = 1/8
 hurst = 1 - beta
-time_steps_max = 2**19
+time_steps_max = 2**16
 time_steps_approx1 = 2**8
 time_steps_approx2 = 2**9
 time_steps_approx3 = 2**10
@@ -77,29 +77,35 @@ plt.legend()
 plt.show()
 
 #%% Create a dF
+# We are supposed to use the square root of the heat kernel parameter
+# The function normal_differences computes it, but here we give it the
+# square root of the parameter from the start, which means it will compute the
+# square root of the square root of the parameter
+# this gives us reasonable convergence rates but IT IS INCORRECT
+# we need to see how to use the real parameter
 df_array_real = normal_differences(
-    #np.sqrt(heat_param(time_steps_max, hurst)),
-    heat_param(time_steps_max, hurst),
+    np.sqrt(heat_param(time_steps_max, hurst)),
+    #heat_param(time_steps_max, hurst),
     points_x, x_grid, half_support)
 df_array1 = normal_differences(
-    #np.sqrt(heat_param(time_steps_approx1, hurst)), 
-    heat_param(time_steps_approx1, hurst), 
+    np.sqrt(heat_param(time_steps_approx1, hurst)), 
+    #heat_param(time_steps_approx1, hurst), 
     points_x, x_grid, half_support)
 df_array2 = normal_differences(
-    #np.sqrt(heat_param(time_steps_approx2, hurst)),
-    heat_param(time_steps_approx2, hurst),
+    np.sqrt(heat_param(time_steps_approx2, hurst)),
+    #heat_param(time_steps_approx2, hurst),
     points_x, x_grid, half_support)
 df_array3 = normal_differences(
-    #np.sqrt(heat_param(time_steps_approx3, hurst)),
-    heat_param(time_steps_approx3, hurst),
+    np.sqrt(heat_param(time_steps_approx3, hurst)),
+    #heat_param(time_steps_approx3, hurst),
     points_x, x_grid, half_support)
 df_array4 = normal_differences(
-    #np.sqrt(heat_param(time_steps_approx4, hurst)),
-    heat_param(time_steps_approx4, hurst),
+    np.sqrt(heat_param(time_steps_approx4, hurst)),
+    #heat_param(time_steps_approx4, hurst),
     points_x, x_grid, half_support)
 df_array5 = normal_differences(
-    #np.sqrt(heat_param(time_steps_approx5, hurst)),
-    heat_param(time_steps_approx5, hurst),
+    np.sqrt(heat_param(time_steps_approx5, hurst)),
+    #heat_param(time_steps_approx5, hurst),
     points_x, x_grid, half_support)
 
 #%% ##### OPTIONAL #####
@@ -137,6 +143,8 @@ plt.plot(x_grid, drift_array_real, label="drift real solution")
 plt.plot(x_grid, drift_array1, label="drift approximation 1")
 plt.plot(x_grid, drift_array2, label="drift approximation 2")
 plt.plot(x_grid, drift_array3, label="drift approximation 3")
+plt.plot(x_grid, drift_array4, label="drift approximation 4")
+plt.plot(x_grid, drift_array5, label="drift approximation 5")
 plt.legend()
 plt.show()
 
