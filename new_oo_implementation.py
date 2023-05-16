@@ -24,6 +24,7 @@ class FractionalBrownianMotion:
         self.gaussian = rng.standard_normal(size=self.points)
         self.grid = np.linspace(start=1/self.points, stop=1, num=self.points)
         self.fbm = self.path()
+        self.fbb = self.bridge()
         
     def path(self) -> np.ndarray:
         x, y = np.meshgrid(self.grid, self.grid, sparse=False, indexing='ij')
@@ -36,11 +37,16 @@ class FractionalBrownianMotion:
         fbm_arr = np.matmul(cholesky, self.gaussian)
         return fbm_arr
     
-    def plot(self):
-        plt.figure()
+    def bridge(self) -> np.ndarray:
+        return self.fbm - (self.fbm[-1]/self.grid[-1])*self.grid
+    
+    def plot_fbm(self):
         plt.plot(self.grid, self.fbm)
-        plt.title("Path of fBm with %d points" % (self.points+1))
-        plt.show()
+        plt.title('Path of fBm with %d points' % (self.points+1))
+        
+    def plot_fbb(self):
+        plt.plot(self.grid, self.fbb)
+        plt.title('Path of "fB bridge" with %d points' % (self.points+1))
         
 #%% Brownian motion class
 class BrownianMotion:
@@ -153,7 +159,7 @@ class EulerMaruyama:
         for i in range(time_steps):
             y[i+1, :] = y[i, :] + self.drift(x=y[i, :])*dt + self.bm[i, :]
         return y
-#%%
+#%% Testing
 hurst = 0.75
 points = 2**9
 time_steps = 2**5
@@ -166,7 +172,10 @@ sp = 3
 y0 = 1
 
 fbm_object = FractionalBrownianMotion(hurst=hurst, points=points)
-fbm_object.plot()
+plt.figure()
+fbm_object.plot_fbm()
+fbm_object.plot_fbb()
+plt.show()
 fbm_path = fbm_object.fbm.copy()
 
 brownian_motion = BrownianMotion(time_steps=time_steps, initial_time=t0, final_time=t1, paths=sp)

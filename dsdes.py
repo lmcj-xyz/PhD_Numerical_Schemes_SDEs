@@ -44,7 +44,7 @@ def fbm(hurst, points_x, half_support):
 
 #%% bridge func
 def bridge(f, grid):
-    return f - (f[-1]/grid[-1])*grid    
+    return f - (f[-1]/grid[-1])*grid
 
 #%% heat parameter func
 # Heat kernel parameter creation based on time steps of the Euler scheme
