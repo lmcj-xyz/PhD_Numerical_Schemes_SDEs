@@ -77,6 +77,7 @@ plt.legend()
 plt.show()
 
 #%% Create a dF
+####### USE PYTHON map() for this and many other chunks
 # We are supposed to use the square root of the heat kernel parameter
 # The function normal_differences computes it, but here we give it the
 # square root of the parameter from the start, which means it will compute the
@@ -84,28 +85,28 @@ plt.show()
 # this gives us reasonable convergence rates but IT IS INCORRECT
 # we need to see how to use the real parameter
 df_array_real = normal_differences(
-    np.sqrt(heat_param(time_steps_max, hurst)),
-    #heat_param(time_steps_max, hurst),
+    #m.sqrt(heat_param(time_steps_max, hurst)),
+    heat_param(time_steps_max, hurst),
     points_x, x_grid, half_support)
 df_array1 = normal_differences(
-    np.sqrt(heat_param(time_steps_approx1, hurst)), 
-    #heat_param(time_steps_approx1, hurst), 
+    #m.sqrt(heat_param(time_steps_approx1, hurst)), 
+    heat_param(time_steps_approx1, hurst), 
     points_x, x_grid, half_support)
 df_array2 = normal_differences(
-    np.sqrt(heat_param(time_steps_approx2, hurst)),
-    #heat_param(time_steps_approx2, hurst),
+    #m.sqrt(heat_param(time_steps_approx2, hurst)),
+    heat_param(time_steps_approx2, hurst),
     points_x, x_grid, half_support)
 df_array3 = normal_differences(
-    np.sqrt(heat_param(time_steps_approx3, hurst)),
-    #heat_param(time_steps_approx3, hurst),
+    #m.sqrt(heat_param(time_steps_approx3, hurst)),
+    heat_param(time_steps_approx3, hurst),
     points_x, x_grid, half_support)
 df_array4 = normal_differences(
-    np.sqrt(heat_param(time_steps_approx4, hurst)),
-    #heat_param(time_steps_approx4, hurst),
+    #m.sqrt(heat_param(time_steps_approx4, hurst)),
+    heat_param(time_steps_approx4, hurst),
     points_x, x_grid, half_support)
 df_array5 = normal_differences(
-    np.sqrt(heat_param(time_steps_approx5, hurst)),
-    #heat_param(time_steps_approx5, hurst),
+    #m.sqrt(heat_param(time_steps_approx5, hurst)),
+    heat_param(time_steps_approx5, hurst),
     points_x, x_grid, half_support)
 
 #%% ##### OPTIONAL #####

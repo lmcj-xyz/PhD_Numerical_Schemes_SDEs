@@ -1,4 +1,4 @@
-# numerical_schemes_sdes
+# Numerical schemes for SDEs
 
 Some numerical schemes for SDEs.
 
