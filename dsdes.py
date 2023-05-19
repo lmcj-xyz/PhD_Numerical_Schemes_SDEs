@@ -6,13 +6,11 @@ Created on Tue Feb 28 14:09:33 2023
 """
 #%% libraries
 import numpy as np
-import matplotlib.pyplot as plt
 from numpy.random import default_rng
 rng = default_rng()
 from scipy.integrate import quad_vec
 from scipy.stats import norm
 import math as m
-import time
 
 #%% fbm func
 # Fractional Brownian motion (fBm) creation function
@@ -61,14 +59,11 @@ def heat_param(time_steps, hurst):
 def normal_differences(heat_parameter, points_x, x_grid, half_support):
     sqrt_heat_parameter = m.sqrt(heat_parameter)
     diff_norm = np.zeros(shape=points_x)
-    delta = half_support/points_x
-    const = -1/sqrt_heat_parameter**2
+    delta = half_support/(points_x - 1)
+    const = -1/heat_parameter
 
-    p = lambda u: const*(x_grid + u)*norm.pdf(
-        x_grid+u,
-        loc=0,
-        scale=sqrt_heat_parameter
-        )
+    p = lambda u: const*(x_grid + u)*norm.pdf(x_grid + u,
+                                              loc=0, scale=sqrt_heat_parameter)
     diff_norm = quad_vec(p, -delta, delta)[0]
 
     return diff_norm

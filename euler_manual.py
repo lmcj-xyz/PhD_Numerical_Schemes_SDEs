@@ -19,8 +19,10 @@ rng = default_rng()
 from scipy.integrate import quad_vec
 from scipy.stats import norm, linregress
 import time
+import math as m
 
-from dsdes import *
+from dsdes import approximate, bridge, coarse_noise, drift_func, fbm, \
+    gen_solve, heat_param, mv_solve, normal_differences, solve, solves
 
 # QOL parameters
 plt.rcParams['figure.dpi'] = 500
@@ -36,8 +38,8 @@ plt.rcParams['figure.dpi'] = 500
 epsilon = 10e-6
 beta = 1/8
 hurst = 1 - beta
-time_steps_max = 2**16
-time_steps_approx1 = 2**8
+time_steps_max = 2**19
+time_steps_approx1 = 2**5
 time_steps_approx2 = 2**9
 time_steps_approx3 = 2**10
 time_steps_approx4 = 2**11
@@ -60,6 +62,9 @@ fbm_array = fbm(hurst, points_x, half_support)
 
 # fBm "bridge"
 bridge_array = bridge(fbm_array, x_grid0)
+
+# sine array
+sine_array = np.sin(x_grid)
 
 # Euler scheme
 y0 = 1
@@ -121,13 +126,21 @@ plt.plot(x_grid, df_array5, label="df approximation 5")
 plt.legend()
 plt.show()
 
+#%% Create drift by convolution with a smooth function
+drift_array_real = np.convolve(sine_array, df_array_real, 'same')
+drift_array1 = np.convolve(sine_array, df_array1, 'same')
+drift_array2 = np.convolve(sine_array, df_array2, 'same')
+drift_array3 = np.convolve(sine_array, df_array3, 'same')
+drift_array4 = np.convolve(sine_array, df_array4, 'same')
+drift_array5 = np.convolve(sine_array, df_array5, 'same')
+
 #%% Create drift by convolution with the bridge
-drift_array_real = np.convolve(bridge_array, df_array_real, 'same')
-drift_array1 = np.convolve(bridge_array, df_array1, 'same')
-drift_array2 = np.convolve(bridge_array, df_array2, 'same')
-drift_array3 = np.convolve(bridge_array, df_array3, 'same')
-drift_array4 = np.convolve(bridge_array, df_array4, 'same')
-drift_array5 = np.convolve(bridge_array, df_array5, 'same')
+#drift_array_real = np.convolve(bridge_array, df_array_real, 'same')
+#drift_array1 = np.convolve(bridge_array, df_array1, 'same')
+#drift_array2 = np.convolve(bridge_array, df_array2, 'same')
+#drift_array3 = np.convolve(bridge_array, df_array3, 'same')
+#drift_array4 = np.convolve(bridge_array, df_array4, 'same')
+#drift_array5 = np.convolve(bridge_array, df_array5, 'same')
 
 #%% ##### OPTIONAL ##### Create drift by convolution with the fBm
 #drift_array_real = np.convolve(fbm_array, df_array_real, 'same')
@@ -141,11 +154,13 @@ drift_array5 = np.convolve(bridge_array, df_array5, 'same')
 # Plot drift
 drift_fig = plt.figure('drift')
 plt.plot(x_grid, drift_array_real, label="drift real solution")
-plt.plot(x_grid, drift_array1, label="drift approximation 1")
-plt.plot(x_grid, drift_array2, label="drift approximation 2")
-plt.plot(x_grid, drift_array3, label="drift approximation 3")
-plt.plot(x_grid, drift_array4, label="drift approximation 4")
-plt.plot(x_grid, drift_array5, label="drift approximation 5")
+plt.plot(x_grid, m.sqrt(2)*np.exp(-heat_param(time_steps_max, hurst)/2)*np.cos(x_grid)/2)
+#plt.plot(x_grid, drift_array1, label="drift approximation 1")
+#plt.plot(x_grid, drift_array2, label="drift approximation 2")
+#plt.plot(x_grid, drift_array3, label="drift approximation 3")
+#plt.plot(x_grid, drift_array4, label="drift approximation 4")
+#plt.plot(x_grid, drift_array5, label="drift approximation 5")
+plt.ylim([-2, 2])
 plt.legend()
 plt.show()
 
@@ -257,11 +272,11 @@ time_grid_approx50 = np.insert(time_grid_approx5, 0, 0)
 
 #%% ##### OPTIONAL #####
 # Visualize coarse noises
-coarse_fig = plt.figure()
-plt.plot(time_grid_approx4, z_approx4[:,0], label="approximation")
-plt.plot(time_grid_real, z_real[:,0], label="real solution")
-plt.legend()
-plt.show()
+#coarse_fig = plt.figure()
+#plt.plot(time_grid_approx4, z_approx4[:,0], label="approximation")
+#plt.plot(time_grid_real, z_real[:,0], label="real solution")
+#plt.legend()
+#plt.show()
 
 #%%% Solve an SDE by Euler scheme
 st = time.process_time()
@@ -396,7 +411,12 @@ strong_error = np.mean(pathwise_error, axis=1)
 a = 5
 seci = np.zeros(shape=a)
 for i in range(a):
-    seci[i] = 1.96*np.sqrt(np.sum((pathwise_error[i, :] - strong_error[i])**2/(sample_paths-1))/sample_paths)
+    seci[i] = 1.96*np.sqrt(
+        np.sum(
+            (
+                pathwise_error[i, :] - strong_error[i]
+            )**2/(sample_paths-1))/sample_paths
+        )
 
 #%% weak error
 # Computation of weak errors at terminal time
@@ -437,7 +457,9 @@ cseci = np.zeros(shape=b)
 for i in range(b):
     cseci[i] = 1.96*np.sqrt(
         np.sum(
-            (pw_consecutive_error[i, :] - consecutive_strong_error[i])**2/(sample_paths-1)
+            (
+                pw_consecutive_error[i, :] - consecutive_strong_error[i]
+            )**2/(sample_paths-1)
             )/sample_paths
         )
 
@@ -459,7 +481,9 @@ cweci = np.zeros(shape=b)
 for i in range(b):
     cweci[i] = 1.96*np.sqrt(
         np.sum(
-            (pw_consecutive_bias[i, :] - consecutive_weak_error[i])**2/(sample_paths-1)
+            (
+                pw_consecutive_bias[i, :] - consecutive_weak_error[i]
+            )**2/(sample_paths-1)
             )/sample_paths
         )
 
@@ -492,15 +516,50 @@ print(rate_weak)
 
 #%% all errors plot
 both_error_fig = plt.figure('both_error_fig')
-plt.title("errors for beta=%.5f \n strong error rate = %f \n weak error rate = %f" % (beta, rate_strong, rate_weak))
-#plt.errorbar([0, 1, 2, 3, 4], strong_error, yerr=seci, marker='', linewidth=1, label='strong error')
-#plt.errorbar([0, 1, 2, 3, 4], weak_error, yerr=weci, marker='', linewidth=1, label='weak error')
-#plt.errorbar([0.5, 1.5, 2.5, 3.5], consecutive_strong_error, yerr=cseci, marker='', linewidth=1, label='error between consecutive approximations')
-#plt.errorbar([0.5, 1.5, 2.5, 3.5], consecutive_weak_error, yerr=cweci, marker='', linewidth=1, label='bias between consecutive approximations')
-plt.plot([0, 1, 2, 3, 4], strong_error, marker='o', label='strong error')
-plt.plot([0, 1, 2, 3, 4], weak_error, marker='o', label='weak error')
-plt.plot([0.5, 1.5, 2.5, 3.5], consecutive_strong_error, marker='o', label='error between consecutive approximations')
-plt.plot([0.5, 1.5, 2.5, 3.5], consecutive_weak_error, marker='o', label='bias between consecutive approximations')
+plt.title(
+    "errors for beta=%.5f \n strong error rate = %f \n weak error rate = %f" 
+    % (beta, rate_strong, rate_weak)
+    )
+#plt.errorbar([0, 1, 2, 3, 4], 
+#        strong_error, 
+#        yerr=seci, 
+#        marker='',
+#        linewidth=1,
+#        label='strong error')
+#plt.errorbar([0, 1, 2, 3, 4], 
+#        weak_error,
+#        yerr=weci,
+#        marker='',
+#        linewidth=1,
+#        label='weak error')
+#plt.errorbar([0.5, 1.5, 2.5, 3.5],
+#        consecutive_strong_error,
+#        yerr=cseci,
+#        marker='',
+#        linewidth=1,
+#        label='error between consecutive approximations')
+#plt.errorbar([0.5, 1.5, 2.5, 3.5],
+#        consecutive_weak_error,
+#        yerr=cweci,
+#        marker='',
+#        linewidth=1,
+#        label='bias between consecutive approximations')
+plt.plot([0, 1, 2, 3, 4], 
+         strong_error,
+         marker='o',
+         label='strong error')
+plt.plot([0, 1, 2, 3, 4],
+         weak_error,
+         marker='o',
+         label='weak error')
+plt.plot([0.5, 1.5, 2.5, 3.5],
+         consecutive_strong_error,
+         marker='o',
+         label='error between consecutive approximations')
+plt.plot([0.5, 1.5, 2.5, 3.5],
+         consecutive_weak_error,
+         marker='o',
+         label='bias between consecutive approximations')
 plt.yscale('log')
 plt.legend()
 plt.show()
@@ -518,15 +577,15 @@ plt.semilogy(strong_error, marker='o')
 plt.show()
 
 #%% one sample path
-path = 9
-plt.figure('paths')
-plt.plot(t0_real, real_solution[:,path])
-plt.plot(t0_a1,         approx1[:,path])
-plt.plot(t0_a2,         approx2[:,path])
-plt.plot(t0_a3,         approx3[:,path])
-plt.plot(t0_a4,         approx4[:,path])
-plt.plot(t0_a5,         approx5[:,path])
-plt.show()
+#path = 9
+#plt.figure('paths')
+#plt.plot(t0_real, real_solution[:,path])
+#plt.plot(t0_a1,         approx1[:,path])
+#plt.plot(t0_a2,         approx2[:,path])
+#plt.plot(t0_a3,         approx3[:,path])
+#plt.plot(t0_a4,         approx4[:,path])
+#plt.plot(t0_a5,         approx5[:,path])
+#plt.show()
 
 #%% histograms
 fig, ax = plt.subplots()
