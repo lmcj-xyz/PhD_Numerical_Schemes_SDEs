@@ -150,11 +150,10 @@ drift_array5 = np.convolve(sine_array, df_array5, 'same')
 #drift_array4 = np.convolve(fbm_array, df_array4, 'same')
 #drift_array5 = np.convolve(fbm_array, df_array5, 'same')
 
-#%% ##### OPTIONAL #####
-# Plot drift
+#%% ##### OPTIONAL ###### Plot drift
 drift_fig = plt.figure('drift')
 plt.plot(x_grid, drift_array_real, label="drift real solution")
-plt.plot(x_grid, m.sqrt(2)*np.exp(-heat_param(time_steps_max, hurst)/2)*np.cos(x_grid)/2)
+plt.plot(x_grid, m.sqrt(2)*np.exp(-heat_param(time_steps_max, hurst)/2)*np.cos(x_grid)/2, label="drift if we use sine instead of fbm")
 #plt.plot(x_grid, drift_array1, label="drift approximation 1")
 #plt.plot(x_grid, drift_array2, label="drift approximation 2")
 #plt.plot(x_grid, drift_array3, label="drift approximation 3")

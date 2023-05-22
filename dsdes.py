@@ -47,7 +47,9 @@ def bridge(f, grid):
 #%% heat parameter func
 # Heat kernel parameter creation based on time steps of the Euler scheme
 def heat_param(time_steps, hurst):
-    eta = 1/(2*(hurst-1/2)**2 + 2 - hurst)
+    #eta = 1/(2*(hurst-1/2)**2 + 2 - hurst) # Parameter that was being used
+    eta = 1/((hurst-1/2)**2 + 2 - hurst) # Parameter from paper?
+    #eta = 1/((hurst-1/2)**2 + 2) # Some testing parameter
     #param = np.sqrt(1/(time_steps**(eta))) # Incorrect parameter
     param = 1/(time_steps**(eta)) # Parameter according to the theory
     #param = 2/(time_steps**(eta)) # Using a different parameter
