@@ -50,10 +50,12 @@ def heat_param(time_steps, hurst):
     #eta = 1/(2*(hurst-1/2)**2 + 2 - hurst) # Parameter that was being used
     eta = 1/((hurst-1/2)**2 + 2 - hurst) # Parameter from paper?
     #eta = 1/((hurst-1/2)**2 + 2) # Some testing parameter
+    
     #param = np.sqrt(1/(time_steps**(eta))) # Incorrect parameter
+    #param = 1/(time_steps**0.001) # Using a different parameter
     param = 1/(time_steps**(eta)) # Parameter according to the theory
-    #param = 2/(time_steps**(eta)) # Using a different parameter
     return param
+    #return 0.5
 
 #%% normal differences func
 # Creation of the drift by convoluting fBm with the 
@@ -61,13 +63,17 @@ def heat_param(time_steps, hurst):
 def normal_differences(heat_parameter, points_x, x_grid, half_support):
     sqrt_heat_parameter = m.sqrt(heat_parameter)
     diff_norm = np.zeros(shape=points_x)
-    delta = half_support/(points_x - 1)
+    delta = half_support/(points_x)
     const = -1/heat_parameter
 
-    p = lambda u: const*(x_grid + u)*norm.pdf(x_grid + u,
-                                              loc=0, scale=sqrt_heat_parameter)
+    p = lambda u: const*(x_grid - u)*norm.pdf(x_grid - u,
+                                              loc=0, 
+                                              scale=sqrt_heat_parameter)
+    # 'quad_vec' gives you the the result of the integral and the error
+    # this is why we select the element '0' from that computation
     diff_norm = quad_vec(p, -delta, delta)[0]
 
+    #return p, diff_norm
     return diff_norm
 
 #%% drift func
