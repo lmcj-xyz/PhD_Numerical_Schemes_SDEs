@@ -18,11 +18,12 @@ from numpy.random import default_rng
 rng = default_rng()
 from scipy.integrate import quad_vec
 from scipy.stats import norm, linregress
+from scipy.stats import linregress
 import time
 import math as m
 
 from dsdes import approximate, bridge, coarse_noise, drift_func, fbm, \
-    gen_solve, heat_param, mv_solve, normal_differences, solve, solves
+    gen_solve, heat_kernel_parameter, mv_solve, integral_between_grid_points, solve, solves
 
 # QOL parameters
 plt.rcParams['figure.dpi'] = 500
@@ -36,24 +37,24 @@ plt.rcParams['figure.dpi'] = 500
 #%% some parameters
 # Variables to modify for the scheme
 epsilon = 10e-6
-beta = 1/8
+beta = 7/16
 hurst = 1 - beta
 time_steps_max = 2**15
-time_steps_approx1 = 2**5
-time_steps_approx2 = 2**9
-time_steps_approx3 = 2**10
-time_steps_approx4 = 2**11
-time_steps_approx5 = 2**12
+time_steps_approx1 = 2**10
+time_steps_approx2 = 2**11
+time_steps_approx3 = 2**12
+time_steps_approx4 = 2**13
+time_steps_approx5 = 2**14
 
 # Variables to create fBm
 points_x = 2**8
 half_support = 10
 delta_x = half_support/(points_x-1)
-x_grid = np.linspace(
+grid_x = np.linspace(
     start = -half_support, stop = half_support, num = points_x
     )
 # For the Brownian bridge
-x_grid0 = np.linspace(
+grid_x0 = np.linspace(
     start = 0, stop =2*half_support, num = points_x
     )
 
@@ -61,10 +62,10 @@ x_grid0 = np.linspace(
 fbm_array = fbm(hurst, points_x, half_support)
 
 # fBm "bridge"
-bridge_array = bridge(fbm_array, x_grid0)
+bridge_array = bridge(fbm_array, grid_x0)
 
 # sine array
-sine_array = np.sin(x_grid)
+sine_array = np.sin(grid_x)
 
 # Euler scheme
 y0 = 1
@@ -75,8 +76,8 @@ time_end = 1
 #%% ##### OPTIONAL #####
 # Plot fBm
 fbm_fig = plt.figure('fbm')
-plt.plot(x_grid, fbm_array, label='fbm')
-plt.plot(x_grid, bridge_array, label='brownian bridge')
+plt.plot(grid_x, fbm_array, label='fbm')
+plt.plot(grid_x, bridge_array, label='brownian bridge')
 plt.grid(linestyle='--', axis='y', linewidth=0.5)
 plt.legend()
 plt.show()
@@ -84,39 +85,39 @@ plt.show()
 #%% Create a dF
 ####### USE PYTHON map() for this and many other chunks
 # We are supposed to use the square root of the heat kernel parameter
-# The function normal_differences computes it, but here we give it the
+# The function integral_between_grid_points computes it, but here we give it the
 # square root of the parameter from the start, which means it will compute the
 # square root of the square root of the parameter
 # this gives us reasonable convergence rates but IT IS INCORRECT
 # we need to see how to use the real parameter
-df_array_real = normal_differences(
-    heat_param(time_steps_max, hurst),
-    points_x, x_grid, half_support)
-df_array1 = normal_differences(
-    heat_param(time_steps_approx1, hurst), 
-    points_x, x_grid, half_support)
-df_array2 = normal_differences(
-    heat_param(time_steps_approx2, hurst),
-    points_x, x_grid, half_support)
-df_array3 = normal_differences(
-    heat_param(time_steps_approx3, hurst),
-    points_x, x_grid, half_support)
-df_array4 = normal_differences(
-    heat_param(time_steps_approx4, hurst),
-    points_x, x_grid, half_support)
-df_array5 = normal_differences(
-    heat_param(time_steps_approx5, hurst),
-    points_x, x_grid, half_support)
+df_array_real = integral_between_grid_points(
+    heat_kernel_parameter(time_steps_max, hurst),
+    points_x, grid_x, half_support)
+df_array1 = integral_between_grid_points(
+    heat_kernel_parameter(time_steps_approx1, hurst), 
+    points_x, grid_x, half_support)
+df_array2 = integral_between_grid_points(
+    heat_kernel_parameter(time_steps_approx2, hurst),
+    points_x, grid_x, half_support)
+df_array3 = integral_between_grid_points(
+    heat_kernel_parameter(time_steps_approx3, hurst),
+    points_x, grid_x, half_support)
+df_array4 = integral_between_grid_points(
+    heat_kernel_parameter(time_steps_approx4, hurst),
+    points_x, grid_x, half_support)
+df_array5 = integral_between_grid_points(
+    heat_kernel_parameter(time_steps_approx5, hurst),
+    points_x, grid_x, half_support)
 
 #%% ##### OPTIONAL #####
 # Plot dF
 df_fig = plt.figure('df')
-plt.plot(x_grid, df_array_real, label="df real solution")
-plt.plot(x_grid, df_array1, label="df approximation 1")
-plt.plot(x_grid, df_array2, label="df approximation 2")
-plt.plot(x_grid, df_array3, label="df approximation 3")
-plt.plot(x_grid, df_array4, label="df approximation 4")
-plt.plot(x_grid, df_array5, label="df approximation 5")
+plt.plot(grid_x, df_array_real, label="df real solution")
+plt.plot(grid_x, df_array1, label="df approximation 1")
+plt.plot(grid_x, df_array2, label="df approximation 2")
+plt.plot(grid_x, df_array3, label="df approximation 3")
+plt.plot(grid_x, df_array4, label="df approximation 4")
+plt.plot(grid_x, df_array5, label="df approximation 5")
 plt.legend()
 plt.show()
 
@@ -145,16 +146,17 @@ drift_array5 = np.convolve(sine_array, df_array5, 'same')
 #drift_array5 = np.convolve(fbm_array, df_array5, 'same')
 
 #%% ##### OPTIONAL ###### Plot drift
+manually_computed = np.exp(-heat_kernel_parameter(time_steps_max, hurst)/2)*np.cos(grid_x)
+limy = 2
 drift_fig = plt.figure('drift')
-#plt.plot(drift_array_real, label="drift real solution")
-plt.plot(x_grid, drift_array_real, label="drift real solution")
-plt.plot(x_grid, m.sqrt(2)*np.exp(-heat_param(time_steps_max, hurst)/2)*np.cos(x_grid)/2, label="drift if we use sine instead of fbm")
-plt.plot(x_grid, drift_array1, label="drift approximation 1")
-plt.plot(x_grid, drift_array2, label="drift approximation 2")
-#plt.plot(x_grid, drift_array3, label="drift approximation 3")
-#plt.plot(x_grid, drift_array4, label="drift approximation 4")
-#plt.plot(x_grid, drift_array5, label="drift approximation 5")
-plt.ylim([-2, 2])
+plt.plot(grid_x, drift_array_real, label="drift real solution")
+plt.plot(grid_x, manually_computed, label="drift for sine instead of fbm")
+#plt.plot(grid_x, drift_array1, label="drift approximation 1")
+#plt.plot(grid_x, drift_array2, label="drift approximation 2")
+#plt.plot(grid_x, drift_array3, label="drift approximation 3")
+#plt.plot(grid_x, drift_array4, label="drift approximation 4")
+#plt.plot(grid_x, drift_array5, label="drift approximation 5")
+plt.ylim([-limy, limy])
 plt.legend()
 plt.show()
 
@@ -165,12 +167,12 @@ delta_x = half_support/(points_x-1)
 support = np.linspace(-half_support, half_support, points_x)
 
 #%% ########OPTIONAL##########
-eval_real = drift_func(support, drift_array_real, x_grid, points_x, delta_x)
-eval1 = drift_func(support, drift_array1, x_grid, points_x, delta_x)
-eval2 = drift_func(support, drift_array2, x_grid, points_x, delta_x)
-eval3 = drift_func(support, drift_array3, x_grid, points_x, delta_x)
-eval4 = drift_func(support, drift_array4, x_grid, points_x, delta_x)
-eval5 = drift_func(support, drift_array5, x_grid, points_x, delta_x)
+eval_real = drift_func(support, drift_array_real, grid_x, points_x, delta_x)
+eval1 = drift_func(support, drift_array1, grid_x, points_x, delta_x)
+eval2 = drift_func(support, drift_array2, grid_x, points_x, delta_x)
+eval3 = drift_func(support, drift_array3, grid_x, points_x, delta_x)
+eval4 = drift_func(support, drift_array4, grid_x, points_x, delta_x)
+eval5 = drift_func(support, drift_array5, grid_x, points_x, delta_x)
 
 #%% ##### OPTIONAL #####
 drift_func_fig = plt.figure('driftfunc')
@@ -179,6 +181,7 @@ plt.plot(support, eval_real, label="real solution drift function")
 #plt.plot(support, eval1, label="approximation 1 drift function")
 #plt.plot(support, eval2, label="approximation 2 drift function")
 #plt.plot(support, eval3, label="approximation 3 drift function")
+plt.ylim([-2, 2])
 plt.grid()
 plt.legend()
 plt.show()
@@ -186,19 +189,19 @@ plt.show()
 #%% #### OPTIONAL ####
 # Convolute deterministic functions with dF and plot for testing purposes
 # Create a deterministic function for testing
-square = x_grid**2
-cube = x_grid**3
-sine = np.sin(x_grid)
+square = grid_x**2
+cube = grid_x**3
+sine = np.sin(grid_x)
 # Create dF, you can change ts to see different parameters of the heat kernel
 ts = 2**10
 points_x_test = 2**8
-x_grid_test = np.linspace(
+grid_x_test = np.linspace(
     start = -half_support, stop = half_support, num = points_x
     )
-df_array_det = normal_differences(
-    np.sqrt(heat_param(time_steps_approx1, hurst)), 
+df_array_det = integral_between_grid_points(
+    np.sqrt(heat_kernel_parameter(time_steps_approx1, hurst)), 
     #1/10**4,
-    points_x_test, x_grid_test, half_support
+    points_x_test, grid_x_test, half_support
     )
 # Convolute
 square_conv = np.convolve(square, df_array_det, 'same')
@@ -282,7 +285,7 @@ real_solution = solves(
     time_end,
     time_steps_max,
     sample_paths,
-    x_grid,
+    grid_x,
     points_x,
     delta_x
     )
@@ -294,7 +297,7 @@ approx1 = solves(
     time_end,
     time_steps_approx1,
     sample_paths,
-    x_grid,
+    grid_x,
     points_x,
     delta_x
     )
@@ -306,7 +309,7 @@ approx2 = solves(
     time_end,
     time_steps_approx2,
     sample_paths,
-    x_grid,
+    grid_x,
     points_x,
     delta_x
     )
@@ -318,7 +321,7 @@ approx3 = solves(
     time_end,
     time_steps_approx3,
     sample_paths,
-    x_grid,
+    grid_x,
     points_x,
     delta_x
     )
@@ -330,7 +333,7 @@ approx4 = solves(
     time_end,
     time_steps_approx4,
     sample_paths,
-    x_grid,
+    grid_x,
     points_x,
     delta_x
     )
@@ -342,7 +345,7 @@ approx5 = solves(
     time_end,
     time_steps_approx5,
     sample_paths,
-    x_grid,
+    grid_x,
     points_x,
     delta_x
     )

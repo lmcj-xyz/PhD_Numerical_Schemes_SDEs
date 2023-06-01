@@ -11,78 +11,89 @@ rng = default_rng()
 from scipy.integrate import quad_vec
 from scipy.stats import norm
 import math as m
-
 #%% fbm func
 # Fractional Brownian motion (fBm) creation function
-def fbm(hurst, points_x, half_support):
+def fbm(hurst, points, half_support):
     fbm_grid = np.linspace(
-            start = 1/points_x,
+            start = 1/points,
             stop = 2*half_support,
             #stop = 1,
-            num = points_x
+            num = points
             )
-    x_grid, y_grid = np.meshgrid(
+    xv, yv = np.meshgrid(
             fbm_grid, 
             fbm_grid, 
             sparse=False,
             indexing='ij'
             )
     covariance = 0.5*(
-            np.abs(x_grid)**(2*hurst) +
-            np.abs(y_grid)**(2*hurst) - 
-            np.abs(x_grid - y_grid)**(2*hurst)
+            np.abs(xv)**(2*hurst) +
+            np.abs(yv)**(2*hurst) - 
+            np.abs(xv - yv)**(2*hurst)
             )
-    g = rng.standard_normal(size=points_x)
+    g = rng.standard_normal(size=points)
     #g_bridge = g - (fbm_grid/half_support)*g[-1]
     cholesky = np.linalg.cholesky(a=covariance)
     #fbm_arr = np.matmul(cholesky, g_bridge)
-    fbm_arr = np.matmul(cholesky, g)
+    fbm_array = np.matmul(cholesky, g)
     #fbm_arr = np.concatenate([np.zeros(1),fbm_arr])
-    return fbm_arr
+    return fbm_array
 
 #%% bridge func
 def bridge(f, grid):
-    return f - (f[-1]/grid[-1])*grid
+    bridge_array = f - (f[-1]/grid[-1])*grid
+    return bridge_array
 
 #%% heat parameter func
 # Heat kernel parameter creation based on time steps of the Euler scheme
-def heat_param(time_steps, hurst):
+def heat_kernel_parameter(time_steps, hurst):
     #eta = 1/(2*(hurst-1/2)**2 + 2 - hurst) # Parameter that was being used
     eta = 1/((hurst-1/2)**2 + 2 - hurst) # Parameter from paper?
     #eta = 1/((hurst-1/2)**2 + 2) # Some testing parameter
     
-    #param = np.sqrt(1/(time_steps**(eta))) # Incorrect parameter
-    #param = 1/(time_steps**0.001) # Using a different parameter
-    param = 1/(time_steps**(eta)) # Parameter according to the theory
-    return param
+    #parameter = np.sqrt(1/(time_steps**(eta))) # Incorrect parameter
+    #parameter = 1 # Using a different parameter
+    parameter = 1/(time_steps**(eta)) # Parameter according to the theory
+    return parameter
     #return 0.5
 
-#%% normal differences func
-# Creation of the drift by convoluting fBm with the 
-# derivative of the heat kernel
-def normal_differences(heat_parameter, points_x, x_grid, half_support):
-    sqrt_heat_parameter = m.sqrt(heat_parameter)
-    diff_norm = np.zeros(shape=points_x)
+#%% derivative of heat kernel for testing only
+def derivative_heat_kernel(z, heat_kernel_parameter, grid_x):
+    constant = -1/heat_kernel_parameter
+    sqrt_heat_kernel_parameter = m.sqrt(heat_kernel_parameter)
+    derivative = constant*(grid_x - z)*norm.pdf(grid_x - z,
+                                                loc=0,
+                                                scale=sqrt_heat_kernel_parameter)
+    return derivative
+
+#%% integral between grid points func
+def integral_between_grid_points(heat_kernel_parameter, 
+                                 points_x, grid_x, 
+                                 half_support):
+    sqrt_heat_kernel_parameter = m.sqrt(heat_kernel_parameter)
+    integral = np.zeros_like(grid_x)
     delta = half_support/(points_x)
-    const = -1/heat_parameter
-
-    p = lambda u: const*(x_grid - u)*norm.pdf(x_grid - u,
-                                              loc=0, 
-                                              scale=sqrt_heat_parameter)
-    # 'quad_vec' gives you the the result of the integral and the error
-    # this is why we select the element '0' from that computation
-    diff_norm = quad_vec(p, -delta, delta)[0]
-
+    #constant = -1/heat_kernel_parameter
+    constant = -1/(m.sqrt(2*m.pi)*sqrt_heat_kernel_parameter**(3/2))
+    derivative_heat_kernel = lambda z: \
+        constant*(grid_x - z)*norm.pdf(grid_x - z,
+                                       loc=0, 
+                                       scale=sqrt_heat_kernel_parameter)
+    integral, error = quad_vec(derivative_heat_kernel, a=-delta, b=delta)
+    #integral, error = quad_vec(derivative_heat_kernel, a=0, b=2*delta)
     #return p, diff_norm
-    return diff_norm
+    return integral
 
 #%% drift func
 # Drift coefficient as a piecewise function created out of an array
 def drift_func(x, drift_array, grid, points, delta):
+    #piecewise_linear = lambda k: \
+    #    (drift_array[k] - drift_array[k-1])/(grid[k] - grid[k-1])
     return np.piecewise(
         x, 
         [(i - delta <= x)*(x < i + delta) for i in grid], 
-        [drift_array[i] for i in range(points)]
+        #[piecewise_linear(i) for i in range(points)]
+        [drift_array[i] for i in range(points)] # piecewise constant
         )
 
 
@@ -217,15 +228,15 @@ def approximate(
         noise,
         sample_paths,
         y0,
-        x_grid,
+        grid_x,
         points_x,
         delta_x,
         half_support):
-    df = normal_differences(
-        np.sqrt(heat_param(time_steps, hurst)), 
+    df = integral_between_grid_points(
+        np.sqrt(heat_kernel_parameter(time_steps, hurst)), 
         #15/11, # for testing with a fixed heat kernel parameter
         points_x, 
-        x_grid, 
+        grid_x, 
         half_support
         )
     drift_array = np.convolve(fbm, df, 'same')
@@ -241,7 +252,7 @@ def approximate(
         time_end, 
         time_steps, 
         sample_paths, 
-        x_grid, 
+        grid_x, 
         points_x, 
         delta_x
         )
