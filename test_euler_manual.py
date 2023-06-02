@@ -37,7 +37,7 @@ plt.rcParams['figure.dpi'] = 500
 #%% some parameters
 # Variables to modify for the scheme
 epsilon = 10e-6
-beta = 7/16
+beta = 4/16
 hurst = 1 - beta
 time_steps_max = 2**15
 time_steps_approx1 = 2**10
@@ -90,23 +90,30 @@ plt.show()
 # square root of the square root of the parameter
 # this gives us reasonable convergence rates but IT IS INCORRECT
 # we need to see how to use the real parameter
+var_heat_kernel_real = heat_kernel_parameter(time_steps_max, hurst)
+var_heat_kernel_approx1 = heat_kernel_parameter(time_steps_approx1, hurst)
+var_heat_kernel_approx2 = heat_kernel_parameter(time_steps_approx2, hurst)
+var_heat_kernel_approx3 = heat_kernel_parameter(time_steps_approx3, hurst)
+var_heat_kernel_approx4 = heat_kernel_parameter(time_steps_approx4, hurst)
+var_heat_kernel_approx5 = heat_kernel_parameter(time_steps_approx5, hurst)
+
 df_array_real = integral_between_grid_points(
-    heat_kernel_parameter(time_steps_max, hurst),
+    var_heat_kernel_real,
     points_x, grid_x, half_support)
 df_array1 = integral_between_grid_points(
-    heat_kernel_parameter(time_steps_approx1, hurst), 
+    var_heat_kernel_approx1, 
     points_x, grid_x, half_support)
 df_array2 = integral_between_grid_points(
-    heat_kernel_parameter(time_steps_approx2, hurst),
+    var_heat_kernel_approx2,
     points_x, grid_x, half_support)
 df_array3 = integral_between_grid_points(
-    heat_kernel_parameter(time_steps_approx3, hurst),
+    var_heat_kernel_approx3,
     points_x, grid_x, half_support)
 df_array4 = integral_between_grid_points(
-    heat_kernel_parameter(time_steps_approx4, hurst),
+    var_heat_kernel_approx4,
     points_x, grid_x, half_support)
 df_array5 = integral_between_grid_points(
-    heat_kernel_parameter(time_steps_approx5, hurst),
+    var_heat_kernel_approx5,
     points_x, grid_x, half_support)
 
 #%% ##### OPTIONAL #####
@@ -151,7 +158,7 @@ limy = 2
 drift_fig = plt.figure('drift')
 plt.plot(grid_x, drift_array_real, label="drift real solution")
 plt.plot(grid_x, manually_computed, label="drift for sine instead of fbm")
-#plt.plot(grid_x, drift_array1, label="drift approximation 1")
+plt.plot(grid_x, drift_array1, label="drift approximation 1")
 #plt.plot(grid_x, drift_array2, label="drift approximation 2")
 #plt.plot(grid_x, drift_array3, label="drift approximation 3")
 #plt.plot(grid_x, drift_array4, label="drift approximation 4")
