@@ -22,7 +22,7 @@ convolution_hk_sin = Integral.integrate(heat_kernel*der_sin, (y, -oo, oo))
 convolution_hk_cos = Integral.integrate(heat_kernel*der_cos, (y, -oo, oo))
 convolution_hk_lin = Integral.integrate(heat_kernel*der_lin, (y, -oo, oo))
 
-t_hk = 8/11
+t_hk = 4/5
 convolution_for_t_hk_sin = convolution_hk_sin.subs(t, t_hk)
 convolution_for_t_hk_cos = convolution_hk_cos.subs(t, t_hk)
 convolution_for_t_hk_lin = convolution_hk_lin.subs(t, t_hk)

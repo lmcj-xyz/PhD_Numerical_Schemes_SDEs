@@ -50,9 +50,9 @@ def heat_kernel_parameter(time_steps, hurst):
     eta = 1/(2*(hurst-1/2)**2 + 2 - hurst) # Parameter that was being used
     #eta = 1/((hurst-1/2)**2 + 2) # Some testing parameter
     #eta = 1/((hurst-1/2)**2 + 2 - hurst) # Parameter from paper?
-    parameter = np.sqrt(1/(time_steps**eta)) # Incorrect parameter
+    #parameter = np.sqrt(1/(time_steps**eta)) # Incorrect parameter
     #parameter = (1/(time_steps**eta))**(1/10) # Using a different parameter
-    #parameter = 1/(time_steps**eta) # Parameter according to the theory
+    parameter = 1/(time_steps**eta) # Parameter according to the theory
     #return 0.5
     return parameter
 
@@ -63,7 +63,8 @@ def integral_between_grid_points(heat_kernel_parameter,
     sqrt_heat_kernel_parameter = m.sqrt(heat_kernel_parameter)
     integral = np.zeros_like(grid_x)
     delta = half_support/(points)
-    constant = -1/heat_kernel_parameter
+    constant = 1
+    #constant = -1/(m.sqrt(2*m.pi)*heat_kernel_parameter)
     #constant = -1/(m.sqrt(2*m.pi)*sqrt_heat_kernel_parameter**(3/2))
     derivative_heat_kernel = lambda z: \
         constant*(grid_x - z)*norm.pdf(grid_x - z,
