@@ -129,20 +129,20 @@ plt.legend()
 plt.show()
 
 #%% Create drift by convolution with a smooth function
-drift_array_real = np.convolve(sine_array, df_array_real, 'same')
-drift_array1 = np.convolve(sine_array, df_array1, 'same')
-drift_array2 = np.convolve(sine_array, df_array2, 'same')
-drift_array3 = np.convolve(sine_array, df_array3, 'same')
-drift_array4 = np.convolve(sine_array, df_array4, 'same')
-drift_array5 = np.convolve(sine_array, df_array5, 'same')
+#drift_array_real = np.convolve(sine_array, df_array_real, 'same')
+#drift_array1 = np.convolve(sine_array, df_array1, 'same')
+#drift_array2 = np.convolve(sine_array, df_array2, 'same')
+#drift_array3 = np.convolve(sine_array, df_array3, 'same')
+#drift_array4 = np.convolve(sine_array, df_array4, 'same')
+#drift_array5 = np.convolve(sine_array, df_array5, 'same')
 
 #%% Create drift by convolution with the bridge
-#drift_array_real = np.convolve(bridge_array, df_array_real, 'same')
-#drift_array1 = np.convolve(bridge_array, df_array1, 'same')
-#drift_array2 = np.convolve(bridge_array, df_array2, 'same')
-#drift_array3 = np.convolve(bridge_array, df_array3, 'same')
-#drift_array4 = np.convolve(bridge_array, df_array4, 'same')
-#drift_array5 = np.convolve(bridge_array, df_array5, 'same')
+drift_array_real = np.convolve(bridge_array, df_array_real, 'same')
+drift_array1 = np.convolve(bridge_array, df_array1, 'same')
+drift_array2 = np.convolve(bridge_array, df_array2, 'same')
+drift_array3 = np.convolve(bridge_array, df_array3, 'same')
+drift_array4 = np.convolve(bridge_array, df_array4, 'same')
+drift_array5 = np.convolve(bridge_array, df_array5, 'same')
 
 #%% ##### OPTIONAL ##### Create drift by convolution with the fBm
 #drift_array_real = np.convolve(fbm_array, df_array_real, 'same')

@@ -56,6 +56,11 @@ def heat_kernel_parameter(time_steps, hurst):
     #return 0.5
     return parameter
 
+#%%
+# TODO
+def derivative_heat_kernel():
+    return 0
+
 #%% integral between grid points func
 def integral_between_grid_points(heat_kernel_parameter, 
                                  points, grid_x, 
@@ -63,8 +68,8 @@ def integral_between_grid_points(heat_kernel_parameter,
     sqrt_heat_kernel_parameter = m.sqrt(heat_kernel_parameter)
     integral = np.zeros_like(grid_x)
     delta = half_support/(points)
-    constant = 1
-    #constant = -1/(m.sqrt(2*m.pi)*heat_kernel_parameter)
+    #constant = 1
+    constant = -1/(m.sqrt(2*m.pi)*heat_kernel_parameter)
     #constant = -1/(m.sqrt(2*m.pi)*sqrt_heat_kernel_parameter**(3/2))
     derivative_heat_kernel = lambda z: \
         constant*(grid_x - z)*norm.pdf(grid_x - z,

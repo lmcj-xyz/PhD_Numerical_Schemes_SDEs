@@ -85,6 +85,11 @@ df_array6 = integral_between_grid_points(
     var_heat_kernel_approx6,
     points_x, grid_x, half_support)
 
+constant = -1/(m.sqrt(2*m.pi)*sqrt_heat_kernel_parameter**(3/2))
+derivative_heat_kernel = lambda z: constant*(grid_x - z)*norm.pdf(grid_x - z,
+                               loc=0,
+                               scale=sqrt_heat_kernel_parameter)
+
 drift_array_real = np.convolve(smooth_array, df_array_real, 'same')
 drift_array1 = np.convolve(smooth_array, df_array1, 'same')
 drift_array2 = np.convolve(smooth_array, df_array2, 'same')
