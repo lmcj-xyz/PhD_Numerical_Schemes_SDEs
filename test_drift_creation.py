@@ -17,7 +17,8 @@ import time
 import math as m
 
 from dsdes import approximate, bridge, coarse_noise, drift_func, fbm, \
-    gen_solve, heat_kernel_parameter, mv_solve, integral_between_grid_points, solve, solves
+    gen_solve, heat_kernel_var, mv_solve, integral_between_grid_points,\
+        solve, solves, derivative_heat_kernel
 
 # QOL parameters
 plt.rcParams['figure.dpi'] = 500
@@ -55,13 +56,13 @@ fbm_array = fbm(hurst, points_x, half_support)
 bridge_array = bridge(fbm_array, grid_x0)
 smooth_array = np.sin(grid_x)
 
-var_heat_kernel_real = heat_kernel_parameter(time_steps_max, hurst)
-var_heat_kernel_approx1 = heat_kernel_parameter(time_steps_approx1, hurst)
-var_heat_kernel_approx2 = heat_kernel_parameter(time_steps_approx2, hurst)
-var_heat_kernel_approx3 = heat_kernel_parameter(time_steps_approx3, hurst)
-var_heat_kernel_approx4 = heat_kernel_parameter(time_steps_approx4, hurst)
-var_heat_kernel_approx5 = heat_kernel_parameter(time_steps_approx5, hurst)
-var_heat_kernel_approx6 = heat_kernel_parameter(time_steps_approx6, hurst)
+var_heat_kernel_real = heat_kernel_var(time_steps_max, hurst)
+var_heat_kernel_approx1 = heat_kernel_var(time_steps_approx1, hurst)
+var_heat_kernel_approx2 = heat_kernel_var(time_steps_approx2, hurst)
+var_heat_kernel_approx3 = heat_kernel_var(time_steps_approx3, hurst)
+var_heat_kernel_approx4 = heat_kernel_var(time_steps_approx4, hurst)
+var_heat_kernel_approx5 = heat_kernel_var(time_steps_approx5, hurst)
+var_heat_kernel_approx6 = heat_kernel_var(time_steps_approx6, hurst)
 
 df_array_real = integral_between_grid_points(
     var_heat_kernel_real,
@@ -85,23 +86,43 @@ df_array6 = integral_between_grid_points(
     var_heat_kernel_approx6,
     points_x, grid_x, half_support)
 
-constant = -1/(m.sqrt(2*m.pi)*sqrt_heat_kernel_parameter**(3/2))
-derivative_heat_kernel = lambda z: constant*(grid_x - z)*norm.pdf(grid_x - z,
-                               loc=0,
-                               scale=sqrt_heat_kernel_parameter)
+xxx = np.zeros_like(df_array1)
+lll  = len(df_array1)
+for xi in range(lll):
+    ddd = np.roll(df_array1, -128+xi)
+    xxx[xi] = np.sum(smooth_array*ddd[xi])
 
-drift_array_real = np.convolve(smooth_array, df_array_real, 'same')
-drift_array1 = np.convolve(smooth_array, df_array1, 'same')
-drift_array2 = np.convolve(smooth_array, df_array2, 'same')
-drift_array3 = np.convolve(smooth_array, df_array3, 'same')
-drift_array4 = np.convolve(smooth_array, df_array4, 'same')
-drift_array5 = np.convolve(smooth_array, df_array5, 'same')
-drift_array6 = np.convolve(smooth_array, df_array6, 'same')
+
+#derivative_real = derivative_heat_kernel(0, var_heat_kernel_real, grid_x)
+#derivative_approx1 = derivative_heat_kernel(0, var_heat_kernel_approx1, grid_x)
+#derivative_approx2 = derivative_heat_kernel(0, var_heat_kernel_approx2, grid_x)
+#derivative_approx3 = derivative_heat_kernel(0, var_heat_kernel_approx3, grid_x)
+#derivative_approx4 = derivative_heat_kernel(0, var_heat_kernel_approx4, grid_x)
+#derivative_approx5 = derivative_heat_kernel(0, var_heat_kernel_approx5, grid_x)
+#derivative_approx6 = derivative_heat_kernel(0, var_heat_kernel_approx6, grid_x)
+
+#drift_array_real = np.convolve(smooth_array, derivative_real, 'same')
+#drift_array1 = np.convolve(smooth_array, derivative_approx1, 'same')
+#drift_array2 = np.convolve(smooth_array, derivative_approx2, 'same')
+#drift_array3 = np.convolve(smooth_array, derivative_approx3, 'same')
+#drift_array4 = np.convolve(smooth_array, derivative_approx4, 'same')
+#drift_array5 = np.convolve(smooth_array, derivative_approx5, 'same')
+#drift_array6 = np.convolve(smooth_array, derivative_approx6, 'same')
+
+#drift_array_real = np.multiply(smooth_array, df_array_real)
+#drift_array1 = np.multiply(smooth_array, df_array1)
+#drift_array2 = np.multiply(smooth_array, df_array2)
+#drift_array3 = np.multiply(smooth_array, df_array3)
+#drift_array4 = np.multiply(smooth_array, df_array4)
+#drift_array5 = np.multiply(smooth_array, df_array5)
+#drift_array6 = np.multiply(smooth_array, df_array6)
 
 manually_computed_sin = m.exp(
-    -heat_kernel_parameter(time_steps_max, hurst)/2)*np.cos(grid_x)
+    -heat_kernel_var(time_steps_max, hurst)/2
+    )*np.cos(grid_x)
 manually_computed_cos = m.exp(
-    -heat_kernel_parameter(time_steps_max, hurst)/2)*np.sin(grid_x)
+    -heat_kernel_var(time_steps_max, hurst)/2
+    )*np.sin(grid_x)
 
 #%%
 limy = 2
@@ -109,12 +130,12 @@ drift_fig = plt.figure('drift')
 plt.plot(grid_x, drift_array_real, label="drift real solution")
 plt.plot(grid_x, manually_computed_sin, label="drift for sin instead of fbm")
 #plt.plot(grid_x, manually_computed_cos, label="drift for cos instead of fbm")
-#plt.plot(grid_x, drift_array1, label="drift approximation 1")
+plt.plot(grid_x, drift_array1, label="drift approximation 1")
 #plt.plot(grid_x, drift_array2, label="drift approximation 2")
 #plt.plot(grid_x, drift_array3, label="drift approximation 3")
 #plt.plot(grid_x, drift_array4, label="drift approximation 4")
-plt.plot(grid_x, drift_array5, label="drift approximation 5")
-plt.plot(grid_x, drift_array6, label="drift approximation 6")
-plt.ylim([-limy, limy])
+#plt.plot(grid_x, drift_array5, label="drift approximation 5")
+#plt.plot(grid_x, drift_array6, label="drift approximation 6")
+#plt.ylim([-limy, limy])
 plt.legend()
 plt.show()

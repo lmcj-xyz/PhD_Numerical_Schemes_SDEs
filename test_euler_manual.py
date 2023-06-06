@@ -23,7 +23,7 @@ import time
 import math as m
 
 from dsdes import approximate, bridge, coarse_noise, drift_func, fbm, \
-    gen_solve, heat_kernel_parameter, mv_solve, integral_between_grid_points, solve, solves
+    gen_solve, heat_kernel_var, mv_solve, integral_between_grid_points, solve, solves
 
 # QOL parameters
 plt.rcParams['figure.dpi'] = 500
@@ -90,12 +90,12 @@ plt.show()
 # square root of the square root of the parameter
 # this gives us reasonable convergence rates but IT IS INCORRECT
 # we need to see how to use the real parameter
-var_heat_kernel_real = heat_kernel_parameter(time_steps_max, hurst)
-var_heat_kernel_approx1 = heat_kernel_parameter(time_steps_approx1, hurst)
-var_heat_kernel_approx2 = heat_kernel_parameter(time_steps_approx2, hurst)
-var_heat_kernel_approx3 = heat_kernel_parameter(time_steps_approx3, hurst)
-var_heat_kernel_approx4 = heat_kernel_parameter(time_steps_approx4, hurst)
-var_heat_kernel_approx5 = heat_kernel_parameter(time_steps_approx5, hurst)
+var_heat_kernel_real = heat_kernel_var(time_steps_max, hurst)
+var_heat_kernel_approx1 = heat_kernel_var(time_steps_approx1, hurst)
+var_heat_kernel_approx2 = heat_kernel_var(time_steps_approx2, hurst)
+var_heat_kernel_approx3 = heat_kernel_var(time_steps_approx3, hurst)
+var_heat_kernel_approx4 = heat_kernel_var(time_steps_approx4, hurst)
+var_heat_kernel_approx5 = heat_kernel_var(time_steps_approx5, hurst)
 
 df_array_real = integral_between_grid_points(
     var_heat_kernel_real,
@@ -153,7 +153,7 @@ drift_array5 = np.convolve(bridge_array, df_array5, 'same')
 #drift_array5 = np.convolve(fbm_array, df_array5, 'same')
 
 #%% ##### OPTIONAL ###### Plot drift
-manually_computed = np.exp(-heat_kernel_parameter(time_steps_max, hurst)/2)*np.cos(grid_x)
+manually_computed = np.exp(-heat_kernel_var(time_steps_max, hurst)/2)*np.cos(grid_x)
 limy = 2
 drift_fig = plt.figure('drift')
 plt.plot(grid_x, drift_array_real, label="drift real solution")
@@ -206,7 +206,7 @@ grid_x_test = np.linspace(
     start = -half_support, stop = half_support, num = points_x
     )
 df_array_det = integral_between_grid_points(
-    np.sqrt(heat_kernel_parameter(time_steps_approx1, hurst)), 
+    np.sqrt(heat_kernel_var(time_steps_approx1, hurst)), 
     #1/10**4,
     points_x_test, grid_x_test, half_support
     )

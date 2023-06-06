@@ -46,36 +46,41 @@ def bridge(f, grid):
 
 #%% heat parameter func
 # Heat kernel parameter creation based on time steps of the Euler scheme
-def heat_kernel_parameter(time_steps, hurst):
+def heat_kernel_var(time_steps, hurst):
     eta = 1/(2*(hurst-1/2)**2 + 2 - hurst) # Parameter that was being used
     #eta = 1/((hurst-1/2)**2 + 2) # Some testing parameter
     #eta = 1/((hurst-1/2)**2 + 2 - hurst) # Parameter from paper?
-    #parameter = np.sqrt(1/(time_steps**eta)) # Incorrect parameter
-    #parameter = (1/(time_steps**eta))**(1/10) # Using a different parameter
-    parameter = 1/(time_steps**eta) # Parameter according to the theory
+    #variance = np.sqrt(1/(time_steps**eta)) # Incorrect parameter
+    #variance = (1/(time_steps**eta))**(1/10) # Using a different parameter
+    variance = 1/(time_steps**eta) # Parameter according to the theory
     #return 0.5
-    return parameter
+    return variance
 
-#%%
-# TODO
-def derivative_heat_kernel():
-    return 0
+#%% derivative of the heat kernel around y
+def derivative_heat_kernel(y, heat_kernel_var, grid_x):
+    constant = -1/(m.sqrt(2*m.pi)*heat_kernel_var)
+    sqrt_heat_kernel_var = m.sqrt(heat_kernel_var)
+    derivative = constant*(grid_x - y)*norm.pdf(grid_x - y,
+                                                loc=0,
+                                                scale=sqrt_heat_kernel_var)
+    return derivative
 
 #%% integral between grid points func
-def integral_between_grid_points(heat_kernel_parameter, 
+def integral_between_grid_points(heat_kernel_var, 
                                  points, grid_x, 
                                  half_support):
-    sqrt_heat_kernel_parameter = m.sqrt(heat_kernel_parameter)
+    sqrt_heat_kernel_var = m.sqrt(heat_kernel_var)
     integral = np.zeros_like(grid_x)
     delta = half_support/(points)
     #constant = 1
-    constant = -1/(m.sqrt(2*m.pi)*heat_kernel_parameter)
-    #constant = -1/(m.sqrt(2*m.pi)*sqrt_heat_kernel_parameter**(3/2))
+    #constant = -1/(m.sqrt(2*m.pi)*heat_kernel_parameter)
+    constant = -1/(m.sqrt(2*m.pi)*sqrt_heat_kernel_var**(3/2))
     derivative_heat_kernel = lambda z: \
         constant*(grid_x - z)*norm.pdf(grid_x - z,
                                        loc=0,
-                                       scale=sqrt_heat_kernel_parameter)
+                                       scale=sqrt_heat_kernel_var)
     integral, error = quad_vec(derivative_heat_kernel, a=-delta, b=delta)
+    #integral, error = quad_vec(derivative_heat_kernel, a=-delta, b=delta)
     #integral, error = quad_vec(derivative_heat_kernel, a=0, b=2*delta)
     #return p, diff_norm
     return integral
@@ -229,7 +234,7 @@ def approximate(
         delta_x,
         half_support):
     df = integral_between_grid_points(
-        np.sqrt(heat_kernel_parameter(time_steps, hurst)), 
+        np.sqrt(heat_kernel_var(time_steps, hurst)), 
         #15/11, # for testing with a fixed heat kernel parameter
         points_x, 
         grid_x, 
