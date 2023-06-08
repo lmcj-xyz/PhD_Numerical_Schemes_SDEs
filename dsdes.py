@@ -4,31 +4,34 @@ Created on Tue Feb 28 14:09:33 2023
 
 @author: mmlmcj
 """
-#%% libraries
+# %% libraries
 import numpy as np
-from numpy.random import default_rng
-rng = default_rng()
+import math as m
 from scipy.integrate import quad_vec
 from scipy.stats import norm
-import math as m
-#%% fbm func
+from numpy.random import default_rng
+
+rng = default_rng()
+# %% fbm func
 # Fractional Brownian motion (fBm) creation function
+
+
 def fbm(hurst, points, half_support):
     fbm_grid = np.linspace(
-            start = 1/points,
-            stop = 2*half_support,
-            #stop = 1,
-            num = points
+            start=1/points,
+            stop=2*half_support,
+            #stop=1,
+            num=points
             )
     xv, yv = np.meshgrid(
-            fbm_grid, 
-            fbm_grid, 
+            fbm_grid,
+            fbm_grid,
             sparse=False,
             indexing='ij'
             )
     covariance = 0.5*(
             np.abs(xv)**(2*hurst) +
-            np.abs(yv)**(2*hurst) - 
+            np.abs(yv)**(2*hurst) -
             np.abs(xv - yv)**(2*hurst)
             )
     g = rng.standard_normal(size=points)
@@ -39,13 +42,17 @@ def fbm(hurst, points, half_support):
     #fbm_arr = np.concatenate([np.zeros(1),fbm_arr])
     return fbm_array
 
-#%% bridge func
+# %% bridge func
+
+
 def bridge(f, grid):
     bridge_array = f - (f[-1]/grid[-1])*grid
     return bridge_array
 
-#%% heat parameter func
+# %% heat parameter func
 # Heat kernel parameter creation based on time steps of the Euler scheme
+
+
 def heat_kernel_var(time_steps, hurst):
     eta = 1/(2*(hurst-1/2)**2 + 2 - hurst) # Parameter that was being used
     #eta = 1/((hurst-1/2)**2 + 2) # Some testing parameter
@@ -56,7 +63,9 @@ def heat_kernel_var(time_steps, hurst):
     #return 0.5
     return variance
 
-#%% derivative of the heat kernel around y
+# %% derivative of the heat kernel around y
+
+
 def derivative_heat_kernel(y, heat_kernel_var, grid_x):
     constant = -1/(m.sqrt(2*m.pi)*heat_kernel_var)
     sqrt_heat_kernel_var = m.sqrt(heat_kernel_var)
@@ -65,9 +74,11 @@ def derivative_heat_kernel(y, heat_kernel_var, grid_x):
                                                 scale=sqrt_heat_kernel_var)
     return derivative
 
-#%% integral between grid points func
-def integral_between_grid_points(heat_kernel_var, 
-                                 points, grid_x, 
+# %% integral between grid points func
+
+
+def integral_between_grid_points(heat_kernel_var,
+                                 points, grid_x,
                                  half_support):
     sqrt_heat_kernel_var = m.sqrt(heat_kernel_var)
     integral = np.zeros_like(grid_x)

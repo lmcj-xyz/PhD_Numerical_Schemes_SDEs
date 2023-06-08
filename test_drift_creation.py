@@ -86,13 +86,6 @@ df_array6 = integral_between_grid_points(
     var_heat_kernel_approx6,
     points_x, grid_x, half_support)
 
-xxx = np.zeros_like(df_array1)
-lll  = len(df_array1)
-for xi in range(lll):
-    ddd = np.roll(df_array1, -128+xi)
-    xxx[xi] = np.sum(smooth_array*ddd[xi])
-
-
 #derivative_real = derivative_heat_kernel(0, var_heat_kernel_real, grid_x)
 #derivative_approx1 = derivative_heat_kernel(0, var_heat_kernel_approx1, grid_x)
 #derivative_approx2 = derivative_heat_kernel(0, var_heat_kernel_approx2, grid_x)
@@ -109,13 +102,13 @@ for xi in range(lll):
 #drift_array5 = np.convolve(smooth_array, derivative_approx5, 'same')
 #drift_array6 = np.convolve(smooth_array, derivative_approx6, 'same')
 
-#drift_array_real = np.multiply(smooth_array, df_array_real)
-#drift_array1 = np.multiply(smooth_array, df_array1)
-#drift_array2 = np.multiply(smooth_array, df_array2)
-#drift_array3 = np.multiply(smooth_array, df_array3)
-#drift_array4 = np.multiply(smooth_array, df_array4)
-#drift_array5 = np.multiply(smooth_array, df_array5)
-#drift_array6 = np.multiply(smooth_array, df_array6)
+drift_array_real =  np.convolve(smooth_array, df_array_real, 'same')
+drift_array1 =      np.convolve(smooth_array, df_array1, 'same')
+drift_array2 =      np.convolve(smooth_array, df_array2, 'same')
+drift_array3 =      np.convolve(smooth_array, df_array3, 'same')
+drift_array4 =      np.convolve(smooth_array, df_array4, 'same')
+drift_array5 =      np.convolve(smooth_array, df_array5, 'same')
+drift_array6 =      np.convolve(smooth_array, df_array6, 'same')
 
 manually_computed_sin = m.exp(
     -heat_kernel_var(time_steps_max, hurst)/2
