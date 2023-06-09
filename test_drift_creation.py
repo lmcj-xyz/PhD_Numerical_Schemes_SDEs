@@ -6,6 +6,7 @@ Created on Thu Jun  1 13:49:52 2023
 @author: lmcj
 """
 
+# %% Imports
 import numpy as np
 import matplotlib.pyplot as plt
 from numpy.random import default_rng
@@ -18,8 +19,9 @@ import math as m
 
 from dsdes import approximate, bridge, coarse_noise, drift_func, fbm, \
     gen_solve, heat_kernel_var, mv_solve, integral_between_grid_points,\
-        solve, solves, derivative_heat_kernel
+        solve, solves
 
+# %% Testing
 # QOL parameters
 plt.rcParams['figure.dpi'] = 500
 
@@ -56,7 +58,7 @@ fbm_array = fbm(hurst, points_x, half_support)
 bridge_array = bridge(fbm_array, grid_x0)
 smooth_array = np.sin(grid_x)
 
-var_heat_kernel_real = heat_kernel_var(time_steps_max, hurst)
+var_heat_kernel_real    = heat_kernel_var(time_steps_max, hurst)
 var_heat_kernel_approx1 = heat_kernel_var(time_steps_approx1, hurst)
 var_heat_kernel_approx2 = heat_kernel_var(time_steps_approx2, hurst)
 var_heat_kernel_approx3 = heat_kernel_var(time_steps_approx3, hurst)
@@ -86,29 +88,13 @@ df_array6 = integral_between_grid_points(
     var_heat_kernel_approx6,
     points_x, grid_x, half_support)
 
-#derivative_real = derivative_heat_kernel(0, var_heat_kernel_real, grid_x)
-#derivative_approx1 = derivative_heat_kernel(0, var_heat_kernel_approx1, grid_x)
-#derivative_approx2 = derivative_heat_kernel(0, var_heat_kernel_approx2, grid_x)
-#derivative_approx3 = derivative_heat_kernel(0, var_heat_kernel_approx3, grid_x)
-#derivative_approx4 = derivative_heat_kernel(0, var_heat_kernel_approx4, grid_x)
-#derivative_approx5 = derivative_heat_kernel(0, var_heat_kernel_approx5, grid_x)
-#derivative_approx6 = derivative_heat_kernel(0, var_heat_kernel_approx6, grid_x)
-
-#drift_array_real = np.convolve(smooth_array, derivative_real, 'same')
-#drift_array1 = np.convolve(smooth_array, derivative_approx1, 'same')
-#drift_array2 = np.convolve(smooth_array, derivative_approx2, 'same')
-#drift_array3 = np.convolve(smooth_array, derivative_approx3, 'same')
-#drift_array4 = np.convolve(smooth_array, derivative_approx4, 'same')
-#drift_array5 = np.convolve(smooth_array, derivative_approx5, 'same')
-#drift_array6 = np.convolve(smooth_array, derivative_approx6, 'same')
-
-drift_array_real =  np.convolve(smooth_array, df_array_real, 'same')
-drift_array1 =      np.convolve(smooth_array, df_array1, 'same')
-drift_array2 =      np.convolve(smooth_array, df_array2, 'same')
-drift_array3 =      np.convolve(smooth_array, df_array3, 'same')
-drift_array4 =      np.convolve(smooth_array, df_array4, 'same')
-drift_array5 =      np.convolve(smooth_array, df_array5, 'same')
-drift_array6 =      np.convolve(smooth_array, df_array6, 'same')
+drift_array_real    = np.convolve(smooth_array, df_array_real,    'same')
+drift_array1        = np.convolve(smooth_array, df_array1,        'same')
+drift_array2        = np.convolve(smooth_array, df_array2,        'same')
+drift_array3        = np.convolve(smooth_array, df_array3,        'same')
+drift_array4        = np.convolve(smooth_array, df_array4,        'same')
+drift_array5        = np.convolve(smooth_array, df_array5,        'same')
+drift_array6        = np.convolve(smooth_array, df_array6,        'same')
 
 manually_computed_sin = m.exp(
     -heat_kernel_var(time_steps_max, hurst)/2
@@ -117,7 +103,7 @@ manually_computed_cos = m.exp(
     -heat_kernel_var(time_steps_max, hurst)/2
     )*np.sin(grid_x)
 
-#%%
+# %% Plots
 limy = 2
 drift_fig = plt.figure('drift')
 plt.plot(grid_x, drift_array_real, label="drift real solution")
@@ -132,3 +118,19 @@ plt.plot(grid_x, drift_array1, label="drift approximation 1")
 #plt.ylim([-limy, limy])
 plt.legend()
 plt.show()
+
+# %% New potential function for derivative of heat kernel
+# testing function
+# move to dsdes.py if useful
+def derivative_heat_kernel(heat_kernel_var, grid_x, **kwargs):
+    constant = -1/(m.sqrt(2*m.pi)*heat_kernel_var)
+    sqrt_heat_kernel_var = m.sqrt(heat_kernel_var)
+    y = kwargs['y']
+    derivative = constant*(grid_x - y)*norm.pdf(grid_x - y,
+                                                loc=0,
+                                                scale=sqrt_heat_kernel_var)
+    return derivative
+
+i, e = quad_vec(derivative_heat_kernel(
+    heat_kernel_var=0.01, grid_x=np.linspace(0, 1, 10), y), a=-0.1, b=0.1
+    )

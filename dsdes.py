@@ -63,17 +63,6 @@ def heat_kernel_var(time_steps, hurst):
     #return 0.5
     return variance
 
-# %% derivative of the heat kernel around y
-
-
-def derivative_heat_kernel(y, heat_kernel_var, grid_x):
-    constant = -1/(m.sqrt(2*m.pi)*heat_kernel_var)
-    sqrt_heat_kernel_var = m.sqrt(heat_kernel_var)
-    derivative = constant*(grid_x - y)*norm.pdf(grid_x - y,
-                                                loc=0,
-                                                scale=sqrt_heat_kernel_var)
-    return derivative
-
 # %% integral between grid points func
 
 
