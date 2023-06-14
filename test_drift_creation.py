@@ -9,17 +9,17 @@ Created on Thu Jun  1 13:49:52 2023
 # %% Imports
 import numpy as np
 import matplotlib.pyplot as plt
+import time
+import math as m
 from numpy.random import default_rng
-rng = default_rng()
+from dsdes import approximate, bridge, coarse_noise, drift_func, fbm, \
+    gen_solve, heat_kernel_var, mv_solve, integral_between_grid_points,\
+    solve, solves, create_drift_array
 from scipy.integrate import quad_vec
 from scipy.stats import norm, linregress
 from scipy.stats import linregress
-import time
-import math as m
 
-from dsdes import approximate, bridge, coarse_noise, drift_func, fbm, \
-    gen_solve, heat_kernel_var, mv_solve, integral_between_grid_points,\
-        solve, solves
+rng = default_rng()
 
 # %% Testing
 # QOL parameters
@@ -36,29 +36,25 @@ time_steps_approx3 = 2**12
 time_steps_approx4 = 2**13
 time_steps_approx5 = 2**14
 time_steps_approx6 = 2**15
-time_steps_list = [time_steps_max, 
-                   time_steps_approx1, 
-                   time_steps_approx2, 
-                   time_steps_approx3, 
-                   time_steps_approx4, 
+time_steps_list = [time_steps_max,
+                   time_steps_approx1,
+                   time_steps_approx2,
+                   time_steps_approx3,
+                   time_steps_approx4,
                    time_steps_approx5,
                    time_steps_approx6]
 # Variables to create fBm
 points_x = 2**8
 half_support = 10
 delta_x = half_support/(points_x-1)
-grid_x = np.linspace(
-    start = -half_support, stop = half_support, num = points_x
-    )
+grid_x = np.linspace(start=-half_support, stop=half_support, num=points_x)
 # For the Brownian bridge
-grid_x0 = np.linspace(
-    start = 0, stop =2*half_support, num = points_x
-    )
+grid_x0 = np.linspace(start=0, stop=2*half_support, num=points_x)
 fbm_array = fbm(hurst, points_x, half_support)
 bridge_array = bridge(fbm_array, grid_x0)
 smooth_array = np.sin(grid_x)
 
-var_heat_kernel_real    = heat_kernel_var(time_steps_max, hurst)
+var_heat_kernel_real = heat_kernel_var(time_steps_max, hurst)
 var_heat_kernel_approx1 = heat_kernel_var(time_steps_approx1, hurst)
 var_heat_kernel_approx2 = heat_kernel_var(time_steps_approx2, hurst)
 var_heat_kernel_approx3 = heat_kernel_var(time_steps_approx3, hurst)
@@ -70,7 +66,7 @@ df_array_real = integral_between_grid_points(
     var_heat_kernel_real,
     points_x, grid_x, half_support)
 df_array1 = integral_between_grid_points(
-    var_heat_kernel_approx1, 
+    var_heat_kernel_approx1,
     points_x, grid_x, half_support)
 df_array2 = integral_between_grid_points(
     var_heat_kernel_approx2,
@@ -88,13 +84,13 @@ df_array6 = integral_between_grid_points(
     var_heat_kernel_approx6,
     points_x, grid_x, half_support)
 
-drift_array_real    = np.convolve(smooth_array, df_array_real,    'same')
-drift_array1        = np.convolve(smooth_array, df_array1,        'same')
-drift_array2        = np.convolve(smooth_array, df_array2,        'same')
-drift_array3        = np.convolve(smooth_array, df_array3,        'same')
-drift_array4        = np.convolve(smooth_array, df_array4,        'same')
-drift_array5        = np.convolve(smooth_array, df_array5,        'same')
-drift_array6        = np.convolve(smooth_array, df_array6,        'same')
+drift_array_real = create_drift_array(smooth_array, df_array_real)
+drift_array1 = create_drift_array(smooth_array, df_array1)
+drift_array2 = create_drift_array(smooth_array, df_array2)
+drift_array3 = create_drift_array(smooth_array, df_array3)
+drift_array4 = create_drift_array(smooth_array, df_array4)
+drift_array5 = create_drift_array(smooth_array, df_array5)
+drift_array6 = create_drift_array(smooth_array, df_array6)
 
 manually_computed_sin = m.exp(
     -heat_kernel_var(time_steps_max, hurst)/2
@@ -108,16 +104,17 @@ limy = 2
 drift_fig = plt.figure('drift')
 plt.plot(grid_x, drift_array_real, label="drift real solution")
 plt.plot(grid_x, manually_computed_sin, label="drift for sin instead of fbm")
-#plt.plot(grid_x, manually_computed_cos, label="drift for cos instead of fbm")
+# plt.plot(grid_x, manually_computed_cos, label="drift for cos instead of fbm")
 plt.plot(grid_x, drift_array1, label="drift approximation 1")
-#plt.plot(grid_x, drift_array2, label="drift approximation 2")
-#plt.plot(grid_x, drift_array3, label="drift approximation 3")
-#plt.plot(grid_x, drift_array4, label="drift approximation 4")
-#plt.plot(grid_x, drift_array5, label="drift approximation 5")
-#plt.plot(grid_x, drift_array6, label="drift approximation 6")
-#plt.ylim([-limy, limy])
+# plt.plot(grid_x, drift_array2, label="drift approximation 2")
+# plt.plot(grid_x, drift_array3, label="drift approximation 3")
+# plt.plot(grid_x, drift_array4, label="drift approximation 4")
+# plt.plot(grid_x, drift_array5, label="drift approximation 5")
+# plt.plot(grid_x, drift_array6, label="drift approximation 6")
+# plt.ylim([-limy, limy])
 plt.legend()
 plt.show()
+
 
 # %% New potential function for derivative of heat kernel
 # testing function
@@ -131,6 +128,6 @@ def derivative_heat_kernel(heat_kernel_var, grid_x, **kwargs):
                                                 scale=sqrt_heat_kernel_var)
     return derivative
 
+
 i, e = quad_vec(derivative_heat_kernel(
-    heat_kernel_var=0.01, grid_x=np.linspace(0, 1, 10), y), a=-0.1, b=0.1
-    )
+    heat_kernel_var=0.01, grid_x=np.linspace(0, 1, 10), y), a=-0.1, b=0.1)
