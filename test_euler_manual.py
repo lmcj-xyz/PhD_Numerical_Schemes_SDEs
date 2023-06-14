@@ -22,7 +22,7 @@ from scipy.stats import linregress
 import time
 import math as m
 
-from dsdes import approximate, bridge, coarse_noise, drift_func, fbm, \
+from dsdes import approximate, bridge, coarse_noise, create_drift_function, fbm, \
     gen_solve, heat_kernel_var, mv_solve, integral_between_grid_points, solve, solves
 
 # QOL parameters
@@ -174,12 +174,12 @@ delta_x = half_support/(points_x-1)
 support = np.linspace(-half_support, half_support, points_x)
 
 #%% ########OPTIONAL##########
-eval_real = drift_func(support, drift_array_real, grid_x, points_x, delta_x)
-eval1 = drift_func(support, drift_array1, grid_x, points_x, delta_x)
-eval2 = drift_func(support, drift_array2, grid_x, points_x, delta_x)
-eval3 = drift_func(support, drift_array3, grid_x, points_x, delta_x)
-eval4 = drift_func(support, drift_array4, grid_x, points_x, delta_x)
-eval5 = drift_func(support, drift_array5, grid_x, points_x, delta_x)
+eval_real = create_drift_function(support, drift_array_real, grid_x, points_x, delta_x)
+eval1 = create_drift_function(support, drift_array1, grid_x, points_x, delta_x)
+eval2 = create_drift_function(support, drift_array2, grid_x, points_x, delta_x)
+eval3 = create_drift_function(support, drift_array3, grid_x, points_x, delta_x)
+eval4 = create_drift_function(support, drift_array4, grid_x, points_x, delta_x)
+eval5 = create_drift_function(support, drift_array5, grid_x, points_x, delta_x)
 
 #%% ##### OPTIONAL #####
 drift_func_fig = plt.figure('driftfunc')

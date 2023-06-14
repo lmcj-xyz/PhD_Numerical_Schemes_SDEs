@@ -92,7 +92,7 @@ def create_drift_array(rough_drift, integral_on_grid):
 
 # %% drift func
 # Drift coefficient as a piecewise function created out of an array
-def drift_func(x, drift_array, grid, points, delta):
+def create_drift_function(x, drift_array, grid, points, delta):
     # piecewise_linear = lambda k: \
     #    (drift_array[k] - drift_array[k-1])/(grid[k] - grid[k-1])
     return np.piecewise(
@@ -135,7 +135,7 @@ def solve(
     y[0, :] = y0
     for i in range(time_steps):
         y[i+1, :] = y[i, :] \
-                + drift_func(
+                + create_drift_function(
                         x=y[i, :],
                         drift_array=drift_array,
                         grid=grid,
@@ -165,7 +165,7 @@ def solves(
     y[0, :] = y0
     for i in range(time_steps):
         y[0, :] = y[0, :] \
-                + drift_func(
+                + create_drift_function(
                         x=y[0, :],
                         drift_array=drift_array,
                         grid=grid,

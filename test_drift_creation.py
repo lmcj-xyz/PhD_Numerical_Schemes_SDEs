@@ -12,9 +12,9 @@ import matplotlib.pyplot as plt
 import time
 import math as m
 from numpy.random import default_rng
-from dsdes import approximate, bridge, coarse_noise, drift_func, fbm, \
-    gen_solve, heat_kernel_var, mv_solve, integral_between_grid_points,\
-    solve, solves, create_drift_array
+from dsdes import approximate, bridge, coarse_noise, create_drift_function,\
+        fbm, gen_solve, heat_kernel_var, mv_solve,\
+        integral_between_grid_points, solve, solves, create_drift_array
 from scipy.integrate import quad_vec
 from scipy.stats import norm, linregress
 from scipy.stats import linregress
