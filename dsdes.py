@@ -79,14 +79,20 @@ def integral_between_grid_points(heat_kernel_var,
     # integral, error = quad_vec(derivative_heat_kernel, a=-delta, b=delta)
     # integral, error = quad_vec(derivative_heat_kernel, a=0, b=2*delta)
     # return p, diff_norm
-    extra_zeros = np.zeros(shape=int(points/2))
-    integral = np.concatenate([extra_zeros, integral, extra_zeros])  # Array with three times as many elements as the fBm
+    #extra_zeros = np.zeros(shape=int(points/2))
+    #integral = np.concatenate([extra_zeros, integral, extra_zeros])  # Array with three times as many elements as the fBm
     return integral
 
 
 # %% Drift array
-def create_drift_array(rough_drift, integral_on_grid):
-    return np.convolve(integral_on_grid, rough_drift, 'valid')[:-1]  # Convolution and removal of last element
+def create_drift_array(rough_func, integral_on_grid):
+    drift = np.zeros_like(rough_func)
+    length = len(rough_func)
+    l2 = int(length/2)
+    for i in range(length):
+        drift[i] = np.sum(np.multiply(rough_func, np.roll(np.flip(integral_on_grid), l2 - i)))
+    #return np.convolve(integral_on_grid, rough_drift, 'valid')[:-1]  # Convolution and removal of last element
+    return drift
 
 
 # %% drift func
