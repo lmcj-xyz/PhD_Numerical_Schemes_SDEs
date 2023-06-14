@@ -62,35 +62,35 @@ var_heat_kernel_approx4 = heat_kernel_var(time_steps_approx4, hurst)
 var_heat_kernel_approx5 = heat_kernel_var(time_steps_approx5, hurst)
 var_heat_kernel_approx6 = heat_kernel_var(time_steps_approx6, hurst)
 
-df_array_real = integral_between_grid_points(
+integral_array_real = integral_between_grid_points(
     var_heat_kernel_real,
     points_x, grid_x, half_support)
-df_array1 = integral_between_grid_points(
+integral_array1 = integral_between_grid_points(
     var_heat_kernel_approx1,
     points_x, grid_x, half_support)
-df_array2 = integral_between_grid_points(
+integral_array2 = integral_between_grid_points(
     var_heat_kernel_approx2,
     points_x, grid_x, half_support)
-df_array3 = integral_between_grid_points(
+integral_array3 = integral_between_grid_points(
     var_heat_kernel_approx3,
     points_x, grid_x, half_support)
-df_array4 = integral_between_grid_points(
+integral_array4 = integral_between_grid_points(
     var_heat_kernel_approx4,
     points_x, grid_x, half_support)
-df_array5 = integral_between_grid_points(
+integral_array5 = integral_between_grid_points(
     var_heat_kernel_approx5,
     points_x, grid_x, half_support)
-df_array6 = integral_between_grid_points(
+integral_array6 = integral_between_grid_points(
     var_heat_kernel_approx6,
     points_x, grid_x, half_support)
 
-drift_array_real = create_drift_array(smooth_array, df_array_real)
-drift_array1 = create_drift_array(smooth_array, df_array1)
-drift_array2 = create_drift_array(smooth_array, df_array2)
-drift_array3 = create_drift_array(smooth_array, df_array3)
-drift_array4 = create_drift_array(smooth_array, df_array4)
-drift_array5 = create_drift_array(smooth_array, df_array5)
-drift_array6 = create_drift_array(smooth_array, df_array6)
+drift_array_real = create_drift_array(smooth_array, integral_array_real)
+drift_array1 = create_drift_array(smooth_array, integral_array1)
+drift_array2 = create_drift_array(smooth_array, integral_array2)
+drift_array3 = create_drift_array(smooth_array, integral_array3)
+drift_array4 = create_drift_array(smooth_array, integral_array4)
+drift_array5 = create_drift_array(smooth_array, integral_array5)
+drift_array6 = create_drift_array(smooth_array, integral_array6)
 
 manually_computed_sin = m.exp(
     -heat_kernel_var(time_steps_max, hurst)/2

@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
 Created on Tue Feb 28 14:09:33 2023
@@ -54,7 +55,7 @@ def bridge(f, grid):
 def heat_kernel_var(time_steps, hurst):
     # eta = 1/(2*(hurst-1/2)**2 + 2 - hurst)  # Parameter that was being used
     # eta = 1/((hurst-1/2)**2 + 2)  # Some testing parameter
-    eta = 1/((hurst-1/2)**2 + 2 - hurst)  # Parameter from paper?
+    eta = 1/((hurst-1/2)**2 + 2 - hurst)  # Parameter from paper
     # variance = np.sqrt(1/(time_steps**eta))  # Incorrect parameter
     # variance = (1/(time_steps**eta))**(1/10)  # Using a different parameter
     variance = 1/(time_steps**eta)  # Parameter according to the theory
@@ -66,28 +67,26 @@ def heat_kernel_var(time_steps, hurst):
 def integral_between_grid_points(heat_kernel_var,
                                  points, grid_x,
                                  half_support):
-    sqrt_heat_kernel_var = m.sqrt(heat_kernel_var)
+    heat_kernel_std = m.sqrt(heat_kernel_var)
     integral = np.zeros_like(grid_x)
     delta = half_support/(points)
     # constant = 1
     # constant = -1/(m.sqrt(2*m.pi)*heat_kernel_parameter)
-    constant = -1/(m.sqrt(2*m.pi)*sqrt_heat_kernel_var**(3/2))
+    constant = -1/(m.sqrt(2*m.pi)*heat_kernel_std**(3/2))
     derivative_heat_kernel = lambda z:\
-        constant*(grid_x - z)*norm.pdf(grid_x - z,
-                                       loc=0,
-                                       scale=sqrt_heat_kernel_var)
+        constant*(grid_x - z)*norm.pdf(grid_x - z, loc=0, scale=heat_kernel_std)
     integral, error = quad_vec(derivative_heat_kernel, a=-delta, b=delta)
     # integral, error = quad_vec(derivative_heat_kernel, a=-delta, b=delta)
     # integral, error = quad_vec(derivative_heat_kernel, a=0, b=2*delta)
     # return p, diff_norm
     extra_zeros = np.zeros(shape=int(points/2))
-    integral = np.concatenate([extra_zeros, integral, extra_zeros])
+    integral = np.concatenate([extra_zeros, integral, extra_zeros])  # Array with three times as many elements as the fBm
     return integral
 
 
 # %% Drift array
 def create_drift_array(rough_drift, integral_on_grid):
-    return np.convolve(rough_drift, integral_on_grid, 'valid')[:-1]
+    return np.convolve(integral_on_grid, rough_drift, 'valid')[:-1]  # Convolution and removal of last element
 
 
 # %% drift func
