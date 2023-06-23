@@ -82,6 +82,8 @@ plt.grid(linestyle='--', axis='y', linewidth=0.5)
 plt.legend()
 plt.show()
 
+# %% ##
+
 #%% Create a dF
 ####### USE PYTHON map() for this and many other chunks
 # We are supposed to use the square root of the heat kernel parameter
@@ -167,7 +169,7 @@ plt.ylim([-limy, limy])
 plt.legend()
 plt.show()
 
-#%% Distance between points in grid for x
+#%% Half Distance between points in grid for x
 delta_x = half_support/(points_x-1)
 
 # Evaluate and plot some drift functions

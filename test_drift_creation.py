@@ -30,6 +30,7 @@ epsilon = 10e-6
 beta = 7/16
 hurst = 1 - beta
 time_steps_max = 2**17
+time_steps_approx0 = 2**7
 time_steps_approx1 = 2**10
 time_steps_approx2 = 2**11
 time_steps_approx3 = 2**12
@@ -52,9 +53,11 @@ grid_x = np.linspace(start=-half_support, stop=half_support, num=points_x)
 grid_x0 = np.linspace(start=0, stop=2*half_support, num=points_x)
 fbm_array = fbm(hurst, points_x, half_support)
 bridge_array = bridge(fbm_array, grid_x0)
-smooth_array = np.sin(grid_x)
+#smooth_array = np.sin(grid_x)
+smooth_array = grid_x
 
 var_heat_kernel_real = heat_kernel_var(time_steps_max, hurst)
+var_heat_kernel_approx0 = heat_kernel_var(time_steps_approx0, hurst)
 var_heat_kernel_approx1 = heat_kernel_var(time_steps_approx1, hurst)
 var_heat_kernel_approx2 = heat_kernel_var(time_steps_approx2, hurst)
 var_heat_kernel_approx3 = heat_kernel_var(time_steps_approx3, hurst)
@@ -64,6 +67,9 @@ var_heat_kernel_approx6 = heat_kernel_var(time_steps_approx6, hurst)
 
 integral_array_real = integral_between_grid_points(
     var_heat_kernel_real,
+    points_x, grid_x, half_support)
+integral_array0 = integral_between_grid_points(
+    var_heat_kernel_approx0,
     points_x, grid_x, half_support)
 integral_array1 = integral_between_grid_points(
     var_heat_kernel_approx1,
@@ -85,6 +91,7 @@ integral_array6 = integral_between_grid_points(
     points_x, grid_x, half_support)
 
 drift_array_real = create_drift_array(smooth_array, integral_array_real)
+drift_array0 = create_drift_array(smooth_array, integral_array0)
 drift_array1 = create_drift_array(smooth_array, integral_array1)
 drift_array2 = create_drift_array(smooth_array, integral_array2)
 drift_array3 = create_drift_array(smooth_array, integral_array3)
@@ -99,19 +106,25 @@ manually_computed_cos = m.exp(
     -heat_kernel_var(time_steps_max, hurst)/2
     )*np.sin(grid_x)
 
+#%% Plots
+plt.plot(integral_array1)
+#plt.plot(integral_array6)
+plt.show()
+
 # %% Plots
 limy = 2
 drift_fig = plt.figure('drift')
 plt.plot(grid_x, drift_array_real, label="drift real solution")
-plt.plot(grid_x, manually_computed_sin, label="drift for sin instead of fbm")
+#plt.plot(grid_x, manually_computed_sin, label="drift for sin instead of fbm")
 # plt.plot(grid_x, manually_computed_cos, label="drift for cos instead of fbm")
+plt.plot(grid_x, drift_array0, label="drift approximation 0")
 plt.plot(grid_x, drift_array1, label="drift approximation 1")
-# plt.plot(grid_x, drift_array2, label="drift approximation 2")
-# plt.plot(grid_x, drift_array3, label="drift approximation 3")
-# plt.plot(grid_x, drift_array4, label="drift approximation 4")
-# plt.plot(grid_x, drift_array5, label="drift approximation 5")
-# plt.plot(grid_x, drift_array6, label="drift approximation 6")
-# plt.ylim([-limy, limy])
+#plt.plot(grid_x, drift_array2, label="drift approximation 2")
+#plt.plot(grid_x, drift_array3, label="drift approximation 3")
+#plt.plot(grid_x, drift_array4, label="drift approximation 4")
+#plt.plot(grid_x, drift_array5, label="drift approximation 5")
+#plt.plot(grid_x, drift_array6, label="drift approximation 6")
+plt.ylim([-limy, limy])
 plt.legend()
 plt.show()
 

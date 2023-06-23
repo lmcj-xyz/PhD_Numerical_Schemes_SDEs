@@ -44,6 +44,35 @@ def fbm(hurst, points, half_support):
     return fbm_array
 
 
+# fBm generator giving the the N(0,1) RV
+def fbm_alt(hurst, gaussian, half_support):
+    points = len(gaussian)
+    fbm_grid = np.linspace(
+            start=1/points,
+            stop=2*half_support,
+            # stop=1,
+            num=points
+            )
+    xv, yv = np.meshgrid(
+            fbm_grid,
+            fbm_grid,
+            sparse=False,
+            indexing='ij'
+            )
+    covariance = 0.5*(
+            np.abs(xv)**(2*hurst) +
+            np.abs(yv)**(2*hurst) -
+            np.abs(xv - yv)**(2*hurst)
+            )
+    #g = rng.standard_normal(size=points)
+    # g_bridge = g - (fbm_grid/half_support)*g[-1]
+    cholesky = np.linalg.cholesky(a=covariance)
+    # fbm_arr = np.matmul(cholesky, g_bridge)
+    fbm_array = np.matmul(cholesky, gaussian)
+    # fbm_arr = np.concatenate([np.zeros(1),fbm_arr])
+    return fbm_array
+
+
 # %% bridge func
 def bridge(f, grid):
     bridge_array = f - (f[-1]/grid[-1])*grid
@@ -67,15 +96,17 @@ def heat_kernel_var(time_steps, hurst):
 def integral_between_grid_points(heat_kernel_var,
                                  points, grid_x,
                                  half_support):
+    # points = len(grid_x)
     heat_kernel_std = m.sqrt(heat_kernel_var)
     integral = np.zeros_like(grid_x)
-    delta = half_support/(points)
+    delta_half = half_support/(points)
     # constant = 1
     # constant = -1/(m.sqrt(2*m.pi)*heat_kernel_parameter)
-    constant = -1/(m.sqrt(2*m.pi)*heat_kernel_std**(3/2))
+    #constant = -1/(m.sqrt(2*m.pi)*heat_kernel_var**(3/2))
     derivative_heat_kernel = lambda z:\
-        constant*(grid_x - z)*norm.pdf(grid_x - z, loc=0, scale=heat_kernel_std)
-    integral, error = quad_vec(derivative_heat_kernel, a=-delta, b=delta)
+        ((grid_x - z)/heat_kernel_var)*norm.pdf(grid_x - z, loc=0, scale=heat_kernel_std)
+        #constant*(grid_x - z)*norm.pdf(grid_x - z, loc=0, scale=heat_kernel_std)
+    integral, error = quad_vec(derivative_heat_kernel, a=-delta_half, b=delta_half)
     # integral, error = quad_vec(derivative_heat_kernel, a=-delta, b=delta)
     # integral, error = quad_vec(derivative_heat_kernel, a=0, b=2*delta)
     # return p, diff_norm
@@ -88,10 +119,15 @@ def integral_between_grid_points(heat_kernel_var,
 def create_drift_array(rough_func, integral_on_grid):
     drift = np.zeros_like(rough_func)
     length = len(rough_func)
-    l2 = int(length/2)
-    for i in range(length):
-        drift[i] = np.sum(np.multiply(rough_func, np.roll(np.flip(integral_on_grid), l2 - i)))
-    #return np.convolve(integral_on_grid, rough_drift, 'valid')[:-1]  # Convolution and removal of last element
+    #l2 = int(length/2)
+    #for i in range(length):
+    #    #drift[j] = np.sum(np.multiply(rough_func, np.roll(np.flip(integral_on_grid), j - int(length/2))))
+    #    for j in range(length):
+    #        if (i - j >= 0 and i - j <= length):
+    #        #if (i - j <= length):
+    #            c = drift[i]
+    #            drift[i] = c + rough_func[j]*integral_on_grid[i-j]
+    return np.convolve(rough_func, integral_on_grid, 'same')  # Convolution and removal of last element
     return drift
 
 
