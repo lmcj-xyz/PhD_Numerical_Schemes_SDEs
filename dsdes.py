@@ -94,9 +94,9 @@ def heat_kernel_var(time_steps, hurst):
 
 # %% integral between grid points func
 def integral_between_grid_points(heat_kernel_var,
-                                 points, grid_x,
+                                 grid_x,
                                  half_support):
-    # points = len(grid_x)
+    points = len(grid_x)
     heat_kernel_std = m.sqrt(heat_kernel_var)
     integral = np.zeros_like(grid_x)
     delta_half = half_support/(points)
@@ -117,18 +117,17 @@ def integral_between_grid_points(heat_kernel_var,
 
 # %% Drift array
 def create_drift_array(rough_func, integral_on_grid):
-    drift = np.zeros_like(rough_func)
-    length = len(rough_func)
-    #l2 = int(length/2)
+    #drift = np.zeros_like(rough_func)
+    #length = len(rough_func)
     #for i in range(length):
     #    #drift[j] = np.sum(np.multiply(rough_func, np.roll(np.flip(integral_on_grid), j - int(length/2))))
     #    for j in range(length):
     #        if (i - j >= 0 and i - j <= length):
-    #        #if (i - j <= length):
+    #       #if (i - j <= length):
     #            c = drift[i]
-    #            drift[i] = c + rough_func[j]*integral_on_grid[i-j]
-    return np.convolve(rough_func, integral_on_grid, 'same')  # Convolution and removal of last element
-    return drift
+    #            drift[i] = c - rough_func[j]*integral_on_grid[i-j]
+    return -np.convolve(rough_func, integral_on_grid, 'same')  # Convolution and removal of last element
+    #return drift
 
 
 # %% drift func

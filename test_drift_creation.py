@@ -27,7 +27,7 @@ plt.rcParams['figure.dpi'] = 500
 
 # Variables to modify for the scheme
 epsilon = 10e-6
-beta = 7/16
+beta = 1/16
 hurst = 1 - beta
 time_steps_max = 2**17
 time_steps_approx0 = 2**7
@@ -45,7 +45,7 @@ time_steps_list = [time_steps_max,
                    time_steps_approx5,
                    time_steps_approx6]
 # Variables to create fBm
-points_x = 2**8
+points_x = 2**12
 half_support = 10
 delta_x = half_support/(points_x-1)
 grid_x = np.linspace(start=-half_support, stop=half_support, num=points_x)
@@ -53,9 +53,10 @@ grid_x = np.linspace(start=-half_support, stop=half_support, num=points_x)
 grid_x0 = np.linspace(start=0, stop=2*half_support, num=points_x)
 fbm_array = fbm(hurst, points_x, half_support)
 bridge_array = bridge(fbm_array, grid_x0)
-#smooth_array = np.sin(grid_x)
-smooth_array = grid_x
+smooth_array = np.sin(grid_x)
+#smooth_array = grid_x
 
+#%%
 var_heat_kernel_real = heat_kernel_var(time_steps_max, hurst)
 var_heat_kernel_approx0 = heat_kernel_var(time_steps_approx0, hurst)
 var_heat_kernel_approx1 = heat_kernel_var(time_steps_approx1, hurst)
@@ -67,38 +68,40 @@ var_heat_kernel_approx6 = heat_kernel_var(time_steps_approx6, hurst)
 
 integral_array_real = integral_between_grid_points(
     var_heat_kernel_real,
-    points_x, grid_x, half_support)
+    grid_x, half_support)
 integral_array0 = integral_between_grid_points(
     var_heat_kernel_approx0,
-    points_x, grid_x, half_support)
+    grid_x, half_support)
 integral_array1 = integral_between_grid_points(
     var_heat_kernel_approx1,
-    points_x, grid_x, half_support)
+    grid_x, half_support)
 integral_array2 = integral_between_grid_points(
     var_heat_kernel_approx2,
-    points_x, grid_x, half_support)
+    grid_x, half_support)
 integral_array3 = integral_between_grid_points(
     var_heat_kernel_approx3,
-    points_x, grid_x, half_support)
+    grid_x, half_support)
 integral_array4 = integral_between_grid_points(
     var_heat_kernel_approx4,
-    points_x, grid_x, half_support)
+    grid_x, half_support)
 integral_array5 = integral_between_grid_points(
     var_heat_kernel_approx5,
-    points_x, grid_x, half_support)
+    grid_x, half_support)
 integral_array6 = integral_between_grid_points(
     var_heat_kernel_approx6,
-    points_x, grid_x, half_support)
+    grid_x, half_support)
 
-drift_array_real = create_drift_array(smooth_array, integral_array_real)
-drift_array0 = create_drift_array(smooth_array, integral_array0)
-drift_array1 = create_drift_array(smooth_array, integral_array1)
-drift_array2 = create_drift_array(smooth_array, integral_array2)
-drift_array3 = create_drift_array(smooth_array, integral_array3)
-drift_array4 = create_drift_array(smooth_array, integral_array4)
-drift_array5 = create_drift_array(smooth_array, integral_array5)
-drift_array6 = create_drift_array(smooth_array, integral_array6)
+# %%
+drift_array_real = create_drift_array(bridge_array, integral_array_real)
+drift_array0 = create_drift_array(bridge_array, integral_array0)
+drift_array1 = create_drift_array(bridge_array, integral_array1)
+drift_array2 = create_drift_array(bridge_array, integral_array2)
+drift_array3 = create_drift_array(bridge_array, integral_array3)
+drift_array4 = create_drift_array(bridge_array, integral_array4)
+drift_array5 = create_drift_array(bridge_array, integral_array5)
+drift_array6 = create_drift_array(bridge_array, integral_array6)
 
+# %%
 manually_computed_sin = m.exp(
     -heat_kernel_var(time_steps_max, hurst)/2
     )*np.cos(grid_x)
@@ -106,13 +109,8 @@ manually_computed_cos = m.exp(
     -heat_kernel_var(time_steps_max, hurst)/2
     )*np.sin(grid_x)
 
-#%% Plots
-plt.plot(integral_array1)
-#plt.plot(integral_array6)
-plt.show()
-
 # %% Plots
-limy = 2
+limy = 5
 drift_fig = plt.figure('drift')
 plt.plot(grid_x, drift_array_real, label="drift real solution")
 #plt.plot(grid_x, manually_computed_sin, label="drift for sin instead of fbm")
@@ -128,7 +126,11 @@ plt.ylim([-limy, limy])
 plt.legend()
 plt.show()
 
-
+#%% Plots
+plt.plot(integral_array0)
+plt.plot(integral_array1)
+plt.plot(integral_array6)
+plt.show()
 # %% New potential function for derivative of heat kernel
 # testing function
 # move to dsdes.py if useful
