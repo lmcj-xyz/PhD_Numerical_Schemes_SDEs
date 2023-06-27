@@ -9,6 +9,7 @@ import numpy as np
 from numpy.random import default_rng
 import matplotlib.pyplot as plt
 import dsdes as ds
+from scipy.stats import linregress
 
 rng = default_rng()
 
@@ -96,3 +97,25 @@ strong_error['e2'] = np.abs(solution['real'] - solution['approx2'])
 strong_error['e3'] = np.abs(solution['real'] - solution['approx3'])
 strong_error['e4'] = np.abs(solution['real'] - solution['approx4'])
 strong_error['e5'] = np.abs(solution['real'] - solution['approx5'])
+
+plot_error = [np.mean(value) for key, value in strong_error.items()]
+plot_dt = [value for key, value in dt.items() if key not in 'real']
+
+log_strong_error = np.log10(plot_error)
+log_dt = np.log10(plot_dt)
+
+reg_strong = linregress(log_dt, log_strong_error)
+rate_strong = reg_strong.slope
+intersection_strong = reg_strong.intercept
+
+both_error_fig = plt.figure('strong_error_fig')
+plt.title(
+    "Strong error for beta=%.5f \n strong error rate = %f" % (beta, rate_strong)
+    )
+plt.plot(plot_dt,
+         plot_error,
+         marker='o',
+         label='Strong error')
+plt.yscale('log')
+plt.legend()
+plt.show()
