@@ -132,12 +132,14 @@ def create_drift_array(rough_func, integral_on_grid):
 
 # %% drift func
 # Drift coefficient as a piecewise function created out of an array
-def create_drift_function(x, drift_array, grid, points, delta):
+def create_drift_function(x, drift_array, grid):
+    points = len(grid)
+    delta_half = grid[-1]/(points-1) # Half support divided by the points
     # piecewise_linear = lambda k: \
     #    (drift_array[k] - drift_array[k-1])/(grid[k] - grid[k-1])
     return np.piecewise(
         x,
-        [(i - delta <= x)*(x < i + delta) for i in grid],
+        [(i - delta_half <= x)*(x < i + delta_half) for i in grid],
         # [piecewise_linear(i) for i in range(points)]
         [drift_array[i] for i in range(points)]  # piecewise constant
         )
@@ -165,9 +167,7 @@ def solve(
         z,
         time_start, time_end, time_steps,
         sample_paths,
-        grid,
-        points,
-        delta
+        grid
         ):
     y = np.zeros(shape=(time_steps+1, sample_paths))
     z_coarse = coarse_noise(z, time_steps, sample_paths)
@@ -178,9 +178,7 @@ def solve(
                 + create_drift_function(
                         x=y[i, :],
                         drift_array=drift_array,
-                        grid=grid,
-                        points=points,
-                        delta=delta
+                        grid=grid
                         )*dt \
                 + z_coarse[i, :]
     return y
@@ -195,9 +193,7 @@ def solves(
         z,
         time_start, time_end, time_steps,
         sample_paths,
-        grid,
-        points,
-        delta
+        grid
         ):
     y = np.zeros(shape=(1, sample_paths))
     z_coarse = coarse_noise(z, time_steps, sample_paths)
@@ -208,13 +204,29 @@ def solves(
                 + create_drift_function(
                         x=y[0, :],
                         drift_array=drift_array,
-                        grid=grid,
-                        points=points,
-                        delta=delta
+                        grid=grid
                         )*dt \
                 + z_coarse[i, :]
     return y
 
+# %% sde solver func terminal time using np.interp
+def solves2(
+        y0,
+        drift_array,
+        z,
+        time_start, time_end, time_steps,
+        sample_paths,
+        grid
+        ):
+    y = np.zeros(shape=(1, sample_paths))
+    z_coarse = coarse_noise(z, time_steps, sample_paths)
+    dt = (time_end - time_start)/(time_steps-1)
+    y[0, :] = y0
+    for i in range(time_steps):
+        y[0, :] = y[0, :] \
+                + np.interp(x=y[0, :], xp=grid, fp=drift_array)*dt \
+                + z_coarse[i, :]
+    return y
 
 # %% generic sde solver func
 # Euler scheme solver for a generic SDE

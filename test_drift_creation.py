@@ -12,9 +12,7 @@ import matplotlib.pyplot as plt
 import time
 import math as m
 from numpy.random import default_rng
-from dsdes import approximate, bridge, coarse_noise, create_drift_function,\
-        fbm, gen_solve, heat_kernel_var, mv_solve,\
-        integral_between_grid_points, solve, solves, create_drift_array
+from dsdes import *
 from scipy.integrate import quad_vec
 from scipy.stats import norm, linregress
 from scipy.stats import linregress
@@ -92,14 +90,14 @@ integral_array6 = integral_between_grid_points(
     grid_x, half_support)
 
 # %%
-drift_array_real = create_drift_array(bridge_array, integral_array_real)
-drift_array0 = create_drift_array(bridge_array, integral_array0)
-drift_array1 = create_drift_array(bridge_array, integral_array1)
-drift_array2 = create_drift_array(bridge_array, integral_array2)
-drift_array3 = create_drift_array(bridge_array, integral_array3)
-drift_array4 = create_drift_array(bridge_array, integral_array4)
-drift_array5 = create_drift_array(bridge_array, integral_array5)
-drift_array6 = create_drift_array(bridge_array, integral_array6)
+drift_array_real = create_drift_array(smooth_array, integral_array_real)
+drift_array0 = create_drift_array(smooth_array, integral_array0)
+drift_array1 = create_drift_array(smooth_array, integral_array1)
+drift_array2 = create_drift_array(smooth_array, integral_array2)
+drift_array3 = create_drift_array(smooth_array, integral_array3)
+drift_array4 = create_drift_array(smooth_array, integral_array4)
+drift_array5 = create_drift_array(smooth_array, integral_array5)
+drift_array6 = create_drift_array(smooth_array, integral_array6)
 
 # %%
 manually_computed_sin = m.exp(
@@ -113,7 +111,7 @@ manually_computed_cos = m.exp(
 limy = 5
 drift_fig = plt.figure('drift')
 plt.plot(grid_x, drift_array_real, label="drift real solution")
-#plt.plot(grid_x, manually_computed_sin, label="drift for sin instead of fbm")
+plt.plot(grid_x, manually_computed_sin, label="drift for sin instead of fbm")
 # plt.plot(grid_x, manually_computed_cos, label="drift for cos instead of fbm")
 plt.plot(grid_x, drift_array0, label="drift approximation 0")
 plt.plot(grid_x, drift_array1, label="drift approximation 1")
