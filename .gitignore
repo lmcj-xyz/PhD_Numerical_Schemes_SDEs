@@ -147,3 +147,4 @@ cython_debug/
 
 # Images and other files
 *.png
+.~.lock*
