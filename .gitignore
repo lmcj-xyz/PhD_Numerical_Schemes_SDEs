@@ -147,4 +147,4 @@ cython_debug/
 
 # Images and other files
 *.png
-.~.lock*
+.~lock.rates.ods#
