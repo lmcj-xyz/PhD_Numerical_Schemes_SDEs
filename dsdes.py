@@ -36,11 +36,8 @@ def fbm(hurst, points, half_support):
             np.abs(xv - yv)**(2*hurst)
             )
     g = rng.standard_normal(size=points)
-    # g_bridge = g - (fbm_grid/half_support)*g[-1]
     cholesky = np.linalg.cholesky(a=covariance)
-    # fbm_arr = np.matmul(cholesky, g_bridge)
     fbm_array = np.matmul(cholesky, g)
-    # fbm_arr = np.concatenate([np.zeros(1),fbm_arr])
     return fbm_array
 
 
@@ -64,12 +61,8 @@ def fbm_alt(hurst, gaussian, half_support):
             np.abs(yv)**(2*hurst) -
             np.abs(xv - yv)**(2*hurst)
             )
-    #g = rng.standard_normal(size=points)
-    # g_bridge = g - (fbm_grid/half_support)*g[-1]
     cholesky = np.linalg.cholesky(a=covariance)
-    # fbm_arr = np.matmul(cholesky, g_bridge)
     fbm_array = np.matmul(cholesky, gaussian)
-    # fbm_arr = np.concatenate([np.zeros(1),fbm_arr])
     return fbm_array
 
 
@@ -82,13 +75,8 @@ def bridge(f, grid):
 # %% heat parameter func
 # Heat kernel parameter creation based on time steps of the Euler scheme
 def heat_kernel_var(time_steps, hurst):
-    # eta = 1/(2*(hurst-1/2)**2 + 2 - hurst)  # Parameter that was being used
-    # eta = 1/((hurst-1/2)**2 + 2)  # Some testing parameter
-    eta = 1/((hurst-1/2)**2 + 2 - hurst)  # Parameter from paper
-    # variance = np.sqrt(1/(time_steps**eta))  # Incorrect parameter
-    # variance = (1/(time_steps**eta))**(1/10)  # Using a different parameter
-    variance = 1/(time_steps**eta)  # Parameter according to the theory
-    # return 0.5
+    eta = 1/((hurst-1/2)**2 + 2 - hurst)
+    variance = 1/(time_steps**eta)
     return variance
 
 
@@ -100,34 +88,15 @@ def integral_between_grid_points(heat_kernel_var,
     heat_kernel_std = m.sqrt(heat_kernel_var)
     integral = np.zeros_like(grid_x)
     delta_half = half_support/(points)
-    # constant = 1
-    # constant = -1/(m.sqrt(2*m.pi)*heat_kernel_parameter)
-    #constant = -1/(m.sqrt(2*m.pi)*heat_kernel_var**(3/2))
     derivative_heat_kernel = lambda z:\
         ((grid_x - z)/heat_kernel_var)*norm.pdf(grid_x - z, loc=0, scale=heat_kernel_std)
-        #constant*(grid_x - z)*norm.pdf(grid_x - z, loc=0, scale=heat_kernel_std)
     integral, error = quad_vec(derivative_heat_kernel, a=-delta_half, b=delta_half)
-    # integral, error = quad_vec(derivative_heat_kernel, a=-delta, b=delta)
-    # integral, error = quad_vec(derivative_heat_kernel, a=0, b=2*delta)
-    # return p, diff_norm
-    #extra_zeros = np.zeros(shape=int(points/2))
-    #integral = np.concatenate([extra_zeros, integral, extra_zeros])  # Array with three times as many elements as the fBm
     return integral
 
 
 # %% Drift array
 def create_drift_array(rough_func, integral_on_grid):
-    #drift = np.zeros_like(rough_func)
-    #length = len(rough_func)
-    #for i in range(length):
-    #    #drift[j] = np.sum(np.multiply(rough_func, np.roll(np.flip(integral_on_grid), j - int(length/2))))
-    #    for j in range(length):
-    #        if (i - j >= 0 and i - j <= length):
-    #       #if (i - j <= length):
-    #            c = drift[i]
-    #            drift[i] = c - rough_func[j]*integral_on_grid[i-j]
-    return -np.convolve(rough_func, integral_on_grid, 'same')  # Convolution and removal of last element
-    #return drift
+    return -np.convolve(rough_func, integral_on_grid, 'same')
 
 
 # %% drift func
@@ -135,12 +104,9 @@ def create_drift_array(rough_func, integral_on_grid):
 def create_drift_function(x, drift_array, grid):
     points = len(grid)
     delta_half = grid[-1]/(points-1) # Half support divided by the points
-    # piecewise_linear = lambda k: \
-    #    (drift_array[k] - drift_array[k-1])/(grid[k] - grid[k-1])
     return np.piecewise(
         x,
         [(i - delta_half <= x)*(x < i + delta_half) for i in grid],
-        # [piecewise_linear(i) for i in range(points)]
         [drift_array[i] for i in range(points)]  # piecewise constant
         )
 
