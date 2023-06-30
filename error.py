@@ -25,7 +25,7 @@ time_steps = dict(zip(keys, time_steps_tuple))
 error_keys = ('e1', 'e2', 'e3', 'e4', 'e5')
 
 epsilon = 10e-6
-beta = 7/16
+beta = 1/2
 hurst = 1 - beta
 y0 = 1
 sample_paths = 10**4
@@ -120,18 +120,18 @@ reg_strong = linregress(log_dt, log_strong_error)
 rate_strong = reg_strong.slope
 intersection_strong = reg_strong.intercept
 
-both_error_fig = plt.figure('strong_error_fig')
-plt.title(
-    r'Rate of convergence r = %f for $\beta$=%f' % (rate_strong, beta)
-    )
-plt.plot(plot_dt,
-         plot_error,
-         marker='o',
-         label='Strong error')
-plt.grid(which='both')
-plt.yscale('log')
-plt.xscale('log')
-plt.xlabel(r'$\log_{10}(\Delta t)$')
-plt.ylabel(r'$\log_{10}(\epsilon)$')
-plt.legend()
-plt.show()
+#both_error_fig = plt.figure('strong_error_fig')
+#plt.title(
+#    r'Rate of convergence r = %f for $\beta$=%f' % (rate_strong, beta)
+#    )
+#plt.plot(plot_dt,
+#         plot_error,
+#         marker='o',
+#         label='Strong error')
+#plt.grid(which='both')
+#plt.yscale('log')
+#plt.xscale('log')
+#plt.xlabel(r'$\log_{10}(\Delta t)$')
+#plt.ylabel(r'$\log_{10}(\epsilon)$')
+#plt.legend()
+#plt.show()
