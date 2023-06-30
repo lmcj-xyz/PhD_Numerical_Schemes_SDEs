@@ -11,6 +11,7 @@ import matplotlib.pyplot as plt
 import dsdes as ds
 from scipy.stats import linregress
 import sys
+import pickle
 
 rng = default_rng()
 
@@ -120,18 +121,32 @@ reg_strong = linregress(log_dt, log_strong_error)
 rate_strong = reg_strong.slope
 intersection_strong = reg_strong.intercept
 
-#both_error_fig = plt.figure('strong_error_fig')
-#plt.title(
-#    r'Rate of convergence r = %f for $\beta$=%f' % (rate_strong, beta)
-#    )
-#plt.plot(plot_dt,
-#         plot_error,
-#         marker='o',
-#         label='Strong error')
-#plt.grid(which='both')
-#plt.yscale('log')
-#plt.xscale('log')
-#plt.xlabel(r'$\log_{10}(\Delta t)$')
-#plt.ylabel(r'$\log_{10}(\epsilon)$')
-#plt.legend()
-#plt.show()
+plot_dict = {
+        'beta': beta,
+        'rate': rate_strong,
+        'dt': plot_dt,
+        'error': plot_error,
+        }
+
+fig, ax = plt.subplots()
+ax.set_title(
+    r'Rate of convergence r = %f for $\beta$=%f' % (rate_strong, beta)
+    )
+ax.plot(plot_dt,
+        plot_error,
+        marker='o',
+        label='Strong error')
+ax.grid(which='both')
+ax.set_yscale('log')
+ax.set_xscale('log')
+ax.set_xlabel(r'$\log_{10}(\Delta t)$')
+ax.set_ylabel(r'$\log_{10}(\epsilon)$')
+ax.legend()
+plt.show()
+
+saving = input('Do you want to save to files the plot and its corresponding dictionary? (yes/no): ')
+if saving == 'yes':
+    fig.savefig('rate.pdf', dpi=200)
+    with open('dict_plot.pkl', 'wb') as fp:
+        pickle.dump(plot_dict, fp)
+        print('Files saved succesfully')
