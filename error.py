@@ -95,7 +95,7 @@ drift_array = dict(zip(keys, drift_tuple))
 
 solution_tuple = tuple(
         map(
-            lambda d, t: ds.solves2(
+            lambda d, t: ds.solve(
                 y0, d, noise, time_start, time_end, t, sample_paths, grid_x
                 ),
             drift_array.values(),

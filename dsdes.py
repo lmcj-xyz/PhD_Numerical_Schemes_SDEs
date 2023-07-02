@@ -17,7 +17,7 @@ rng = default_rng()
 
 # %% fbm func
 # Fractional Brownian motion (fBm) creation function
-def fbm(hurst, points, half_support):
+def fbm(hurst: float, points: int, half_support: float) -> np.ndarray:
     fbm_grid = np.linspace(
             start=1/points,
             stop=2*half_support,
@@ -41,79 +41,48 @@ def fbm(hurst, points, half_support):
     return fbm_array
 
 
-# fBm generator giving the the N(0,1) RV
-def fbm_alt(hurst, gaussian, half_support):
-    points = len(gaussian)
-    fbm_grid = np.linspace(
-            start=1/points,
-            stop=2*half_support,
-            # stop=1,
-            num=points
-            )
-    xv, yv = np.meshgrid(
-            fbm_grid,
-            fbm_grid,
-            sparse=False,
-            indexing='ij'
-            )
-    covariance = 0.5*(
-            np.abs(xv)**(2*hurst) +
-            np.abs(yv)**(2*hurst) -
-            np.abs(xv - yv)**(2*hurst)
-            )
-    cholesky = np.linalg.cholesky(a=covariance)
-    fbm_array = np.matmul(cholesky, gaussian)
-    return fbm_array
-
-
 # %% bridge func
-def bridge(f, grid):
+def bridge(f: np.ndarray, grid: np.ndarray) -> np.ndarray:
     bridge_array = f - (f[-1]/grid[-1])*grid
     return bridge_array
 
 
 # %% heat parameter func
 # Heat kernel parameter creation based on time steps of the Euler scheme
-def heat_kernel_var(time_steps, hurst):
+def heat_kernel_var(time_steps: int, hurst: float) -> float:
     eta = 1/((hurst-1/2)**2 + 2 - hurst)
     variance = 1/(time_steps**eta)
     return variance
 
 
 # %% integral between grid points func
-def integral_between_grid_points(heat_kernel_var,
-                                 grid_x,
-                                 half_support):
+def integral_between_grid_points(heat_kernel_var: float,
+                                 grid_x: np.ndarray,
+                                 half_support: float) -> np.ndarray:
     points = len(grid_x)
     heat_kernel_std = m.sqrt(heat_kernel_var)
     integral = np.zeros_like(grid_x)
     delta_half = half_support/(points)
-    derivative_heat_kernel = lambda z:\
-        ((grid_x - z)/heat_kernel_var)*norm.pdf(grid_x - z, loc=0, scale=heat_kernel_std)
-    integral, error = quad_vec(derivative_heat_kernel, a=-delta_half, b=delta_half)
+    integral, error = quad_vec(lambda z:
+                               ((grid_x - z)/heat_kernel_var)*norm.pdf(
+                                   grid_x - z,
+                                   loc=0,
+                                   scale=heat_kernel_std),
+                               a=-delta_half, b=delta_half)
     return integral
 
 
 # %% Drift array
-def create_drift_array(rough_func, integral_on_grid):
+def create_drift_array(rough_func: np.ndarray,
+                       integral_on_grid: np.ndarray) -> np.ndarray:
     return -np.convolve(rough_func, integral_on_grid, 'same')
-
-
-# %% drift func
-# Drift coefficient as a piecewise function created out of an array
-def create_drift_function(x, drift_array, grid):
-    points = len(grid)
-    delta_half = grid[-1]/(points-1) # Half support divided by the points
-    return np.piecewise(
-        x,
-        [(i - delta_half <= x)*(x < i + delta_half) for i in grid],
-        [drift_array[i] for i in range(points)]  # piecewise constant
-        )
 
 
 # %% coarse noise func
 # Coarse noise
-def coarse_noise(z, time_steps, sample_paths):
+def coarse_noise(z: np.ndarray,
+                 time_steps: int,
+                 sample_paths: int) -> np.ndarray:
     z_coarse = np.zeros(shape=(time_steps, sample_paths))
     q = int(np.shape(z)[0] / time_steps)
     if q == 1:
@@ -124,10 +93,33 @@ def coarse_noise(z, time_steps, sample_paths):
     return z_coarse
 
 
+# %% sde solver func terminal time using np.interp
+def solve(
+        y0: float,
+        drift_array: np.ndarray,
+        z: np.ndarray,
+        time_start: float, time_end: float, time_steps: int,
+        sample_paths: int,
+        grid: np.ndarray
+        ) -> np.ndarray:
+    y = np.zeros(shape=(1, sample_paths))
+    z_coarse = coarse_noise(z, time_steps, sample_paths)
+    dt = (time_end - time_start)/(time_steps-1)
+    y[0, :] = y0
+    for i in range(time_steps):
+        y[0, :] = y[0, :] \
+                + np.interp(x=y[0, :], xp=grid, fp=drift_array)*dt \
+                + z_coarse[i, :]
+    return y
+
+
+#####################
+# Below are the functions no longer used
+#####################
 # %% sde solver func
 # Euler scheme solver for the distributional drift
 # This function keeps the entire array corresponding to the solutions
-def solve(
+def solve_keep_paths(
         y0,
         drift_array,
         z,
@@ -175,24 +167,6 @@ def solves(
                 + z_coarse[i, :]
     return y
 
-# %% sde solver func terminal time using np.interp
-def solves2(
-        y0,
-        drift_array,
-        z,
-        time_start, time_end, time_steps,
-        sample_paths,
-        grid
-        ):
-    y = np.zeros(shape=(1, sample_paths))
-    z_coarse = coarse_noise(z, time_steps, sample_paths)
-    dt = (time_end - time_start)/(time_steps-1)
-    y[0, :] = y0
-    for i in range(time_steps):
-        y[0, :] = y[0, :] \
-                + np.interp(x=y[0, :], xp=grid, fp=drift_array)*dt \
-                + z_coarse[i, :]
-    return y
 
 # %% generic sde solver func
 # Euler scheme solver for a generic SDE
@@ -270,3 +244,40 @@ def approximate(
         grid_x, points_x, delta_x
         )
     return solution, time_grid, time_grid0, drift_array
+
+
+# fBm generator giving the the N(0,1) RV
+def fbm_alt(hurst, gaussian, half_support):
+    points = len(gaussian)
+    fbm_grid = np.linspace(
+            start=1/points,
+            stop=2*half_support,
+            # stop=1,
+            num=points
+            )
+    xv, yv = np.meshgrid(
+            fbm_grid,
+            fbm_grid,
+            sparse=False,
+            indexing='ij'
+            )
+    covariance = 0.5*(
+            np.abs(xv)**(2*hurst) +
+            np.abs(yv)**(2*hurst) -
+            np.abs(xv - yv)**(2*hurst)
+            )
+    cholesky = np.linalg.cholesky(a=covariance)
+    fbm_array = np.matmul(cholesky, gaussian)
+    return fbm_array
+
+
+# %% drift func
+# Drift coefficient as a piecewise function created out of an array
+def create_drift_function(x, drift_array, grid):
+    points = len(grid)
+    delta_half = grid[-1]/(points-1) # Half support divided by the points
+    return np.piecewise(
+        x,
+        [(i - delta_half <= x)*(x < i + delta_half) for i in grid],
+        [drift_array[i] for i in range(points)]  # piecewise constant
+        )
