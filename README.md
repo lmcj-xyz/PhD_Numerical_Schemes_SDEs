@@ -1,3 +1,10 @@
+---
+TO DO:
+- [ ] Add type hints to all the files used
+- [ ] Remove unnecessary old files
+- [ ] Add reference to the paper once we have the preprint.
+---
+
 # Numerical schemes for SDEs
 
 Some numerical schemes for SDEs with irregular coefficients.
@@ -11,7 +18,7 @@ dX_t = b(t, X_t) dt + W_t,
 $$
 
 where $W$ is a Brownian motion, and $b$ is a distribution living in the Hölder-Zygmund space $C_T \mathcal C^{-\beta}(\mathbb R)$ for some $\beta \in (0, 1/2)$.
-For the numerical methods we consider the drift to be time homogeneous, i.e: $\hat b \in \mathcal C^{-\beta}$, where $\hat b$.
+For the numerical methods we consider the drift to be time homogeneous, i.e: $\hat b \in \mathcal C^{-\beta}(\mathbb R)$.
 
 For further details look at the paper at...
 
@@ -32,9 +39,3 @@ You can also modify the dictionary `time_steps` just have the following in mind:
 - The following `keys` are `approx1`, `approx2`, etc. This is for the amount of approximations that you want to compute. So if you want an extra approximation you must modify three tuples, namely `keys`, `
 
 If you want to try out
-
----
-TO DO:
-- [ ] Add type hints to all the files used
-- [ ] Remove unnecessary old files
-- [ ] Add reference to the paper once we have the preprint.
