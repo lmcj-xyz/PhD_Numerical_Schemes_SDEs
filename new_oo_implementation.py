@@ -71,25 +71,26 @@ class BrownianMotion:
         if quotient == 1:
             coarse_bm = original_bm
             print("\nThe number of time steps \
-                  provided are the same as the \
-                      maximum amount of time steps.\
-                          \nThe output is the original Brownian motion!\n")
+                    provided are the same as the \
+                    maximum amount of time steps.\
+                    \nThe output is the original Brownian motion!\n")
             return coarse_bm
         elif quotient > 1:
             temp = original_bm.reshape(new_time_steps, quotient, self.paths)
             coarse_bm = np.sum(temp, axis=1)
             print("\nThe output is the corresponding \
-                  Brownian motion now with %d time \
-                      steps instead of the maximum amount of \
-                          %d.\n" % (new_time_steps, self.time_steps))
+                    Brownian motion now with %d time steps \
+                    instead of the maximum amount of time steps %d.\n"
+                  % (new_time_steps, self.time_steps))
             return coarse_bm
         else:
-            raise ValueError("Impossible to lower the \
-                             resolution of the Brownian \
-                                 motion if the new time \
-                                     steps are more than \
-                                         the maximum time steps.\
-                                             \nTry a smaller number!")
+            raise ValueError(
+                    "Impossible to lower the \
+                    resolution of the Brownian \
+                    motion if the new time \
+                    steps are more than \
+                    the maximum time steps.\
+                    \nTry a smaller number!")
 
 
 class DistributionalDrift:

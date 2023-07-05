@@ -9,7 +9,7 @@ Created on Tue Feb 28 14:09:33 2023
 import numpy as np
 import math as m
 from scipy.integrate import quad_vec
-from scipy.stats import norm
+from scipy.stats import norm, gaussian_kde
 from numpy.random import default_rng
 
 rng = default_rng()
@@ -113,6 +113,28 @@ def solve(
     return y
 
 
+# Euler scheme solver for a generic McKean-Vlasov SDE
+def mv_solve(
+        y0: float,
+        drift_array: np.ndarray,
+        z: np.ndarray,
+        time_start: float, time_end: float, time_steps: int,
+        sample_paths: int,
+        grid: np.ndarray,
+        ):
+    y = np.zeros(shape=(time_steps+1, sample_paths))
+    z_coarse = coarse_noise(z, time_steps, sample_paths)
+    dt = (time_end - time_start)/(time_steps-1)
+    nu0 = norm.pdf(y0),
+    y[0, :] = y0*nu0
+    for i in range(time_steps):
+        kde = gaussian_kde(dataset=y[i, :], bw_method='scott')
+        y[i+1, :] = y[i, :] + \
+            kde.evaluate(y[i, :])*np.interp(x=y[i, :], xp=grid, fp=drift_array)*dt + \
+            z_coarse[i, :]
+    return y
+
+
 #####################
 # Below are the functions no longer used
 #####################
@@ -185,27 +207,6 @@ def gen_solve(
         y[i+1, :] = y[i, :] \
                 + drift(t=i, x=y[i, :])*dt \
                 + diffusion(t=i, x=y[i, :])*z[i, :]
-    return y
-
-
-# %% mckean-vlasov sde solver func
-# Euler scheme solver for a generic McKean-Vlasov SDE
-def mv_solve(
-        y0,
-        drift,
-        diffusion,
-        z,
-        time_start, time_end, time_steps,
-        sample_paths
-        ):
-    y = np.zeros(shape=(time_steps+1, sample_paths))
-    dt = (time_end - time_start)/(time_steps-1)
-    y[0, :] = y0
-    for i in range(time_steps):
-        nu = 1  # use the KDE from scikit learn
-        y[i+1, :] = y[i, :]\
-            + drift(t=i, x=y[i, :], law=nu(y[i, :]))*dt\
-            + diffusion(t=i, x=y[i, :], law=nu(y[i, :]))*z[i, :]
     return y
 
 
