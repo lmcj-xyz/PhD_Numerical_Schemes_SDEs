@@ -50,7 +50,7 @@ def points_drift(m, L, beta):
 
 mA = 2**12
 lA = 5
-betaA = [10e-6, 1/6, 1/8, 1/4, 1/2]
+betaA = [10e-6, 1/8, 1/6, 1/4, 1/2]
 etaA = [eta(b) for b in betaA]
 hurstA = [1 - b for b in betaA]
 n_1A = [ds.heat_kernel_var(time_steps=mA, hurst=h) for h in hurstA]
@@ -85,22 +85,27 @@ with open('dict_plot-beta_14.pkl', 'rb') as fp14:
 with open('dict_plot-beta_12.pkl', 'rb') as fp12:
     beta12 = pickle.load(fp12)
 
+beta00C = [e * 1000 for e in beta00['error']]
+beta18C = [e * 8 for e in beta18['error']]
+beta14C = [e * 3.6 for e in beta14['error']]
+beta12C = [e for e in beta12['error']]
+
 fig, axs = plt.subplots(1, 1, sharey=True)
 fig.suptitle(r'Empirical convergence rate for different values of $\beta$')
 axs.plot(beta12['dt'],
-         beta12['error'],
+         beta12C,
          marker='o',
          label=r'rate = %f for $\beta$=%f' % (beta12['rate'], beta12['beta']))
 axs.plot(beta14['dt'],
-         beta14['error'],
+         beta14C,
          marker='o',
          label=r'rate = %f for $\beta$=%f' % (beta14['rate'], beta14['beta']))
 axs.plot(beta18['dt'],
-         beta18['error'],
+         beta18C,
          marker='o',
          label=r'rate = %f for $\beta$=%f' % (beta18['rate'], beta18['beta']))
 axs.plot(beta00['dt'],
-         beta00['error'],
+         beta00C,
          marker='o',
          label=r'rate = %f for $\beta$=%f' % (beta00['rate'], beta00['beta']))
 axs.grid(which='both')
