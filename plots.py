@@ -18,9 +18,9 @@ hk1 = ds.heat_kernel_var(time_steps=ts1, hurst=0.8)
 hk2 = ds.heat_kernel_var(time_steps=ts2, hurst=0.8)
 
 i1 = ds.integral_between_grid_points(heat_kernel_var=hk1,
-                                  grid_x=grid, half_support=hs)
+                                     grid_x=grid, half_support=hs)
 i2 = ds.integral_between_grid_points(heat_kernel_var=hk2,
-                                  grid_x=grid, half_support=hs)
+                                     grid_x=grid, half_support=hs)
 
 ticks1 = np.arange(-5, 6, 1)
 fig, axs = plt.subplots(1, 2, sharey=True)
@@ -132,7 +132,7 @@ var = ds.heat_kernel_var(time_steps, hurst)
 y0 = 1
 integral = ds.integral_between_grid_points(var, grid_x, half_support)
 drift_array = ds.create_drift_array(bridge_array, integral)
-sample_paths = 10
+sample_paths = 3
 rng = default_rng()
 z = rng.normal(
         loc=0.0, scale=np.sqrt(dt),
@@ -146,6 +146,7 @@ paths = ds.solve_keep_paths(
         sample_paths,
         grid_x
         )
+
 fig, ax = plt.subplots()
-ax.plot(paths)
+ax.plot(paths[:, 0])
 plt.show()

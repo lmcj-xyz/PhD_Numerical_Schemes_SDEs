@@ -94,14 +94,12 @@ def coarse_noise(z: np.ndarray,
 
 
 # %% sde solver func terminal time using np.interp
-def solve(
-        y0: float,
-        drift_array: np.ndarray,
-        z: np.ndarray,
-        time_start: float, time_end: float, time_steps: int,
-        sample_paths: int,
-        grid: np.ndarray
-        ) -> np.ndarray:
+def solve(y0: float,
+          drift_array: np.ndarray,
+          z: np.ndarray,
+          time_start: float, time_end: float, time_steps: int,
+          sample_paths: int,
+          grid: np.ndarray,) -> np.ndarray:
     y = np.zeros(shape=(1, sample_paths))
     z_coarse = coarse_noise(z, time_steps, sample_paths)
     dt = (time_end - time_start)/(time_steps-1)
@@ -113,15 +111,33 @@ def solve(
     return y
 
 
+# Euler scheme solver for the distributional drift
+# This function keeps the entire array corresponding to the solutions
+# Use with care because it will eat up your memory very quick
+def solve_keep_paths(y0: float,
+                     drift_array: np.ndarray,
+                     z: np.ndarray,
+                     time_start: float, time_end: float, time_steps: int,
+                     sample_paths: int,
+                     grid: np.ndarray,) -> np.ndarray:
+    y = np.zeros(shape=(time_steps+1, sample_paths))
+    z_coarse = coarse_noise(z, time_steps, sample_paths)
+    dt = (time_end - time_start)/(time_steps-1)
+    y[0, :] = y0
+    for i in range(time_steps):
+        y[i, :] = y[i, :] \
+                + np.interp(x=y[i, :], xp=grid, fp=drift_array)*dt \
+                + z_coarse[i, :]
+    return y
+
+
 # Euler scheme solver for a generic McKean-Vlasov SDE
-def mv_solve(
-        y0: float,
-        drift_array: np.ndarray,
-        z: np.ndarray,
-        time_start: float, time_end: float, time_steps: int,
-        sample_paths: int,
-        grid: np.ndarray,
-        ):
+def mv_solve(y0: float,
+             drift_array: np.ndarray,
+             z: np.ndarray,
+             time_start: float, time_end: float, time_steps: int,
+             sample_paths: int,
+             grid: np.ndarray,) -> np.ndarray:
     y = np.zeros(shape=(time_steps+1, sample_paths))
     z_coarse = coarse_noise(z, time_steps, sample_paths)
     dt = (time_end - time_start)/(time_steps-1)
@@ -138,28 +154,6 @@ def mv_solve(
 #####################
 # Below are the functions no longer used
 #####################
-# %% sde solver func
-# Euler scheme solver for the distributional drift
-# This function keeps the entire array corresponding to the solutions
-def solve_keep_paths(
-        y0,
-        drift_array,
-        z,
-        time_start, time_end, time_steps,
-        sample_paths,
-        grid
-        ):
-    y = np.zeros(shape=(time_steps+1, sample_paths))
-    z_coarse = coarse_noise(z, time_steps, sample_paths)
-    dt = (time_end - time_start)/(time_steps-1)
-    y[0, :] = y0
-    for i in range(time_steps):
-        y[i, :] = y[i, :] \
-                + np.interp(x=y[i, :], xp=grid, fp=drift_array)*dt \
-                + z_coarse[i, :]
-    return y
-
-
 # %% sde solver func terminal time
 # Euler scheme solver for the distributional drift
 # This function only keeps the terminal time of the solution
