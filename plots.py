@@ -148,5 +148,5 @@ paths = ds.solve_keep_paths(
         )
 
 fig, ax = plt.subplots()
-ax.plot(paths[:, 0])
+ax.plot(paths)
 plt.show()

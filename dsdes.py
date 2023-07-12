@@ -125,7 +125,7 @@ def solve_keep_paths(y0: float,
     dt = (time_end - time_start)/(time_steps-1)
     y[0, :] = y0
     for i in range(time_steps):
-        y[i, :] = y[i, :] \
+        y[i+1, :] = y[i, :] \
                 + np.interp(x=y[i, :], xp=grid, fp=drift_array)*dt \
                 + z_coarse[i, :]
     return y
