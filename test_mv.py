@@ -12,7 +12,7 @@ linear = grid
 time_start = 0
 time_end = 1
 dt = (time_end - time_start)/time_steps
-sample_paths = 10**1
+sample_paths = 10**2
 noise = rng.normal(loc=0.0, scale=np.sqrt(dt),
                    size=(time_steps, sample_paths))
 y0 = 1
@@ -34,7 +34,7 @@ plt.show()
 
 sg = np.linspace(0, 2.5, 1000)
 fig, ax = plt.subplots()
-for i in range(20):
+for i in range(50):
     ax.plot(sg, law[i].evaluate(sg), label='ap')
 fig.legend()
 plt.show()
