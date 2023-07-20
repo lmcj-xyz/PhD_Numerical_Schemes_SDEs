@@ -9,15 +9,16 @@ rng = default_rng()
 time_steps = 2**8
 grid = np.linspace(-10, 10, 10**3)
 linear = grid
+fbm = ds.fbm(hurst=0.8, points=10**3, half_support=10)
 time_start = 0
 time_end = 1
 dt = (time_end - time_start)/time_steps
-sample_paths = 10**2
+sample_paths = 10**3
 noise = rng.normal(loc=0.0, scale=np.sqrt(dt),
                    size=(time_steps, sample_paths))
 y0 = 1
 soln, law = ds.mv_solve(y0=y0,
-                        drift_array=linear,
+                        drift_array=fbm,
                         z=noise,
                         time_start=time_start,
                         time_end=time_end,

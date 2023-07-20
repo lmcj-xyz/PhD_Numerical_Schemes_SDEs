@@ -67,10 +67,10 @@ plt.fill_between(df['Beta'],
                  alpha=0.15,
                  label='Confidence intervals at 95%')
 plt.plot(df['Beta'], df['Conjecture'], linestyle='dotted', marker='.',
-         label=r'Rate $1/2 - \beta/2$')
+         label=r'Rate $1/2 - \hat \beta/2$')
 plt.plot(df['Beta'], df['Theoretical'], marker='o',
          label='Theoretical rate')
-plt.xlabel(r'$\beta$')
+plt.xlabel(r'$\hat \beta$')
 plt.ylabel('Rate of convergence')
 plt.legend()
 plt.grid()
@@ -91,23 +91,23 @@ beta14C = [e * 3.6 for e in beta14['error']]
 beta12C = [e for e in beta12['error']]
 
 fig, axs = plt.subplots(1, 1, sharey=True)
-fig.suptitle(r'Empirical convergence rate for different values of $\beta$')
+fig.suptitle(r'Empirical convergence rate for different values of $\hat \beta$')
 axs.plot(beta12['dt'],
-         beta12C,
+         beta12['error'],
          marker='o',
-         label=r'rate = %f for $\beta$=%f' % (beta12['rate'], beta12['beta']))
+         label=r'rate = %f for $\hat \beta$=%f' % (beta12['rate'], beta12['beta']))
 axs.plot(beta14['dt'],
-         beta14C,
+         beta14['error'],
          marker='o',
-         label=r'rate = %f for $\beta$=%f' % (beta14['rate'], beta14['beta']))
+         label=r'rate = %f for $\hat \beta$=%f' % (beta14['rate'], beta14['beta']))
 axs.plot(beta18['dt'],
-         beta18C,
+         beta18['error'],
          marker='o',
-         label=r'rate = %f for $\beta$=%f' % (beta18['rate'], beta18['beta']))
+         label=r'rate = %f for $\hat \beta$=%f' % (beta18['rate'], beta18['beta']))
 axs.plot(beta00['dt'],
-         beta00C,
+         beta00['error'],
          marker='o',
-         label=r'rate = %f for $\beta$=%f' % (beta00['rate'], beta00['beta']))
+         label=r'rate = %f for $\hat \beta$=%f' % (beta00['rate'], beta00['beta']))
 axs.grid(which='both')
 axs.set_yscale('log')
 axs.set_xscale('log')
