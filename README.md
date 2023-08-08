@@ -8,6 +8,12 @@ Work by
 - [Elena Issoglio](https://sites.google.com/view/elenaissoglio), Università degli Studi di Torino
 - [Jan Palczewksi](https://www1.maths.leeds.ac.uk/~jp/), University of Leeds
 
+## TO DO:
+
+- [X] Add type hints to `*.py` files
+- [X] Remove unnecessary old files
+- [ ] Add reference to the paper once we have the preprint.
+
 ## Brief theory
 
 We are concerned with the equation
@@ -68,11 +74,3 @@ strong_error['e6'] = np.abs(solution['real'] - solution['approx6'])  # this will
 ```
 
 Those changes should allow you to run the code and get an extra approximation, optionally you can also change the first element from the `time_stesp_tuple` from `2**15` to `2**16` to have a finer real solution.
-
----
-
-TO DO:
-
-- [X] Add type hints to all the files used
-- [X] Remove unnecessary old files
-- [ ] Add reference to the paper once we have the preprint.
