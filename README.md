@@ -74,5 +74,5 @@ Those changes should allow you to run the code and get an extra approximation, o
 TO DO:
 
 - [X] Add type hints to all the files used
-- [ ] Remove unnecessary old files
+- [X] Remove unnecessary old files
 - [ ] Add reference to the paper once we have the preprint.
