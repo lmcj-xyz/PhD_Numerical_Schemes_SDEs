@@ -95,7 +95,7 @@ fig.suptitle(r'Empirical convergence rate for different values of $\hat \beta$')
 axs.plot(beta12['dt'],
          beta12['error'],
          marker='o',
-         label=r'rate = %f for $\hat \beta$=%f' % (beta12['rate'], beta12['beta']))
+         label=r'rate = %f for $\hat \beta$=%f' % (beta12['rate'], beta12['beta'] - beta00['beta']))
 axs.plot(beta14['dt'],
          beta14['error'],
          marker='o',
