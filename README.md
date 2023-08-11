@@ -1,5 +1,7 @@
 # Numerical schemes for SDEs
 
+[![DOI](https://zenodo.org/badge/677419718.svg)](https://zenodo.org/badge/latestdoi/677419718)
+
 Some numerical schemes for SDEs with irregular coefficients.
 
 Work by
