@@ -1,0 +1,53 @@
+# This CITATION.cff file was generated with cffinit.
+# Visit https://bit.ly/cffinit to generate yours today!
+
+cff-version: 1.2.0
+title: >-
+  Implementation of the Numerical Methods from ''Convergence
+  rate of numerical solutions to SDEs with distributional
+  drifts in Besov spaces''
+message: >-
+  If you use this software, please cite it using the
+  metadata from this file.
+type: software
+authors:
+  - given-names: Luis Mario
+    family-names: Chaparro Jáquez
+    email: mmlmcj@leeds.ac.uk
+    affiliation: University of Leeds
+    orcid: 'https://orcid.org/0000-0003-3913-4869'
+  - given-names: Elena
+    family-names: Issoglio
+    affiliation: Università degli Studi di Torino
+    email: elena.issoglio@unito.it
+    orcid: 'https://orcid.org/0000-0003-3035-2712'
+  - given-names: Jan
+    family-names: Palczewski
+    email: J.Palczewski@leeds.ac.uk
+    affiliation: University of Leeds
+    orcid: 'https://orcid.org/0000-0003-0235-8746'
+identifiers:
+  - type: doi
+    value: 10.5281/zenodo.8239428
+    description: The concept DOI of the work.
+  - type: url
+    value: >-
+      https://github.com/lmcj-xyz/PhD_Numerical_Schemes_SDEs/releases/tag/v1.0
+    description: The URL of version 1.0 of the software
+  - type: url
+    value: >-
+      https://codeberg.org/lmcj/PhD_Numerical_Schemes_SDEs/releases/tag/v1.0
+    description: Alternative URL of version 1.0 of the software
+repository-code: 'https://github.com/lmcj-xyz/PhD_Numerical_Schemes_SDEs'
+repository: 'https://codeberg.org/lmcj/PhD_Numerical_Schemes_SDEs'
+abstract: Numerical methods for SDEs with distributional drift.
+keywords:
+  - euler-maruyama-scheme
+  - numerical-methods
+  - probability
+  - sde
+  - stochastic-differential-equations
+license: GPL-3.0
+commit: aab1225510805eaebea3e8c7a9cb49c57375525c
+version: v1.0
+date-released: '2023-08-11'
