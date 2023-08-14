@@ -39,7 +39,7 @@ where $B(t, X_t) \in C_T \mathcal C^{1-\beta}$, and $P_h$ is the heat semigroup 
 
 In particular we are interested in some function $B$ with a rough behaviour in an $\mathbb R$, although for practical purposes we want a said function defined on an interval $[-L, L]$. One such function is *a single sample path* of the well known fractional Brownian motion (fBm) denoted by $B^H$, where $H$ is the so called *Hurst parameter*. It is known that for $H>0$, the function $B^H(\cdot, x)$ is $\alpha$-Hölder continuos for any $\alpha < H$.
 
-Notice that $P_h [\partial_x B^H](y) = p_h \ast [\partial_x B^H](y) = [\partial_x p_h] \ast B^H(y)$, so we can compute the approximated distributional drift by finding the derivative of the heat kernel, which is a very smooth function, and then performing the confolution of the result of it with the fBm we generate.
+Notice that $P_h [\partial_x B^H] (y) = p_h \ast [\partial_x B^H] (y) = [\partial_x p_h] \ast B^H(y)$, so we can compute the approximated distributional drift by finding the derivative of the heat kernel, which is a very smooth function, and then performing the confolution of the result of it with the fBm we generate.
 
 Once the drift is found, we can proceeed by performing the Euler scheme.
 
