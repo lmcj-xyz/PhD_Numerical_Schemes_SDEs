@@ -12,6 +12,9 @@ import dsdes as ds
 from scipy.stats import linregress
 import sys
 import pickle
+import time
+
+start_time = time.time()
 
 rng = default_rng()
 
@@ -20,13 +23,13 @@ plt.rcParams['figure.dpi'] = 200
 # Parameters for Euler scheme
 keys = ('real', 'approx1', 'approx2', 'approx3', 'approx4', 'approx5')
 
-time_steps_tuple = (2**15, 2**8, 2**9, 2**10, 2**11, 2**12)
+time_steps_tuple = (2**11, 2**5, 2**6, 2**7, 2**8, 2**9)
 time_steps = dict(zip(keys, time_steps_tuple))
 
 error_keys = ('e1', 'e2', 'e3', 'e4', 'e5')
 
 epsilon = 10e-6
-beta = 1/2
+beta = 1/8
 hurst = 1 - beta
 y0 = 1
 sample_paths = 10**4
@@ -103,13 +106,13 @@ solution_tuple = tuple(
             )
         )
 solution = dict(zip(keys, solution_tuple))
-
+#%%
 strong_error = dict.fromkeys(error_keys)
-strong_error['e1'] = np.abs(solution['real'] - solution['approx1'])
-strong_error['e2'] = np.abs(solution['real'] - solution['approx2'])
-strong_error['e3'] = np.abs(solution['real'] - solution['approx3'])
-strong_error['e4'] = np.abs(solution['real'] - solution['approx4'])
-strong_error['e5'] = np.abs(solution['real'] - solution['approx5'])
+strong_error['e1'] = np.abs(solution['real'][0][-1] - solution['approx1'][0][-1])
+strong_error['e2'] = np.abs(solution['real'][0][-1] - solution['approx2'][0][-1])
+strong_error['e3'] = np.abs(solution['real'][0][-1] - solution['approx3'][0][-1])
+strong_error['e4'] = np.abs(solution['real'][0][-1] - solution['approx4'][0][-1])
+strong_error['e5'] = np.abs(solution['real'][0][-1] - solution['approx5'][0][-1])
 
 plot_error = [np.mean(value) for key, value in strong_error.items()]
 plot_dt = [value for key, value in dt.items() if key not in 'real']
@@ -144,9 +147,18 @@ ax.set_ylabel(r'$\log_{10}(\epsilon)$')
 ax.legend()
 plt.show()
 
-saving = input('Do you want to save to files the plot and its corresponding dictionary? (yes/no): ')
+end_time = time.time()
+running_time = end_time - start_time
+print(running_time)
+
+#%%
+#saving = input('Do you want to save to files the plot and its corresponding dictionary? (yes/no): ')
+saving = 'yes'
+date_string = time.strftime("%Y-%m-%d-%H-%M")
 if saving == 'yes':
-    fig.savefig('rate.pdf', dpi=200)
-    with open('dict_plot.pkl', 'wb') as fp:
+    plot_string = date_string + '-rate.pdf'
+    dict_string = date_string + '-dict_plot.pkl'
+    fig.savefig(plot_string, dpi=200)
+    with open(dict_string, 'wb') as fp:
         pickle.dump(plot_dict, fp)
         print('Files saved succesfully')
