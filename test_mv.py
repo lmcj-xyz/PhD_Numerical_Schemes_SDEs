@@ -7,14 +7,14 @@ from matplotlib.collections import PolyCollection
 from matplotlib import cm
 
 rng = default_rng()
-time_steps = 2**8
+time_steps = 2**10
 grid = np.linspace(-10, 10, 10**3)
 linear = grid
 fbm = ds.fbm(hurst=0.8, points=10**3, half_support=10)
 time_start = 0
 time_end = 1
 dt = (time_end - time_start)/time_steps
-sample_paths = 10**3
+sample_paths = 10**4
 noise = rng.normal(loc=0.0, scale=np.sqrt(dt),
                    size=(time_steps, sample_paths))
 y0 = 1
