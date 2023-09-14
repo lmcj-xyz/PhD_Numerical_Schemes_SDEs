@@ -78,15 +78,15 @@ plt.show()
 
 with open('dict_plot-mk-beta_00.pkl', 'rb') as fp00:
     beta00 = pickle.load(fp00)
-#with open('dict_plot-mk-beta_18.pkl', 'rb') as fp18:
-#    beta18 = pickle.load(fp18)
+with open('dict_plot-mk-beta_18.pkl', 'rb') as fp18:
+    beta18 = pickle.load(fp18)
 with open('dict_plot-mk-beta_14.pkl', 'rb') as fp14:
     beta14 = pickle.load(fp14)
 with open('dict_plot-mk-beta_12.pkl', 'rb') as fp12:
     beta12 = pickle.load(fp12)
 
 beta00C = [e * 1000 for e in beta00['error']]
-#beta18C = [e * 8 for e in beta18['error']]
+beta18C = [e * 8 for e in beta18['error']]
 beta14C = [e * 3.6 for e in beta14['error']]
 beta12C = [e for e in beta12['error']]
 
@@ -100,10 +100,10 @@ axs.plot(beta14['dt'],
          beta14['error'],
          marker='o',
          label=r'rate = %f for $\hat \beta$=%f' % (beta14['rate'], beta14['beta']))
-#axs.plot(beta18['dt'],
-#         beta18['error'],
-#         marker='o',
-#         label=r'rate = %f for $\hat \beta$=%f' % (beta18['rate'], beta18['beta']))
+axs.plot(beta18['dt'],
+         beta18['error'],
+         marker='o',
+         label=r'rate = %f for $\hat \beta$=%f' % (beta18['rate'], beta18['beta']))
 axs.plot(beta00['dt'],
          beta00['error'],
          marker='o',
