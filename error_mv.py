@@ -29,7 +29,7 @@ time_steps = dict(zip(keys, time_steps_tuple))
 error_keys = ('e1', 'e2', 'e3', 'e4', 'e5')
 
 epsilon = 10e-6
-beta = 1/8
+beta = 1/4
 hurst = 1 - beta
 y0 = 1
 sample_paths = 10**4
