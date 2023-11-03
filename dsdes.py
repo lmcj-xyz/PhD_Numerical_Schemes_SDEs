@@ -143,7 +143,7 @@ def mv_solve(y0: float,
     z_coarse = coarse_noise(z, time_steps, sample_paths)
     dt = (time_end - time_start)/(time_steps-1)
     iloc = y0
-    nu0 = rng.normal(loc=iloc, scale=np.sqrt(0.001),
+    nu0 = rng.normal(loc=iloc, scale=np.sqrt(1),
                      size=sample_paths)
     y[0, :] = y0*nu0
     for i in range(time_steps):

@@ -14,7 +14,7 @@ fbm = ds.fbm(hurst=0.8, points=10**3, half_support=10)
 time_start = 0
 time_end = 1
 dt = (time_end - time_start)/time_steps
-sample_paths = 10**4
+sample_paths = 10**2
 noise = rng.normal(loc=0.0, scale=np.sqrt(dt),
                    size=(time_steps, sample_paths))
 y0 = 1
@@ -59,7 +59,7 @@ facecolors = plt.colormaps['viridis_r'](np.linspace(0., 1, len(verts)))
 poly = PolyCollection(verts, facecolors=facecolors, alpha=0.7)
 ax.add_collection3d(poly, zs=t, zdir='y')
 
-ax.set(xlim=(0, 10), ylim=(0, 20), zlim=(0, 20),
+ax.set(xlim=(0, 10), ylim=(0, 20), zlim=(0, 1),
        xlabel='x', ylabel='t', zlabel='prob')
 
 plt.show()
