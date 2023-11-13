@@ -29,8 +29,8 @@ state = ScalarField(grid, data=ic)
 storage = MemoryStorage()
 eq = FokkerPlanckPDE()
 solver = ScipySolver(eq)
-cont = Controller(solver, t_range=(0, 1),# dt=1e-2,
-                  tracker=["plot", storage.tracker(0.1)])
+cont = Controller(solver, t_range=(0, 1),
+                  tracker=["plot", storage.tracker(0.05)])
 soln = cont.run(state)
 
 plot_kymograph(storage)
