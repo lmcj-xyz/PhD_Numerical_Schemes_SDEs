@@ -12,13 +12,10 @@ import math as m
 from scipy.stats import norm
 from scipy.integrate import quad_vec
 rng = np.random.default_rng()
-plt.rcParams['figure.dpi'] = 500
 
 
 class FractionalBrownianMotion:
-    def __init__(self,
-                 hurst: float,
-                 points: int):
+    def __init__(self, hurst: float, points: int):
         self.hurst = hurst
         self.points = points
         self.gaussian = rng.standard_normal(size=self.points)

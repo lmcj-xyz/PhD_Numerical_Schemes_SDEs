@@ -14,10 +14,10 @@ sp = 3
 y0 = 1
 
 fbm_object = dsdes.FractionalBrownianMotion(hurst=hurst, points=points)
-plt.figure()
-fbm_object.plot_fbm()
-fbm_object.plot_fbb()
-plt.show()
+#plt.figure()
+#fbm_object.plot_fbm()
+#fbm_object.plot_fbb()
+#plt.show()
 fbm_path = fbm_object.fbm.copy()
 
 brownian_motion = dsdes.BrownianMotion(
