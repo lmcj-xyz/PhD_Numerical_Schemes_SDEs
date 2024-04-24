@@ -10,11 +10,9 @@ Work by
 - [Elena Issoglio](https://sites.google.com/view/elenaissoglio), Università degli Studi di Torino
 - [Jan Palczewksi](https://www1.maths.leeds.ac.uk/~jp/), University of Leeds
 
-## TO DO:
+These is the implementation of the numerical methods discussed in the following work:
 
-- [x] Add type hints to `*.py`
-- [x] Stop tracking unnecessary old files
-- [ ] Add reference to the paper once we have the preprint
+> L. M. Chaparro Jáquez, E. Issoglio, and J. Palczewski, ‘Convergence rate of numerical scheme for SDEs with a distributional drift in Besov space’. arXiv, Sep. 20, 2023. doi: [10.48550/arXiv.2309.11396](https://arxiv.org/abs/2309.11396).
 
 ## Brief theory
 
