@@ -1,6 +1,12 @@
 from pde import PDE, CartesianGrid, MemoryStorage, ScalarField, plot_kymograph
+from sympy import sin
 
-eq = PDE({"v": "0.5 * laplace(v) - d_dx(v * sin(v) * 5)"})
+
+def fun(x):
+    return sin(x) * x
+
+
+eq = PDE({"v": f"0.5 * laplace(v) - d_dx({fun}() * 5)"})
 grid = CartesianGrid([[-1, 1]], [32], periodic=True)
 state = ScalarField.from_expression(grid, "10 * sin(x)")
 
