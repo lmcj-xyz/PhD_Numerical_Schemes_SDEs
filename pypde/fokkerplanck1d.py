@@ -39,14 +39,15 @@ state1 = ScalarField(grid=grid, data=ic)
 state2 = ScalarField(grid=grid, data=ic)
 
 rhs1 = (0.5 * state.laplace("dirichlet") - ((state * state**2 * 1).gradient("dirichlet"))[0]).data
-rhs2 = (0.5 * state.laplace("dirichlet") - ((state * state**2 * state).gradient("dirichlet"))[0]).data
-rhs3 = (0.5 * state.laplace("dirichlet") - ((state * np.log(state) * np.sqrt(state)).gradient("dirichlet"))[0]).data
-rhs4 = (0.5 * state.laplace("dirichlet") - ((state * np.sin(state) * np.tan(state)).gradient("dirichlet"))[0]).data
+rhs2 = (0.5 * state.laplace("dirichlet") - ((state * np.tan(state) * 1).gradient("dirichlet"))[0]).data
+rhs3 = (0.5 * state.laplace("dirichlet") - ((state * np.log(state) * 1).gradient("dirichlet"))[0]).data
+rhs4 = (0.5 * state.laplace("dirichlet") - ((state * np.sin(state) * 1).gradient("dirichlet"))[0]).data
 plt.figure()
 plt.plot(rhs1, label=r"$b = 1, F = x^2$")
-plt.plot(rhs2, label=r"$b = x, F = x^2$")
-plt.plot(rhs3, label=r"$b = \sqrt{x}, F = \log{x}$")
-plt.plot(rhs4, label=r"$b = \tan{x}, F = \sin{x}$")
+plt.plot(rhs2, label=r"$b = 1, F = \tan{x}$")
+plt.plot(rhs3, label=r"$b = 1, F = \log{x}$")
+plt.plot(rhs4, label=r"$b = 1, F = \sin{x}$")
+plt.ylim([-1.5, 1.5])
 plt.legend()
 plt.show()
 
@@ -66,7 +67,7 @@ plt.show()
 ##movie(storage, filename="fp.mp4")
 ##plot_kymograph(storage, filename="fp.jpg")
 #
-#"""
+#
 #tplot = np.linspace(0, 1, np.shape(storage.data)[0])
 #xplot = np.linspace(-1, 1, np.shape(storage.data)[1])
 #tplot, xplot = np.meshgrid(tplot, xplot)
@@ -78,4 +79,4 @@ plt.show()
 #ax.set_ylabel(r"$x$")
 #ax.set_zlabel(r"$\rho(t, x)$")
 #plt.show()
-#"""
+#
