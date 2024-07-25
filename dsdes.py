@@ -11,6 +11,13 @@ import math as m
 from scipy.integrate import quad_vec
 from scipy.stats import norm, gaussian_kde
 from numpy.random import default_rng
+from pde import CartesianGrid, \
+    ScalarField, \
+    MemoryStorage, \
+    PDEBase, \
+    ScipySolver, \
+    Controller
+from scipy.stats import norm
 
 rng = default_rng()
 
@@ -36,7 +43,7 @@ def fbm(hurst: float, points: int, half_support: float) -> np.ndarray:
             np.abs(xv - yv)**(2*hurst)
             )
     g = rng.standard_normal(size=points)
-    cholesky = np.linalg.cholesky(a=covariance)
+    cholesky = np.linalg.cholesky(covariance)
     fbm_array = np.matmul(cholesky, g)
     return fbm_array
 
@@ -262,7 +269,7 @@ def fbm_alt(hurst, gaussian, half_support):
             np.abs(yv)**(2*hurst) -
             np.abs(xv - yv)**(2*hurst)
             )
-    cholesky = np.linalg.cholesky(a=covariance)
+    cholesky = np.linalg.cholesky(covariance)
     fbm_array = np.matmul(cholesky, gaussian)
     return fbm_array
 

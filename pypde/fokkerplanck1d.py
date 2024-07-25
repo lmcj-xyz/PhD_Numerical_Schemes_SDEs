@@ -51,32 +51,31 @@ plt.ylim([-1.5, 1.5])
 plt.legend()
 plt.show()
 
-#storage1 = MemoryStorage()
-#storage2 = MemoryStorage()
-#eq1 = FokkerPlanckPDE(drift=lambda x: x, nonlinear=lambda x: x**2)
-#eq2 = FokkerPlanckPDE(drift=lambda x: 1, nonlinear=lambda x: x**2)
-#solverSP1 = ScipySolver(pde=eq1)
-#solverSP2 = ScipySolver(pde=eq2)
-#cont1 = Controller(solver=solverSP1, t_range=(0, 1),
-#                  tracker=storage1.tracker(0.01))
-#cont2 = Controller(solver=solverSP2, t_range=(0, 1),
-#                  tracker=storage2.tracker(0.01))
-#soln = cont1.run(state1)
-#soln = cont2.run(state2)
-#
-##movie(storage, filename="fp.mp4")
-##plot_kymograph(storage, filename="fp.jpg")
-#
-#
-#tplot = np.linspace(0, 1, np.shape(storage.data)[0])
-#xplot = np.linspace(-1, 1, np.shape(storage.data)[1])
-#tplot, xplot = np.meshgrid(tplot, xplot)
-#yplot = np.array(storage.data).transpose()
-#fig = plt.figure()
-#ax = fig.add_subplot(projection="3d")
-#ax.plot_surface(tplot, xplot, yplot)
-#ax.set_xlabel(r"$t$")
-#ax.set_ylabel(r"$x$")
-#ax.set_zlabel(r"$\rho(t, x)$")
-#plt.show()
-#
+storage1 = MemoryStorage()
+storage2 = MemoryStorage()
+eq1 = FokkerPlanckPDE(drift=lambda x: x, nonlinear=lambda x: x**2)
+eq2 = FokkerPlanckPDE(drift=lambda x: 1, nonlinear=lambda x: x**2)
+solverSP1 = ScipySolver(pde=eq1)
+solverSP2 = ScipySolver(pde=eq2)
+cont1 = Controller(solver=solverSP1, t_range=(0, 1),
+                  tracker=storage1.tracker(0.01))
+cont2 = Controller(solver=solverSP2, t_range=(0, 1),
+                  tracker=storage2.tracker(0.01))
+soln = cont1.run(state1)
+soln = cont2.run(state2)
+
+#movie(storage, filename="fp.mp4")
+#plot_kymograph(storage, filename="fp.jpg")
+
+
+tplot = np.linspace(0, 1, np.shape(storage.data)[0])
+xplot = np.linspace(-1, 1, np.shape(storage.data)[1])
+tplot, xplot = np.meshgrid(tplot, xplot)
+yplot = np.array(storage.data).transpose()
+fig = plt.figure()
+ax = fig.add_subplot(projection="3d")
+ax.plot_surface(tplot, xplot, yplot)
+ax.set_xlabel(r"$t$")
+ax.set_ylabel(r"$x$")
+ax.set_zlabel(r"$\rho(t, x)$")
+plt.show()
