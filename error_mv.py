@@ -98,8 +98,10 @@ drift_array = dict(zip(keys, drift_tuple))
 
 solution_tuple = tuple(
         map(
-            lambda d, t: ds.mv_solve(
-                y0, d, noise, time_start, time_end, t, sample_paths, grid_x
+            lambda d, t: ds.solve_mv(
+                y0, d, noise,
+                time_start, time_end, t,
+                sample_paths, grid_x, half_support
                 ),
             drift_array.values(),
             time_steps.values(),

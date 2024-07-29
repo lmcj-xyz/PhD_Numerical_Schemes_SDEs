@@ -37,15 +37,15 @@ state = ScalarField(grid=grid, data=ic)
 storage = MemoryStorage()
 
 
-def b(x):
-    return x
+def b_drift(t):
+    return np.interp(t, x, x)
 
 
-def F(x):
+def f_nonlinear(x):
     return np.log(x)
 
 
-eq = FokkerPlanckPDE(drift=b, nonlinear=F)
+eq = FokkerPlanckPDE(drift=b_drift, nonlinear=f_nonlinear)
 solver = ScipySolver(pde=eq)
 
 time_steps = 10
@@ -71,13 +71,13 @@ plt.show()
 finer_time_steps = 1000
 finer_space_steps = 2**9
 finer_grid = [np.linspace(0, 1, finer_time_steps), np.linspace(-1, 1, finer_space_steps)]
-Ft, Fx = np.meshgrid(*finer_grid)
+ft, fx = np.meshgrid(*finer_grid)
 yfiner = interpn((tplot, xplot), yplot.transpose(), np.meshgrid(*finer_grid), 'cubic')
 
 fig = plt.figure()
 ax = fig.add_subplot(projection="3d")
-ax.plot_surface(Ft, Fx, yfiner)
+ax.plot_surface(ft, fx, yfiner)
 ax.set_xlabel(r"$t$")
 ax.set_ylabel(r"$x$")
 ax.set_zlabel(r"$\rho(t, x)$")
-plt.plot()
+plt.show()

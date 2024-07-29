@@ -9,7 +9,6 @@ Created on Tue Feb 28 14:09:33 2023
 import numpy as np
 import math as m
 from scipy.integrate import quad_vec
-from scipy.stats import norm, gaussian_kde
 from numpy.random import default_rng
 from pde import CartesianGrid, \
     ScalarField, \
@@ -18,6 +17,9 @@ from pde import CartesianGrid, \
     ScipySolver, \
     Controller
 from scipy.stats import norm
+from scipy.interpolate import interpn
+import numpy as np
+import matplotlib.pyplot as plt
 
 rng = default_rng()
 
@@ -139,28 +141,67 @@ def solve_keep_paths(y0: float,
 
 
 # Euler scheme solver for a generic McKean-Vlasov SDE
-def mv_solve(y0: float,
+class FokkerPlanckPDE(PDEBase):
+    def __init__(self, drift, nonlinear, bc="dirichlet"):
+        self.drift = drift
+        self.nonlinear = nonlinear
+        self.bc = bc
+
+    def evolution_rate(self, state, t=0):
+        assert state.grid.dim == 1
+        v = state
+        drift2 = v * self.nonlinear(v) * self.drift(v)
+        v_x = drift2.gradient(bc=self.bc)[0]
+        v_xx = v.laplace(bc=self.bc)
+        v_t = 0.5 * v_xx - v_x
+        return v_t
+
+
+def solve_fp(drift_a, grid, limx=1, nonlinear_f=lambda x: np.sin(x), ts=0, te=1):
+    xn = 2**3
+    x = np.linspace(norm.ppf(0.01), norm.ppf(0.99), xn)
+    ic = norm.pdf(x)
+    grid_bounds = (-limx, limx)
+    grid = CartesianGrid(bounds=[grid_bounds], shape=xn, periodic=False)
+    state = ScalarField(grid=grid, data=ic)
+    storage = MemoryStorage()
+
+    def drift_f(x, drift_array=drift_a, grid=grid):
+        return np.interp(x=x, xp=grid, fp=drift_array)
+
+    eq = FokkerPlanckPDE(drift=drift_f, nonlinear=nonlinear_f)
+    solver = ScipySolver(pde=eq)
+    time_steps = 10
+    dt = 1/time_steps
+    time_range = (ts, te)
+    cont = Controller(solver=solver, t_range=time_range,
+                      tracker=storage.tracker(dt))
+    soln = cont.run(state)
+    return storage
+
+
+def solve_mv(y0: float,
              drift_array: np.ndarray,
              z: np.ndarray,
              time_start: float, time_end: float, time_steps: int,
              sample_paths: int,
-             grid: np.ndarray,) -> np.ndarray:
+             grid: np.ndarray,
+             half_suport) -> np.ndarray:
     y = np.zeros(shape=(time_steps+1, sample_paths))
-    nu = []
     z_coarse = coarse_noise(z, time_steps, sample_paths)
     dt = (time_end - time_start)/(time_steps-1)
-    iloc = y0
-    nu0 = rng.normal(loc=iloc, scale=np.sqrt(1),
-                     size=sample_paths)
-    y[0, :] = y0*nu0
+    y[0, :] = y0
+    rho = solve_fp(drift_a=drift_array, grid=grid, limx=half_suport)
+    tpde = np.linspace(time_start, time_end, time_steps)
+    xpde = np.linspace(-half_suport, half_suport, sample_paths)
+    tpde, xpde = np.meshgrid(tpde, xpde, 'ij')
     for i in range(time_steps):
-        kde = gaussian_kde(dataset=y[i, :], bw_method='scott')
-        nu.append(kde)
         y[i+1, :] = y[i, :] + \
-            kde.evaluate(y[i, :]) * \
-            np.interp(x=y[i, :], xp=grid, fp=drift_array)*dt + \
-            z_coarse[i, :]
-    return y, nu
+                interpn((tpde, xpde),
+                        rho, y[i, :], 'cubic') * \
+                np.interp(x=y[i, :], xp=grid, fp=drift_array)*dt + \
+                z_coarse[i, :]
+    return y
 
 
 #####################
