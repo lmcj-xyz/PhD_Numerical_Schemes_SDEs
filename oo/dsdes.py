@@ -11,10 +11,11 @@ import matplotlib.pyplot as plt
 import math as m
 from scipy.stats import norm
 from scipy.integrate import quad_vec
+from abc import ABC
 rng = np.random.default_rng()
 
 
-class FractionalBrownianMotion:
+class FractionalBrownianMotion(ABC):
     def __init__(self, hurst: float, points: int):
         self.hurst = hurst
         self.points = points
