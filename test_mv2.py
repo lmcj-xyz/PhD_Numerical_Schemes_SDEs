@@ -1,13 +1,12 @@
 import dsdes as ds
 from numpy.random import default_rng
+import matplotlib.pyplot as plt
 import numpy as np
 import sys
-from scipy.stats import norm
-import pde
 
 
 rng = default_rng()
-time_steps = 10
+time_steps = 2**8
 epsilon = 10e-6
 beta = 1/4
 hurst = 1 - beta
@@ -42,30 +41,12 @@ var_heat_kernel = ds.heat_kernel_var(time_steps, hurst)
 # Integral between grid points
 integral_grid = ds.integral_between_grid_points(var_heat_kernel, grid_x, half_support)
 # Drift creation
-drift_array = ds.create_drift_array(bridge_array, integral_grid),
-
-#ds.solve_fp(drift_array, grid_x, half_support, lambda x: np.cos(x), ts=0, te=1)
-xn = 2**3
-x = np.linspace(norm.ppf(0.01), norm.ppf(0.99), xn)
-ic = norm.pdf(x)
-grid_bounds = (-half_support, half_support)
-grid = pde.CartesianGrid(bounds=[grid_bounds], shape=xn, periodic=False)
-state = pde.ScalarField(grid=grid, data=ic)
-storage = pde.MemoryStorage()
+drift_array = ds.create_drift_array(bridge_array, integral_grid)
 
 
-def drift_f(x: np.ndarray, drift_array=drift_array, grid=grid_x):
-    return np.interp(x=x.data, xp=grid, fp=drift_array)
+# PDE solution
 
+y = ds.solve_mv(y0, drift_array, noise, time_start, time_end, time_steps, sample_paths, grid_x, half_support, 2**8, 10)
 
-eq = ds.FokkerPlanckPDE(drift=drift_f, nonlinear=lambda x: np.sin(x))
-solver = pde.ScipySolver(pde=eq)
-time_steps = 10
-dt = 1/time_steps
-time_range = (time_start, time_end)
-cont = pde.Controller(solver=solver, t_range=time_range, tracker=storage.tracker(dt))
-soln = cont.run(state)
-
-
-#if __name__ == "__main__":
-    #main()
+plt.plot(y[:, 0:5])
+plt.show()

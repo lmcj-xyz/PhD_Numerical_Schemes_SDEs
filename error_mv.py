@@ -29,7 +29,7 @@ time_steps = dict(zip(keys, time_steps_tuple))
 error_keys = ('e1', 'e2', 'e3', 'e4', 'e5')
 
 epsilon = 10e-6
-beta = 1/4
+beta = 1/16
 hurst = 1 - beta
 y0 = 1
 sample_paths = 10**4
@@ -101,7 +101,7 @@ solution_tuple = tuple(
             lambda d, t: ds.solve_mv(
                 y0, d, noise,
                 time_start, time_end, t,
-                sample_paths, grid_x, half_support
+                sample_paths, grid_x, half_support, 2**8, 10
                 ),
             drift_array.values(),
             time_steps.values(),
@@ -110,11 +110,11 @@ solution_tuple = tuple(
 solution = dict(zip(keys, solution_tuple))
 #%%
 strong_error = dict.fromkeys(error_keys)
-strong_error['e1'] = np.abs(solution['real'][0][-1] - solution['approx1'][0][-1])
-strong_error['e2'] = np.abs(solution['real'][0][-1] - solution['approx2'][0][-1])
-strong_error['e3'] = np.abs(solution['real'][0][-1] - solution['approx3'][0][-1])
-strong_error['e4'] = np.abs(solution['real'][0][-1] - solution['approx4'][0][-1])
-strong_error['e5'] = np.abs(solution['real'][0][-1] - solution['approx5'][0][-1])
+strong_error['e1'] = np.abs(solution['real'][-1] - solution['approx1'][-1])
+strong_error['e2'] = np.abs(solution['real'][-1] - solution['approx2'][-1])
+strong_error['e3'] = np.abs(solution['real'][-1] - solution['approx3'][-1])
+strong_error['e4'] = np.abs(solution['real'][-1] - solution['approx4'][-1])
+strong_error['e5'] = np.abs(solution['real'][-1] - solution['approx5'][-1])
 
 plot_error = [np.mean(value) for key, value in strong_error.items()]
 plot_dt = [value for key, value in dt.items() if key not in 'real']
