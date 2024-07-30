@@ -157,7 +157,7 @@ class FokkerPlanckPDE(PDEBase):
         return v_t
 
 
-def solve_fp(drift_a, grid, limx=1, nonlinear_f=lambda x: np.sin(x), ts=0, te=1):
+def solve_fp(drift_a, grid_a, limx=1, nonlinear_f=lambda x: np.sin(x), ts=0, te=1):
     xn = 2**3
     x = np.linspace(norm.ppf(0.01), norm.ppf(0.99), xn)
     ic = norm.pdf(x)
@@ -166,8 +166,8 @@ def solve_fp(drift_a, grid, limx=1, nonlinear_f=lambda x: np.sin(x), ts=0, te=1)
     state = ScalarField(grid=grid, data=ic)
     storage = MemoryStorage()
 
-    def drift_f(x, drift_array=drift_a, grid=grid):
-        return np.interp(x=x, xp=grid, fp=drift_array)
+    def drift_f(x: np.ndarray, drift_array=drift_a, grid=grid_a):
+        return np.interp(x=x.data, xp=grid, fp=drift_array)
 
     eq = FokkerPlanckPDE(drift=drift_f, nonlinear=nonlinear_f)
     solver = ScipySolver(pde=eq)
@@ -191,14 +191,15 @@ def solve_mv(y0: float,
     z_coarse = coarse_noise(z, time_steps, sample_paths)
     dt = (time_end - time_start)/(time_steps-1)
     y[0, :] = y0
-    rho = solve_fp(drift_a=drift_array, grid=grid, limx=half_suport)
+    rho = solve_fp(drift_a=drift_array, grid_a=grid, limx=half_suport)
+    rho_usable = np.array(rho.data).transpose()
     tpde = np.linspace(time_start, time_end, time_steps)
     xpde = np.linspace(-half_suport, half_suport, sample_paths)
     tpde, xpde = np.meshgrid(tpde, xpde, 'ij')
     for i in range(time_steps):
         y[i+1, :] = y[i, :] + \
                 interpn((tpde, xpde),
-                        rho, y[i, :], 'cubic') * \
+                        rho_usable, y[i, :], 'cubic') * \
                 np.interp(x=y[i, :], xp=grid, fp=drift_array)*dt + \
                 z_coarse[i, :]
     return y

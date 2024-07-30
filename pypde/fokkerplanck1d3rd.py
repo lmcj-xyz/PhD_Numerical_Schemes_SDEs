@@ -37,8 +37,8 @@ state = ScalarField(grid=grid, data=ic)
 storage = MemoryStorage()
 
 
-def b_drift(t):
-    return np.interp(t, x, x)
+def b_drift(x0):
+    return np.interp(x0.data, x, x)
 
 
 def f_nonlinear(x):
