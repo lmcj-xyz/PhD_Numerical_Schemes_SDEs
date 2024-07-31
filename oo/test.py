@@ -4,7 +4,7 @@ import dsdes
 
 hurst = 0.75
 points = 2**9
-time_steps = 2**5
+time_steps = 2**8
 half_support = 10
 grid = np.linspace(-half_support, half_support, points)
 grid2x5 = np.linspace(-half_support, half_support, 2**5)
@@ -25,23 +25,30 @@ brownian_motion = dsdes.BrownianMotion(
 brownian_motion.lower_resolution(new_time_steps=2**4)
 brownian_motion.bm
 type(brownian_motion.lower_resolution(new_time_steps=2**3))  # See type
-np.shape(brownian_motion.lower_resolution(new_time_steps=2**8))  # Raise except
+#np.shape(brownian_motion.lower_resolution(new_time_steps=2**8))  # Raise except
 
 drift = dsdes.DistributionalDrift(
         fbm_path, hurst, time_steps, points, grid, half_support)
 drift_array = drift.drift_array
-drift_function = drift.drift(grid)
-drift_function_2x5 = drift.drift(grid2x5)
+drift_function = drift.eval(grid)
+drift_function_2x5 = drift.eval(grid2x5)
 
-solution1 = dsdes.EulerMaruyama(
-        time_steps=time_steps, time_start=t0, time_end=t1,
+sde = dsdes.DistributionalSDE(
         initial_condition=y0,
-        brownian_motion=brownian_motion.bm,
-        drift=drift.drift)
-solution2 = dsdes.EulerMaruyama(
-        time_steps=2**4, time_start=t0, time_end=t1,
-        initial_condition=y0,
-        brownian_motion=brownian_motion.lower_resolution(2**4),
-        drift=drift.drift)
-paths_solution1 = solution1.y
-paths_solution2 = solution2.y
+        time_start=t0,
+        time_end=t1,
+        brownian_motion=brownian_motion,
+        drift=drift)
+real = sde.real_solution(time_steps)
+appr = sde.approx([2**4, 2**5, 2**6])
+
+plt.figure()
+plt.plot(np.linspace(t0, t1, time_steps+1), real[:, 0:2])
+plt.plot(np.linspace(t0, t1, 2**4+1), appr[0][:, 0:2])
+plt.plot(np.linspace(t0, t1, 2**5+1), appr[1][:, 0:2])
+plt.plot(np.linspace(t0, t1, 2**6+1), appr[2][:, 0:2])
+plt.show()
+
+err = dsdes.StrongError(real, appr)
+print(err.calculate())
+print(err.log())
