@@ -46,7 +46,7 @@ drift_array = ds.create_drift_array(bridge_array, integral_grid)
 
 # PDE solution
 
-y = ds.solve_mv(y0, drift_array, noise, time_start, time_end, time_steps, sample_paths, grid_x, half_support, 2**8, 10)
+y = ds.solve_mv(y0, drift_array, noise, time_start, time_end, time_steps, sample_paths, grid_x, half_support, 10, 2**8)
 
 plt.plot(y[:, 0:5])
 plt.show()

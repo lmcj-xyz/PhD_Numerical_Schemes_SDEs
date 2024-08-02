@@ -11,7 +11,7 @@ import matplotlib.pyplot as plt
 
 
 class FokkerPlanckPDE(PDEBase):
-    def __init__(self, drift, nonlinear, bc="dirichlet"):
+    def __init__(self, drift, nonlinear, bc={"value": norm.pdf(norm.ppf(0.01))}):
         self.drift = drift
         self.nonlinear = nonlinear
         self.bc = bc
@@ -26,11 +26,13 @@ class FokkerPlanckPDE(PDEBase):
         return v_t
 
 
-xn = 2**3
-x = np.linspace(norm.ppf(0.01), norm.ppf(0.99), xn)
+xn = 2**5
+x0 = norm.ppf(0.01)
+x1 = norm.ppf(0.99)
+x = np.linspace(x0, x1, xn)
 ic = norm.pdf(x)
 
-grid_bounds = (-1, 1)
+grid_bounds = (x0, x1)
 grid = CartesianGrid(bounds=[grid_bounds], shape=xn, periodic=False)
 state = ScalarField(grid=grid, data=ic)
 
@@ -48,16 +50,18 @@ def f_nonlinear(x):
 eq = FokkerPlanckPDE(drift=b_drift, nonlinear=f_nonlinear)
 solver = ScipySolver(pde=eq)
 
-time_steps = 10
+time_steps = 100
 dt = 1/time_steps
-time_range = (0, 1)
+t0 = 0
+t1 = 1
+time_range = (t0, t1)
 cont = Controller(solver=solver, t_range=time_range,
                   tracker=storage.tracker(dt))
 
 soln = cont.run(state)
 
-tplot = np.linspace(0, 1, np.shape(storage.data)[0])
-xplot = np.linspace(-1, 1, np.shape(storage.data)[1])
+tplot = np.linspace(t0, t1, np.shape(storage.data)[0])
+xplot = np.linspace(x0, x1, np.shape(storage.data)[1])
 Tplot, Xplot = np.meshgrid(tplot, xplot)
 yplot = np.array(storage.data).transpose()
 fig = plt.figure()
@@ -66,11 +70,14 @@ ax.plot_surface(Tplot, Xplot, yplot)
 ax.set_xlabel(r"$t$")
 ax.set_ylabel(r"$x$")
 ax.set_zlabel(r"$\rho(t, x)$")
+ax.set_title("Solution to PDE")
 plt.show()
 
 finer_time_steps = 1000
 finer_space_steps = 2**9
-finer_grid = [np.linspace(0, 1, finer_time_steps), np.linspace(-1, 1, finer_space_steps)]
+finer_x = np.linspace(x0, x1, finer_space_steps)
+finer_t = np.linspace(t0, t1, finer_time_steps)
+finer_grid = [finer_t, finer_x]
 ft, fx = np.meshgrid(*finer_grid)
 yfiner = interpn((tplot, xplot), yplot.transpose(), np.meshgrid(*finer_grid), 'cubic')
 
@@ -80,4 +87,5 @@ ax.plot_surface(ft, fx, yfiner)
 ax.set_xlabel(r"$t$")
 ax.set_ylabel(r"$x$")
 ax.set_zlabel(r"$\rho(t, x)$")
+ax.set_title("Interpolation")
 plt.show()

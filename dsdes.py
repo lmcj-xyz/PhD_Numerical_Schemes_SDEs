@@ -159,7 +159,8 @@ class FokkerPlanckPDE(PDEBase):
 
 def solve_fp(drift_a, grid_a, limx=1, nonlinear_f=lambda x: np.sin(x), ts=0, te=1, xpoints=10, tpoints=2**8):
     xn = xpoints
-    x = np.linspace(norm.ppf(0.01), norm.ppf(0.99), xn)
+    #x = np.linspace(norm.ppf(0.01), norm.ppf(0.99), xn)
+    x = np.linspace(-limx, limx, xn)
     ic = norm.pdf(x)
     grid_bounds = (-limx, limx)
     grid = CartesianGrid(bounds=[grid_bounds], shape=xn, periodic=False)
@@ -187,12 +188,12 @@ def solve_mv(y0: float,
              sample_paths: int,
              grid: np.ndarray,
              half_support,
-             tpde, xpde) -> np.ndarray:
+             xpde, tpde) -> np.ndarray:
     y = np.zeros(shape=(time_steps+1, sample_paths))
     z_coarse = coarse_noise(z, time_steps, sample_paths)
     dt = (time_end - time_start)/(time_steps-1)
     y[0, :] = y0
-    rho = solve_fp(drift_a=drift_array, grid_a=grid, limx=half_support)
+    rho = solve_fp(drift_a=drift_array, grid_a=grid, limx=half_support, xpoints=xpde, tpoints=tpde)
     rho_usable = np.array(rho.data)
     tsde = np.linspace(time_start, time_end, tpde+1)
     xsde = np.linspace(-half_support, half_support, xpde)
