@@ -108,34 +108,25 @@ def solve(y0: float,
           z: np.ndarray,
           time_start: float, time_end: float, time_steps: int,
           sample_paths: int,
-          grid: np.ndarray,) -> np.ndarray:
-    y = np.zeros(shape=(1, sample_paths))
+          grid: np.ndarray,
+          keep_paths: bool = False) -> np.ndarray:
+    # The keep_paths option keeps the entire array corresponding to the solutions
+    # Use with care because it will eat up your memory very quick
     z_coarse = coarse_noise(z, time_steps, sample_paths)
     dt = (time_end - time_start)/(time_steps-1)
+    if keep_paths:
+        y = np.zeros(shape=(time_steps+1, sample_paths))
+        y[0, :] = y0
+        for i in range(time_steps):
+            y[i+1, :] = y[i, :] \
+                    + np.interp(x=y[i, :], xp=grid, fp=drift_array)*dt \
+                    + z_coarse[i, :]
+        return y
+    y = np.zeros(shape=(1, sample_paths))
     y[0, :] = y0
     for i in range(time_steps):
         y[0, :] = y[0, :] \
                 + np.interp(x=y[0, :], xp=grid, fp=drift_array)*dt \
-                + z_coarse[i, :]
-    return y
-
-
-# Euler scheme solver for the distributional drift
-# This function keeps the entire array corresponding to the solutions
-# Use with care because it will eat up your memory very quick
-def solve_keep_paths(y0: float,
-                     drift_array: np.ndarray,
-                     z: np.ndarray,
-                     time_start: float, time_end: float, time_steps: int,
-                     sample_paths: int,
-                     grid: np.ndarray,) -> np.ndarray:
-    y = np.zeros(shape=(time_steps+1, sample_paths))
-    z_coarse = coarse_noise(z, time_steps, sample_paths)
-    dt = (time_end - time_start)/(time_steps-1)
-    y[0, :] = y0
-    for i in range(time_steps):
-        y[i+1, :] = y[i, :] \
-                + np.interp(x=y[i, :], xp=grid, fp=drift_array)*dt \
                 + z_coarse[i, :]
     return y
 

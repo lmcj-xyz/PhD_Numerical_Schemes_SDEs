@@ -11,7 +11,7 @@ import matplotlib.pyplot as plt
 
 
 class FokkerPlanckPDE(PDEBase):
-    def __init__(self, drift, nonlinear, bc={"value": norm.pdf(norm.ppf(0.01))}):
+    def __init__(self, drift, nonlinear, bc={"value": norm.pdf(5)}):
         self.drift = drift
         self.nonlinear = nonlinear
         self.bc = bc
@@ -26,9 +26,9 @@ class FokkerPlanckPDE(PDEBase):
         return v_t
 
 
-xn = 2**5
-x0 = norm.ppf(0.01)
-x1 = norm.ppf(0.99)
+xn = 2**7
+x0 = -5#norm.ppf(0.01)
+x1 = 5#norm.ppf(0.99)
 x = np.linspace(x0, x1, xn)
 ic = norm.pdf(x)
 
