@@ -29,7 +29,7 @@ time_steps = dict(zip(keys, time_steps_tuple))
 error_keys = ('e1', 'e2', 'e3', 'e4', 'e5')
 
 epsilon = 10e-6
-beta = 1/16
+beta = epsilon
 hurst = 1 - beta
 y0 = 1
 sample_paths = 10**4
@@ -101,7 +101,8 @@ solution_tuple = tuple(
             lambda d, t: ds.solve_mv(
                 y0, d, noise,
                 time_start, time_end, t,
-                sample_paths, grid_x, half_support, 2**8, 10
+                sample_paths, grid_x, half_support, 2**8, 10,
+                lambda x: np.sin(x)
                 ),
             drift_array.values(),
             time_steps.values(),
@@ -110,11 +111,11 @@ solution_tuple = tuple(
 solution = dict(zip(keys, solution_tuple))
 #%%
 strong_error = dict.fromkeys(error_keys)
-strong_error['e1'] = np.abs(solution['real'][-1] - solution['approx1'][-1])
-strong_error['e2'] = np.abs(solution['real'][-1] - solution['approx2'][-1])
-strong_error['e3'] = np.abs(solution['real'][-1] - solution['approx3'][-1])
-strong_error['e4'] = np.abs(solution['real'][-1] - solution['approx4'][-1])
-strong_error['e5'] = np.abs(solution['real'][-1] - solution['approx5'][-1])
+strong_error['e1'] = np.abs(solution['real'] - solution['approx1'])
+strong_error['e2'] = np.abs(solution['real'] - solution['approx2'])
+strong_error['e3'] = np.abs(solution['real'] - solution['approx3'])
+strong_error['e4'] = np.abs(solution['real'] - solution['approx4'])
+strong_error['e5'] = np.abs(solution['real'] - solution['approx5'])
 
 plot_error = [np.mean(value) for key, value in strong_error.items()]
 plot_dt = [value for key, value in dt.items() if key not in 'real']
@@ -133,21 +134,23 @@ plot_dict = {
         'error': plot_error,
         }
 
-fig, ax = plt.subplots()
-ax.set_title(
-    r'Rate of convergence r = %f for $\beta$=%f' % (rate_strong, beta)
-    )
-ax.plot(plot_dt,
-        plot_error,
-        marker='o',
-        label='Strong error')
-ax.grid(which='both')
-ax.set_yscale('log')
-ax.set_xscale('log')
-ax.set_xlabel(r'$\log_{10}(\Delta t)$')
-ax.set_ylabel(r'$\log_{10}(\epsilon)$')
-ax.legend()
-plt.show()
+plot = False
+if plot:
+    fig, ax = plt.subplots()
+    ax.set_title(
+        r'Rate of convergence r = %f for $\beta$=%f' % (rate_strong, beta)
+        )
+    ax.plot(plot_dt,
+            plot_error,
+            marker='o',
+            label='Strong error')
+    ax.grid(which='both')
+    ax.set_yscale('log')
+    ax.set_xscale('log')
+    ax.set_xlabel(r'$\log_{10}(\Delta t)$')
+    ax.set_ylabel(r'$\log_{10}(\epsilon)$')
+    ax.legend()
+    plt.show()
 
 end_time = time.time()
 running_time = end_time - start_time
@@ -155,9 +158,9 @@ print(running_time)
 
 #%%
 #saving = input('Do you want to save to files the plot and its corresponding dictionary? (yes/no): ')
-saving = 'yes'
+saving = False
 date_string = time.strftime("%Y-%m-%d-%H-%M")
-if saving == 'yes':
+if saving:
     plot_string = date_string + '-rate.pdf'
     dict_string = date_string + '-dict_plot.pkl'
     fig.savefig(plot_string, dpi=200)

@@ -141,14 +141,15 @@ class FokkerPlanckPDE(PDEBase):
     def evolution_rate(self, state, t=0):
         assert state.grid.dim == 1
         v = state
-        drift2 = v * self.nonlinear(v) * self.drift(v)
-        v_x = drift2.gradient(bc=self.bc)[0]
+        div = v * self.nonlinear(v) * self.drift(v)
+        v_x = div.gradient(bc=self.bc)[0]
         v_xx = v.laplace(bc=self.bc)
         v_t = 0.5 * v_xx - v_x
         return v_t
 
 
-def solve_fp(drift_a, grid_a, limx=1, nonlinear_f=lambda x: np.sin(x), ts=0, te=1, xpoints=10, tpoints=2**8):
+def solve_fp(drift_a, grid_a, limx=1, nonlinear_f=lambda x: np.sin(x),
+             ts=0, te=1, xpoints=10, tpoints=2**8):
     xn = xpoints
     #x = np.linspace(norm.ppf(0.01), norm.ppf(0.99), xn)
     x = np.linspace(-limx, limx, xn)
@@ -179,22 +180,24 @@ def solve_mv(y0: float,
              sample_paths: int,
              grid: np.ndarray,
              half_support,
-             xpde, tpde) -> np.ndarray:
-    y = np.zeros(shape=(time_steps+1, sample_paths))
+             xpde, tpde, nl) -> np.ndarray:
+    y = np.zeros(shape=(1, sample_paths))
     z_coarse = coarse_noise(z, time_steps, sample_paths)
     dt = (time_end - time_start)/(time_steps-1)
     y[0, :] = y0
-    rho = solve_fp(drift_a=drift_array, grid_a=grid, limx=half_support, xpoints=xpde, tpoints=tpde)
+    rho = solve_fp(drift_a=drift_array, grid_a=grid, limx=half_support, nonlinear_f=nl, xpoints=xpde, tpoints=tpde)
     rho_usable = np.array(rho.data)
     tsde = np.linspace(time_start, time_end, tpde+1)
     xsde = np.linspace(-half_support, half_support, xpde)
     ti = 0
     for i in range(time_steps):
         ti += dt
-        tti = np.repeat(ti, y[i+1, :].shape[0])
-        y[i+1, :] = y[i, :] + \
-            interpn((tsde, xsde), rho_usable, list(zip(tti, y[i, :])), 'cubic', False, 1) * \
-            np.interp(x=y[i, :], xp=grid, fp=drift_array)*dt + \
+        tti = np.repeat(ti, sample_paths)
+        y[0, :] = y[0, :] + \
+            nl(interpn((tsde, xsde), rho_usable,
+                       list(zip(tti, y[0, :])),
+                       'cubic', False, 1)) * \
+            np.interp(x=y[0, :], xp=grid, fp=drift_array)*dt + \
             z_coarse[i, :]
     return y
 
