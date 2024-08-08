@@ -15,6 +15,60 @@ from scipy.integrate import quad_vec
 rng = np.random.default_rng()
 
 
+class BrownianMotion:
+    def __init__(self,
+                 time_steps: int,
+                 initial_time: float,
+                 final_time: float,
+                 paths: int):
+
+        self.time_steps = time_steps
+        self.initial_time = initial_time
+        self.final_time = final_time
+        self.dt = (self.final_time - self.initial_time)/(self.time_steps-1)
+        self.paths = paths
+        self.bm = rng.normal(loc=0.0,
+                             scale=m.sqrt(self.dt),
+                             size=(self.time_steps, self.paths)
+                             )
+
+    def __str__(self):
+        return f'BrownianMotion(t0 = {self.initial_time}, \
+                                t1 = {self.final_time}, \
+                                dt = {self.dt}, \
+                                dim = {self.paths})'
+
+    def lower_resolution(self,
+                         new_time_steps: int,
+                         verbose: bool = False) -> np.ndarray:
+        coarse_bm = np.zeros(shape=(new_time_steps, self.paths))
+        original_bm = self.bm.copy()
+        quotient = int(self.time_steps/new_time_steps)
+        if quotient == 1:
+            coarse_bm = original_bm
+            if verbose:
+                print("The number of time steps \
+                    provided are the same as the \
+                    maximum amount of time steps.\
+                    \nThe output is the original Brownian motion!\n")
+            return coarse_bm
+        elif quotient > 1:
+            temp = original_bm.reshape(new_time_steps, quotient, self.paths)
+            coarse_bm = np.sum(temp, axis=1)
+            if verbose:
+                print(f"The output is the corresponding \
+                    Brownian motion now with {new_time_steps} \
+                    time steps instead of the maximum amount of time steps \
+                    {self.time_steps}.\n")
+            return coarse_bm
+        else:
+            raise ValueError(
+                    f"Impossible to lower the resolution of the Brownian \
+                    motion if new_time_steps > time_steps \
+                    \nTry a choosing new_time_steps less than \
+                    {self.time_steps}!")
+
+
 class FractionalBrownianMotion:
     def __init__(self, hurst: float, points: int):
         self.hurst = hurst
@@ -48,50 +102,6 @@ class FractionalBrownianMotion:
     def plot_fbb(self):
         plt.plot(self.grid, self.fbb)
         plt.title('Path of "fB bridge" with %d points' % (self.points+1))
-
-
-class BrownianMotion:
-    def __init__(self,
-                 time_steps: int,
-                 initial_time: float,
-                 final_time: float,
-                 paths: int):
-
-        self.time_steps = time_steps
-        self.dt = (final_time - initial_time)/(time_steps-1)
-        self.paths = paths
-        self.bm = rng.normal(loc=0.0,
-                             scale=m.sqrt(self.dt),
-                             size=(self.time_steps, self.paths)
-                             )
-
-    def lower_resolution(self, new_time_steps: int, verbose=False) -> np.ndarray:
-        coarse_bm = np.zeros(shape=(new_time_steps, self.paths))
-        original_bm = self.bm.copy()
-        quotient = int(self.time_steps/new_time_steps)
-        if quotient == 1:
-            coarse_bm = original_bm
-            if verbose:
-                print("The number of time steps \
-                    provided are the same as the \
-                    maximum amount of time steps.\
-                    \nThe output is the original Brownian motion!\n")
-            return coarse_bm
-        elif quotient > 1:
-            temp = original_bm.reshape(new_time_steps, quotient, self.paths)
-            coarse_bm = np.sum(temp, axis=1)
-            if verbose:
-                print(f"The output is the corresponding \
-                    Brownian motion now with {new_time_steps} \
-                    time steps instead of the maximum amount of time steps \
-                    {self.time_steps}.\n")
-            return coarse_bm
-        else:
-            raise ValueError(
-                    f"Impossible to lower the resolution of the Brownian \
-                    motion if new_time_steps > time_steps \
-                    \nTry a choosing new_time_steps less than \
-                    {self.time_steps}!")
 
 
 class DistributionalDrift:
