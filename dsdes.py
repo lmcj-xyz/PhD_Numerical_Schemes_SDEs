@@ -12,6 +12,7 @@ from scipy.integrate import quad_vec
 from numpy.random import default_rng
 from pde import CartesianGrid, \
     ScalarField, \
+    VectorField, \
     MemoryStorage, \
     PDEBase, \
     ScipySolver, \
@@ -148,6 +149,7 @@ class FokkerPlanckPDE(PDEBase):
         return v_t
 
 
+
 def solve_fp(drift_a, grid_a, limx=1, nonlinear_f=lambda x: np.sin(x),
              ts=0, te=1, xpoints=10, tpoints=2**8):
     xn = xpoints
@@ -157,19 +159,21 @@ def solve_fp(drift_a, grid_a, limx=1, nonlinear_f=lambda x: np.sin(x),
     grid_bounds = (-limx, limx)
     grid = CartesianGrid(bounds=[grid_bounds], shape=xn, periodic=False)
     state = ScalarField(grid=grid, data=ic)
-    storage = MemoryStorage()
 
     def drift_f(x: np.ndarray, drift_array=drift_a, grid=grid_a):
         return np.interp(x=x.data, xp=grid, fp=drift_array)
 
     eq = FokkerPlanckPDE(drift=drift_f, nonlinear=nonlinear_f)
-    solver = ScipySolver(pde=eq)
+    #solver = ScipySolver(pde=eq)
     time_steps = tpoints
     dt = 1/time_steps
     time_range = (ts, te)
-    cont = Controller(solver=solver, t_range=time_range,
-                      tracker=storage.tracker(dt))
-    soln = cont.run(state)
+    storage = MemoryStorage()
+    #cont = Controller(solver=solver, t_range=time_range,
+    #                  tracker=storage.tracker(dt))
+    #soln = cont.run(state)
+    eq.solve(state, t_range=time_range, solver='scipy',
+             tracker=storage.tracker(dt))
     return storage
 
 
@@ -185,20 +189,27 @@ def solve_mv(y0: float,
     z_coarse = coarse_noise(z, time_steps, sample_paths)
     dt = (time_end - time_start)/(time_steps-1)
     y[0, :] = y0
-    rho = solve_fp(drift_a=drift_array, grid_a=grid, limx=half_support, nonlinear_f=nl, xpoints=xpde, tpoints=tpde)
+    rho = solve_fp(drift_a=drift_array, grid_a=grid, limx=half_support,
+                   nonlinear_f=nl, ts=time_start, te=time_end,
+                   xpoints=xpde, tpoints=tpde)
     rho_usable = np.array(rho.data)
     tsde = np.linspace(time_start, time_end, tpde+1)
     xsde = np.linspace(-half_support, half_support, xpde)
+    drift = np.multiply(drift_array, nl(rho_usable))
     ti = 0
     for i in range(time_steps):
         ti += dt
         tti = np.repeat(ti, sample_paths)
         y[0, :] = y[0, :] + \
-            nl(interpn((tsde, xsde), rho_usable,
-                       list(zip(tti, y[0, :])),
-                       'cubic', False, 1)) * \
-            np.interp(x=y[0, :], xp=grid, fp=drift_array)*dt + \
-            z_coarse[i, :]
+                interpn((tsde, xsde), drift, list(zip(tti, y[0, :])), 'cubic', False, 1) + \
+                z_coarse[i, :]
+                #np.interp(x=y[0, :], xp=grid, fp=drift)*dt + \
+                #z_coarse[i, :]
+            #nl(interpn((tsde, xsde), rho_usable,
+            #           list(zip(tti, y[0, :])),
+            #           'cubic', False, 1)) * \
+            #np.interp(x=y[0, :], xp=grid, fp=drift_array)*dt + \
+            #z_coarse[i, :]
     return y
 
 

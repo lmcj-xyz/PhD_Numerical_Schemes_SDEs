@@ -1,14 +1,23 @@
-import dsdes as ds
+import numpy as np
+import pde
 from numpy.random import default_rng
 import matplotlib.pyplot as plt
-import numpy as np
+import dsdes as ds
+from scipy.stats import linregress
 import sys
+import pickle
+import time
 
+start_time = time.time()
 
 rng = default_rng()
-time_steps = 2**8
+
+plt.rcParams['figure.dpi'] = 200
+
+# Parameters for Euler scheme
+time_steps = 2**9
 epsilon = 10e-6
-beta = 1/4
+beta = 1/4 - epsilon
 hurst = 1 - beta
 y0 = 1
 sample_paths = 10**4
@@ -16,13 +25,16 @@ time_start = 0
 time_end = 1
 dt = (time_end - time_start)/(time_steps - 1)
 time_grid = np.linspace(time_start + dt, time_end, time_steps)
+
 noise = rng.normal(
         loc=0.0, scale=np.sqrt(dt),
         size=(time_steps, sample_paths)
         )
+
 # Parameters to create fBm
 points_x = 2**12  # According to the lower bound in the paper
 half_support = 10
+
 eta = 1/((hurst-1/2)**2 + 2 - hurst)
 lower_bound = 2*half_support*time_steps**(eta/2)
 eqn = 66
@@ -31,22 +43,29 @@ if (points_x <= lower_bound):
             points as per equation (%d) in the paper.' % (lower_bound, eqn)
     raise ValueError(msg)
     sys.exit(1)
+
 delta_x = half_support/(points_x-1)
 grid_x = np.linspace(start=-half_support, stop=half_support, num=points_x)
 grid_x0 = np.linspace(start=0, stop=2*half_support, num=points_x)
 fbm_array = ds.fbm(hurst, points_x, half_support)
 bridge_array = ds.bridge(fbm_array, grid_x0)
+
 # Variance of heat kernel
 var_heat_kernel = ds.heat_kernel_var(time_steps, hurst)
+
 # Integral between grid points
 integral_grid = ds.integral_between_grid_points(var_heat_kernel, grid_x, half_support)
+
 # Drift creation
 drift_array = ds.create_drift_array(bridge_array, integral_grid)
 
+def drift_f(x: np.ndarray, drift_array=drift_array, grid=grid_x):
+    return np.interp(x=x.data, xp=grid, fp=drift_array)
 
-# PDE solution
-
-y = ds.solve_mv(y0, drift_array, noise, time_start, time_end, time_steps, sample_paths, grid_x, half_support, points_x, 2**8, lambda x: np.sin(x))
-
-plt.plot(y[:, 0:5])
-plt.show()
+# FP
+eq = ds.FokkerPlanckPDE(drift_f, lambda x: np.sin(x))
+grid = pde.CartesianGrid(bounds=[(-half_support, half_support)], shape=points_x, periodic=False)
+state = pde.ScalarField(grid=grid, data=1)
+storage = pde.MemoryStorage()
+eq.solve(state, t_range=(time_start, time_end), solver='scipy',
+         tracker=storage.tracker(dt))

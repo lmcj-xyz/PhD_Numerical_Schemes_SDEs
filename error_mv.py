@@ -101,7 +101,7 @@ solution_tuple = tuple(
             lambda d, t: ds.solve_mv(
                 y0, d, noise,
                 time_start, time_end, t,
-                sample_paths, grid_x, half_support, 2**8, 10,
+                sample_paths, grid_x, half_support, points_x, 100,
                 lambda x: np.sin(x)
                 ),
             drift_array.values(),
@@ -134,7 +134,7 @@ plot_dict = {
         'error': plot_error,
         }
 
-plot = False
+plot = True
 if plot:
     fig, ax = plt.subplots()
     ax.set_title(
