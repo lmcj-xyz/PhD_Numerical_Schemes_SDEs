@@ -2,11 +2,13 @@ import numpy as np
 import pde
 from numpy.random import default_rng
 import matplotlib.pyplot as plt
-import dsdes as ds
-from scipy.stats import linregress
-import sys
-import pickle
+from scipy.stats import norm
 import time
+
+import os
+import sys
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+import dsdes as ds
 
 start_time = time.time()
 
@@ -31,8 +33,9 @@ noise = rng.normal(
         size=(time_steps, sample_paths)
         )
 
-# Parameters to create fBm
-points_x = 2**12  # According to the lower bound in the paper
+# Parameters to create fBm and drift
+# These are also for the space paramenter of the PDE
+points_x = 2**10  # According to the lower bound in the paper
 half_support = 10
 
 eta = 1/((hurst-1/2)**2 + 2 - hurst)
@@ -65,7 +68,11 @@ def drift_f(x: np.ndarray, drift_array=drift_array, grid=grid_x):
 # FP
 eq = ds.FokkerPlanckPDE(drift_f, lambda x: np.sin(x))
 grid = pde.CartesianGrid(bounds=[(-half_support, half_support)], shape=points_x, periodic=False)
-state = pde.ScalarField(grid=grid, data=1)
+ic = norm.pdf(np.linspace(-half_support, half_support, points_x))
+state = pde.ScalarField(grid=grid, data=ic)
 storage = pde.MemoryStorage()
 eq.solve(state, t_range=(time_start, time_end), solver='scipy',
          tracker=storage.tracker(dt))
+
+# div
+div_array = np.multiply(drift_array, np.sin(np.array(storage.data)))

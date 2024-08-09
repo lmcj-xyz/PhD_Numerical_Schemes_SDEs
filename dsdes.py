@@ -17,7 +17,9 @@ rng = default_rng()
 
 
 # Fractional Brownian motion (fBm) creation function
-def fbm(hurst: float, points: int, half_support: float) -> np.ndarray:
+def fbm(hurst: float,
+        points: int = 2**12,
+        half_support: float = 10) -> np.ndarray:
     fbm_grid = np.linspace(start=1/points, stop=2*half_support, num=points)
 
     xv, yv = np.meshgrid(fbm_grid, fbm_grid, sparse=False, indexing='ij')
@@ -176,13 +178,13 @@ def solve_mv(y0: float,
         ti += dt
         tti = np.repeat(ti, sample_paths)
         y[0, :] = y[0, :] + \
-                interpn((tsde, xsde), drift, list(zip(tti, y[0, :])), 'cubic', False, 1) + \
-                z_coarse[i, :]
+            nl(interpn((tsde, xsde), rho_usable,
+                       list(zip(tti, y[0, :])),
+                       'cubic', False, 1)) * \
+            np.interp(x=y[0, :], xp=grid, fp=drift_array)*dt + \
+            z_coarse[i, :]
+                #interpn((tsde, xsde), drift, list(zip(tti, y[0, :])), 'cubic', False, 1) + \
+                #z_coarse[i, :]
                 #np.interp(x=y[0, :], xp=grid, fp=drift)*dt + \
                 #z_coarse[i, :]
-            #nl(interpn((tsde, xsde), rho_usable,
-            #           list(zip(tti, y[0, :])),
-            #           'cubic', False, 1)) * \
-            #np.interp(x=y[0, :], xp=grid, fp=drift_array)*dt + \
-            #z_coarse[i, :]
     return y
