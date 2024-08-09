@@ -30,7 +30,7 @@ xn = 2**7
 x0 = -5#norm.ppf(0.01)
 x1 = 5#norm.ppf(0.99)
 x = np.linspace(x0, x1, xn)
-ic = norm.pdf(x, loc=0, scale=3)
+ic = norm.pdf(x, loc=-2, scale=0.5) + norm.pdf(x, loc=2, scale=0.8)
 
 grid_bounds = (x0, x1)
 grid = CartesianGrid(bounds=[grid_bounds], shape=xn, periodic=False)

@@ -132,7 +132,7 @@ def solve_fp(drift_a, grid_a, limx=1, nonlinear_f=lambda x: np.sin(x),
     xn = xpoints
     #x = np.linspace(norm.ppf(0.01), norm.ppf(0.99), xn)
     x = np.linspace(-limx, limx, xn)
-    ic = norm.pdf(x)
+    ic = norm.pdf(x, loc=1, scale=limx)
     grid_bounds = (-limx, limx)
     grid = CartesianGrid(bounds=[grid_bounds], shape=xn, periodic=False)
     state = ScalarField(grid=grid, data=ic)
@@ -141,16 +141,16 @@ def solve_fp(drift_a, grid_a, limx=1, nonlinear_f=lambda x: np.sin(x),
         return np.interp(x=x.data, xp=grid, fp=drift_array)
 
     eq = FokkerPlanckPDE(drift=drift_f, nonlinear=nonlinear_f)
-    #solver = ScipySolver(pde=eq)
+    solver = ScipySolver(pde=eq)
     time_steps = tpoints
     dt = 1/time_steps
     time_range = (ts, te)
     storage = MemoryStorage()
-    #cont = Controller(solver=solver, t_range=time_range,
-    #                  tracker=storage.tracker(dt))
-    #soln = cont.run(state)
-    eq.solve(state, t_range=time_range, solver='scipy',
-             tracker=storage.tracker(dt))
+    cont = Controller(solver=solver, t_range=time_range,
+                      tracker=storage.tracker(dt))
+    soln = cont.run(state)
+    #eq.solve(state, t_range=time_range, solver='scipy',
+    #         tracker=storage.tracker(dt))
     return storage
 
 
@@ -172,7 +172,7 @@ def solve_mv(y0: float,
     rho_usable = np.array(rho.data)
     tsde = np.linspace(time_start, time_end, tpde+1)
     xsde = np.linspace(-half_support, half_support, xpde)
-    drift = np.multiply(drift_array, nl(rho_usable))
+    #drift = np.multiply(drift_array, nl(rho_usable))
     ti = 0
     for i in range(time_steps):
         ti += dt

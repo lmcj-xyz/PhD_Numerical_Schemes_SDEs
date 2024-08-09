@@ -34,7 +34,7 @@ time_steps = dict(zip(keys, time_steps_tuple))
 error_keys = ('e1', 'e2', 'e3', 'e4', 'e5')
 
 epsilon = 10e-6
-beta = epsilon
+beta = 1/2 - epsilon
 hurst = 1 - beta
 y0 = 1
 sample_paths = 10**4
@@ -106,8 +106,8 @@ solution_tuple = tuple(
             lambda d, t: ds.solve_mv(
                 y0, d, noise,
                 time_start, time_end, t,
-                sample_paths, grid_x, half_support, points_x, 100,
-                lambda x: np.sin(x)
+                sample_paths, grid_x, half_support, 2**8, 10,
+                lambda x: 5*np.sin(0.1*x - 10)
                 ),
             drift_array.values(),
             time_steps.values(),
