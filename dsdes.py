@@ -1,279 +1,199 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on Tue Feb 28 14:09:33 2023
+Created on Fri Mar 17 18:50:37 2023
 
-@author: mmlmcj
+@author: tari
 """
-# %% libraries
+
 import numpy as np
+import matplotlib.pyplot as plt
 import math as m
+from scipy.stats import norm
 from scipy.integrate import quad_vec
-from scipy.stats import norm, gaussian_kde
-from numpy.random import default_rng
 
-rng = default_rng()
+rng = np.random.default_rng()
 
 
-# %% fbm func
-# Fractional Brownian motion (fBm) creation function
-def fbm(hurst: float, points: int, half_support: float) -> np.ndarray:
-    fbm_grid = np.linspace(
-            start=1/points,
-            stop=2*half_support,
-            # stop=1,
-            num=points
-            )
-    xv, yv = np.meshgrid(
-            fbm_grid,
-            fbm_grid,
-            sparse=False,
-            indexing='ij'
-            )
-    covariance = 0.5*(
-            np.abs(xv)**(2*hurst) +
-            np.abs(yv)**(2*hurst) -
-            np.abs(xv - yv)**(2*hurst)
-            )
-    g = rng.standard_normal(size=points)
-    cholesky = np.linalg.cholesky(a=covariance)
-    fbm_array = np.matmul(cholesky, g)
-    return fbm_array
-
-
-# %% bridge func
-def bridge(f: np.ndarray, grid: np.ndarray) -> np.ndarray:
-    bridge_array = f - (f[-1]/grid[-1])*grid
-    return bridge_array
-
-
-# %% heat parameter func
-# Heat kernel parameter creation based on time steps of the Euler scheme
-def heat_kernel_var(time_steps: int, hurst: float) -> float:
-    eta = 1/((hurst-1/2)**2 + 2 - hurst)
-    variance = 1/(time_steps**eta)
-    return variance
-
-
-# %% integral between grid points func
-def integral_between_grid_points(heat_kernel_var: float,
-                                 grid_x: np.ndarray,
-                                 half_support: float) -> np.ndarray:
-    points = len(grid_x)
-    heat_kernel_std = m.sqrt(heat_kernel_var)
-    integral = np.zeros_like(grid_x)
-    delta_half = half_support/(points)
-    integral, error = quad_vec(lambda z:
-                               ((grid_x - z)/heat_kernel_var)*norm.pdf(
-                                   grid_x - z,
-                                   loc=0,
-                                   scale=heat_kernel_std),
-                               a=-delta_half, b=delta_half)
-    return integral
-
-
-# %% Drift array
-def create_drift_array(rough_func: np.ndarray,
-                       integral_on_grid: np.ndarray) -> np.ndarray:
-    return -np.convolve(rough_func, integral_on_grid, 'same')
-
-
-# %% coarse noise func
-# Coarse noise
-def coarse_noise(z: np.ndarray,
+class BrownianMotion:
+    def __init__(self,
                  time_steps: int,
-                 sample_paths: int) -> np.ndarray:
-    z_coarse = np.zeros(shape=(time_steps, sample_paths))
-    q = int(np.shape(z)[0] / time_steps)
-    if q == 1:
-        z_coarse = z
-    else:
-        temp = z.reshape(time_steps, q, sample_paths)
-        z_coarse = np.sum(temp, axis=1)
-    return z_coarse
+                 initial_time: float,
+                 final_time: float,
+                 paths: int):
+
+        self.time_steps = time_steps
+        self.initial_time = initial_time
+        self.final_time = final_time
+        self.dt = (self.final_time - self.initial_time)/(self.time_steps-1)
+        self.paths = paths
+        self.bm = rng.normal(loc=0.0,
+                             scale=m.sqrt(self.dt),
+                             size=(self.time_steps, self.paths)
+                             )
+
+    def __str__(self):
+        return f'BrownianMotion(t0 = {self.initial_time}, \
+                                t1 = {self.final_time}, \
+                                dt = {self.dt}, \
+                                dim = {self.paths})'
+
+    def lower_resolution(self,
+                         new_time_steps: int,
+                         verbose: bool = False) -> np.ndarray:
+        coarse_bm = np.zeros(shape=(new_time_steps, self.paths))
+        original_bm = self.bm.copy()
+        quotient = int(self.time_steps/new_time_steps)
+        if quotient == 1:
+            coarse_bm = original_bm
+            if verbose:
+                print("The number of time steps \
+                    provided are the same as the \
+                    maximum amount of time steps.\
+                    \nThe output is the original Brownian motion!\n")
+            return coarse_bm
+        elif quotient > 1:
+            temp = original_bm.reshape(new_time_steps, quotient, self.paths)
+            coarse_bm = np.sum(temp, axis=1)
+            if verbose:
+                print(f"The output is the corresponding \
+                    Brownian motion now with {new_time_steps} \
+                    time steps instead of the maximum amount of time steps \
+                    {self.time_steps}.\n")
+            return coarse_bm
+        else:
+            raise ValueError(
+                    f"Impossible to lower the resolution of the Brownian \
+                    motion if new_time_steps > time_steps \
+                    \nTry a choosing new_time_steps less than \
+                    {self.time_steps}!")
 
 
-# %% sde solver func terminal time using np.interp
-def solve(y0: float,
-          drift_array: np.ndarray,
-          z: np.ndarray,
-          time_start: float, time_end: float, time_steps: int,
-          sample_paths: int,
-          grid: np.ndarray,) -> np.ndarray:
-    y = np.zeros(shape=(1, sample_paths))
-    z_coarse = coarse_noise(z, time_steps, sample_paths)
-    dt = (time_end - time_start)/(time_steps-1)
-    y[0, :] = y0
-    for i in range(time_steps):
-        y[0, :] = y[0, :] \
-                + np.interp(x=y[0, :], xp=grid, fp=drift_array)*dt \
-                + z_coarse[i, :]
-    return y
+class DistributionalDrift:
+    def __init__(self, hurst: float, points: int,
+                 time_steps: int, half_support: float):
+        self.hurst = hurst
+        self.points = points
+        self.time_steps = time_steps
+        self.half_support = half_support
 
+        self.grid = np.linspace(start=1/self.points, stop=1, num=self.points)
+        self.gaussian = rng.standard_normal(size=self.points)
+        self.eta = 1/(2*(self.hurst-1/2)**2 + 2 - self.hurst)
+        self.heat_parameter = 1/(self.time_steps**(self.eta))
+        self.delta = self.half_support/self.points
 
-# Euler scheme solver for the distributional drift
-# This function keeps the entire array corresponding to the solutions
-# Use with care because it will eat up your memory very quick
-def solve_keep_paths(y0: float,
-                     drift_array: np.ndarray,
-                     z: np.ndarray,
-                     time_start: float, time_end: float, time_steps: int,
-                     sample_paths: int,
-                     grid: np.ndarray,) -> np.ndarray:
-    y = np.zeros(shape=(time_steps+1, sample_paths))
-    z_coarse = coarse_noise(z, time_steps, sample_paths)
-    dt = (time_end - time_start)/(time_steps-1)
-    y[0, :] = y0
-    for i in range(time_steps):
-        y[i+1, :] = y[i, :] \
-                + np.interp(x=y[i, :], xp=grid, fp=drift_array)*dt \
-                + z_coarse[i, :]
-    return y
-
-
-# Euler scheme solver for a generic McKean-Vlasov SDE
-def mv_solve(y0: float,
-             drift_array: np.ndarray,
-             z: np.ndarray,
-             time_start: float, time_end: float, time_steps: int,
-             sample_paths: int,
-             grid: np.ndarray,) -> np.ndarray:
-    y = np.zeros(shape=(time_steps+1, sample_paths))
-    nu = []
-    z_coarse = coarse_noise(z, time_steps, sample_paths)
-    dt = (time_end - time_start)/(time_steps-1)
-    iloc = y0
-    nu0 = rng.normal(loc=iloc, scale=np.sqrt(0.001),
-                     size=sample_paths)
-    y[0, :] = y0*nu0
-    for i in range(time_steps):
-        kde = gaussian_kde(dataset=y[i, :], bw_method='scott')
-        nu.append(kde)
-        y[i+1, :] = y[i, :] + \
-            kde.evaluate(y[i, :]) * \
-            np.interp(x=y[i, :], xp=grid, fp=drift_array)*dt + \
-            z_coarse[i, :]
-    return y, nu
-
-
-#####################
-# Below are the functions no longer used
-#####################
-# %% sde solver func terminal time
-# Euler scheme solver for the distributional drift
-# This function only keeps the terminal time of the solution
-def solves(
-        y0,
-        drift_array,
-        z,
-        time_start, time_end, time_steps,
-        sample_paths,
-        grid
-        ):
-    y = np.zeros(shape=(1, sample_paths))
-    z_coarse = coarse_noise(z, time_steps, sample_paths)
-    dt = (time_end - time_start)/(time_steps-1)
-    y[0, :] = y0
-    for i in range(time_steps):
-        y[0, :] = y[0, :] \
-                + create_drift_function(
-                        x=y[0, :],
-                        drift_array=drift_array,
-                        grid=grid
-                        )*dt \
-                + z_coarse[i, :]
-    return y
-
-
-# %% generic sde solver func
-# Euler scheme solver for a generic SDE
-def gen_solve(
-        y0,
-        drift,
-        diffusion,
-        z,
-        time_start, time_end, time_steps,
-        sample_paths
-        ):
-    y = np.zeros(shape=(time_steps+1, sample_paths))
-    dt = (time_end - time_start)/(time_steps-1)
-    y[0, :] = y0
-    for i in range(time_steps):
-        y[i+1, :] = y[i, :] \
-                + drift(t=i, x=y[i, :])*dt \
-                + diffusion(t=i, x=y[i, :])*z[i, :]
-    return y
-
-
-# %%
-# Create solutions/approximations
-# This will be tested in approximate_tests.py
-# To test each one of the functions above separately use manual_tests.py
-def approximate(
-        fbm,
-        time_steps,
-        hurst,
-        time_start, time_end,
-        noise,
-        sample_paths,
-        y0,
-        grid_x, points_x, delta_x,
-        half_support):
-    df = integral_between_grid_points(
-        np.sqrt(heat_kernel_var(time_steps, hurst)),
-        # 15/11, # for testing with a fixed heat kernel parameter
-        points_x,
-        grid_x,
-        half_support
-        )
-    drift_array = np.convolve(fbm, df, 'same')
-    dt = (time_end - time_start)/(time_steps-1)
-    time_grid = np.linspace(time_start + dt, time_end, time_steps)
-    time_grid0 = np.insert(time_grid, 0, 0)
-    z = coarse_noise(noise, time_steps, sample_paths)
-    solution = solve(
-        y0,
-        drift_array,
-        z,
-        time_start, time_end, time_steps,
-        sample_paths,
-        grid_x, points_x, delta_x
-        )
-    return solution, time_grid, time_grid0, drift_array
-
-
-# fBm generator giving the the N(0,1) RV
-def fbm_alt(hurst, gaussian, half_support):
-    points = len(gaussian)
-    fbm_grid = np.linspace(
-            start=1/points,
-            stop=2*half_support,
-            # stop=1,
-            num=points
+    def eval(self, x):
+        drift = np.piecewise(
+            x,
+            [(i - self.delta <= x)*(x < i + self.delta) for i in self.grid],
+            [self.drift()[i] for i in range(self.points)]
             )
-    xv, yv = np.meshgrid(
-            fbm_grid,
-            fbm_grid,
-            sparse=False,
-            indexing='ij'
+        return drift
+
+    def drift(self):
+        return -np.convolve(self.fbm(), self.kernel(), 'same')
+
+    def fbm(self) -> np.ndarray:
+        x, y = np.meshgrid(self.grid, self.grid, sparse=False, indexing='ij')
+        covariance = 0.5*(
+            np.abs(x)**(2*self.hurst) +
+            np.abs(y)**(2*self.hurst) -
+            np.abs(x - y)**(2*self.hurst)
             )
-    covariance = 0.5*(
-            np.abs(xv)**(2*hurst) +
-            np.abs(yv)**(2*hurst) -
-            np.abs(xv - yv)**(2*hurst)
-            )
-    cholesky = np.linalg.cholesky(a=covariance)
-    fbm_array = np.matmul(cholesky, gaussian)
-    return fbm_array
+        cholesky = np.linalg.cholesky(covariance)
+        fbm_arr = np.matmul(cholesky, self.gaussian)
+        return fbm_arr
+
+    def fbb(self) -> np.ndarray:
+        return self.fbm() - (self.fbm()[-1]/self.grid[-1])*self.grid
+
+    def plot_fbm(self):
+        plt.plot(self.grid, self.fbm)
+        plt.title('Path of fBm with %d points' % (self.points+1))
+
+    def plot_fbb(self):
+        plt.plot(self.grid, self.fbb)
+        plt.title('Path of "fB bridge" with %d points' % (self.points+1))
+
+    def kernel(self):
+        kernel = np.zeros_like(self.grid)
+        constant = -1/self.heat_parameter
+        kernel = quad_vec(lambda u: constant*(self.grid + u)*norm.pdf(
+            self.grid+u,
+            loc=0,
+            scale=m.sqrt(self.heat_parameter)
+            ), -self.delta, self.delta)[0]
+        return kernel
 
 
-# %% drift func
-# Drift coefficient as a piecewise function created out of an array
-def create_drift_function(x, drift_array, grid):
-    points = len(grid)
-    delta_half = grid[-1]/(points-1) # Half support divided by the points
-    return np.piecewise(
-        x,
-        [(i - delta_half <= x)*(x < i + delta_half) for i in grid],
-        [drift_array[i] for i in range(points)]  # piecewise constant
-        )
+class DistributionalSDE:
+    def __init__(self,
+                 initial_condition: float,
+                 time_start: float,
+                 time_end: float,
+                 brownian_motion: BrownianMotion,
+                 drift: DistributionalDrift
+                 ):
+        self.y0 = initial_condition
+        self.time_start = time_start
+        self.time_end = time_end
+        self.brownian_motion = brownian_motion
+        self.sample_paths = self.brownian_motion.bm.shape[1]
+        self.drift = drift.eval
+
+    def real_solution(self, time_steps: int):
+        return self.solve(time_steps)
+
+    def approx(self, time_steps: list[int]):
+        approx_list = []
+        for t in time_steps:
+            approx_list.append(self.solve(t))
+        return approx_list
+
+    def solve(self, time_steps):
+        y = np.zeros(shape=(time_steps+1, self.sample_paths))
+        dt = (self.time_end - self.time_start)/(time_steps-1)
+        y[0, :] = self.y0
+        bm = self.brownian_motion.lower_resolution(time_steps)
+        for i in range(time_steps):
+            y[i+1, :] = y[i, :] + self.drift(x=y[i, :])*dt + bm[i, :]
+        return y
+
+    def plot(self, trajectories):
+        pass
+
+
+class StrongError:
+    def __init__(self,
+                 real_solution: np.ndarray,
+                 approximation: list[np.ndarray]):
+        self.real_solution = real_solution
+        self.approximation = approximation
+        self.keys = tuple(f'approx{i+1}' for i, _ in enumerate(self.approximation))
+
+    def calculate(self):
+        error = dict.fromkeys(self.keys)
+        for i, k in enumerate(error):
+            error[k] = np.mean(
+                    np.abs(self.real_solution[-1] - self.approximation[i][-1])
+                    )
+        return error
+
+    def log(self):
+        error = self.calculate()
+        log_error = dict.fromkeys(error.keys())
+        for k, v in error.items():
+            log_error[k] = np.log(error[k])
+        return log_error
+
+    def plot(self):
+        pass
+
+
+def main():
+    return 0
+
+
+if __name__ == "__main__":
+    main()
