@@ -85,4 +85,3 @@ plt.plot(div_array[1])
 plt.plot(div_array[10])
 plt.plot(div_array[100])
 plt.show()
-
