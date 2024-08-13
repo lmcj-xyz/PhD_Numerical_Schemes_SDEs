@@ -77,7 +77,7 @@ eq.solve(state, t_range=(time_start, time_end), solver='scipy',
          tracker=storage.tracker(dt))
 
 # div
-div_array = np.multiply(drift_array, np.sin(0.1*np.array(storage.data) - 5))
+div_array = np.multiply(drift_array, np.cos(0.1*np.array(storage.data)))
 
 # plot
 plt.plot(drift_array)

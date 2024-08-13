@@ -154,7 +154,7 @@ def solve_fp(drift_a, grid_a, limx=1, nonlinear_f=lambda x: np.sin(x),
     return storage
 
 
-def solve_mv(y0: float,
+def solve_mv(y0: np.ndarray,
              drift_array: np.ndarray,
              z: np.ndarray,
              time_start: float, time_end: float, time_steps: int,
@@ -187,4 +187,4 @@ def solve_mv(y0: float,
                 #z_coarse[i, :]
                 #np.interp(x=y[0, :], xp=grid, fp=drift)*dt + \
                 #z_coarse[i, :]
-    return y
+    return y, rho_usable
