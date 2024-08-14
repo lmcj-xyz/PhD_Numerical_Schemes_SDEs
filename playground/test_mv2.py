@@ -1,8 +1,11 @@
-import dsdes as ds
 from numpy.random import default_rng
 import matplotlib.pyplot as plt
 import numpy as np
+
+import os
 import sys
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+import dsdes as ds
 
 
 rng = default_rng()
@@ -48,5 +51,5 @@ drift_array = ds.create_drift_array(bridge_array, integral_grid)
 
 y = ds.solve_mv(y0, drift_array, noise, time_start, time_end, time_steps, sample_paths, grid_x, half_support, points_x, 2**8, lambda x: np.sin(x))
 
-plt.plot(y[:, 0:5])
+plt.hist(y[0, :])
 plt.show()

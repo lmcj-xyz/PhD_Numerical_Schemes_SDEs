@@ -126,13 +126,12 @@ class FokkerPlanckPDE(PDEBase):
         return v_t
 
 
-
 def solve_fp(drift_a, grid_a, limx=1, nonlinear_f=lambda x: np.sin(x),
              ts=0, te=1, xpoints=10, tpoints=2**8):
     xn = xpoints
     #x = np.linspace(norm.ppf(0.01), norm.ppf(0.99), xn)
     x = np.linspace(-limx, limx, xn)
-    ic = norm.pdf(x, loc=1, scale=limx)
+    ic = norm.pdf(x)
     grid_bounds = (-limx, limx)
     grid = CartesianGrid(bounds=[grid_bounds], shape=xn, periodic=False)
     state = ScalarField(grid=grid, data=ic)

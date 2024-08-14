@@ -40,6 +40,25 @@ sample_paths = 10**4
 y0 = rng.normal(size=sample_paths)
 time_start = 0
 time_end = 1
+# Parameters to create fBm
+points_x = 2**12  # According to the lower bound in the paper
+half_support = 10
+
+eta = 1/((hurst-1/2)**2 + 2 - hurst)
+lower_bound = 2*half_support*time_steps['real']**(eta/2)
+eqn = 66
+if (points_x <= lower_bound):
+    msg = 'You need to define your fBm on at least %.2f \
+            points as per equation (%d) in the paper.' % (lower_bound, eqn)
+    raise ValueError(msg)
+    sys.exit(1)
+
+delta_x = half_support/(points_x-1)
+grid_x = np.linspace(start=-half_support, stop=half_support, num=points_x)
+grid_x0 = np.linspace(start=0, stop=2*half_support, num=points_x)
+fbm_array = ds.fbm(hurst, points_x, half_support)
+bridge_array = ds.bridge(fbm_array, grid_x0)
+
 dt_tuple = tuple(
         map(
             lambda t: (time_end - time_start)/(t - 1), time_steps.values()
@@ -59,25 +78,6 @@ noise = rng.normal(
         loc=0.0, scale=np.sqrt(dt['real']),
         size=(time_steps['real'], sample_paths)
         )
-
-# Parameters to create fBm
-points_x = 2**12  # According to the lower bound in the paper
-half_support = 10
-
-eta = 1/((hurst-1/2)**2 + 2 - hurst)
-lower_bound = 2*half_support*time_steps['real']**(eta/2)
-eqn = 66
-if (points_x <= lower_bound):
-    msg = 'You need to define your fBm on at least %.2f \
-            points as per equation (%d) in the paper.' % (lower_bound, eqn)
-    raise ValueError(msg)
-    sys.exit(1)
-
-delta_x = half_support/(points_x-1)
-grid_x = np.linspace(start=-half_support, stop=half_support, num=points_x)
-grid_x0 = np.linspace(start=0, stop=2*half_support, num=points_x)
-fbm_array = ds.fbm(hurst, points_x, half_support)
-bridge_array = ds.bridge(fbm_array, grid_x0)
 
 # Variance of heat kernel
 var_tuple = tuple(map(lambda t: ds.heat_kernel_var(t, hurst), time_steps.values()))
