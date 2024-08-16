@@ -13,8 +13,8 @@ time_steps = 2**8
 epsilon = 10e-6
 beta = 1/4
 hurst = 1 - beta
-y0 = 1
 sample_paths = 10**4
+y0 = rng.normal(size=sample_paths)
 time_start = 0
 time_end = 1
 dt = (time_end - time_start)/(time_steps - 1)
@@ -24,7 +24,7 @@ noise = rng.normal(
         size=(time_steps, sample_paths)
         )
 # Parameters to create fBm
-points_x = 2**12  # According to the lower bound in the paper
+points_x = 2**8  # According to the lower bound in the paper
 half_support = 10
 eta = 1/((hurst-1/2)**2 + 2 - hurst)
 lower_bound = 2*half_support*time_steps**(eta/2)
@@ -47,9 +47,13 @@ integral_grid = ds.integral_between_grid_points(var_heat_kernel, grid_x, half_su
 drift_array = ds.create_drift_array(bridge_array, integral_grid)
 
 
-# PDE solution
+# SDE solution
 
-y = ds.solve_mv(y0, drift_array, noise, time_start, time_end, time_steps, sample_paths, grid_x, half_support, points_x, 2**8, lambda x: np.sin(x))
+y = ds.solve_mv(y0, drift_array, noise, time_start, time_end, time_steps, sample_paths, grid_x, half_support, points_x, 20, lambda x: np.sin(x))
 
-plt.hist(y[0, :])
+plt.hist(y[0][0, :], bins=100, density=True, label="SDE terminal density")
+plt.plot(grid_x, y[1][0, :], label="PDE density t = 0")
+plt.plot(grid_x, y[1][10, :], label="PDE density t = 1/2")
+plt.plot(grid_x, y[1][-1, :], label="PDE density t = 1")
+plt.legend()
 plt.show()

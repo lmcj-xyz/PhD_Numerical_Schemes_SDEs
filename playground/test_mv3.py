@@ -66,7 +66,7 @@ def drift_f(x: np.ndarray, drift_array=drift_array, grid=grid_x):
     return np.interp(x=x.data, xp=grid, fp=drift_array)
 
 # FP
-eq = ds.FokkerPlanckPDE(drift_f, lambda x: np.sin(x))
+eq = ds.FokkerPlanckPDE(drift_f, lambda x: np.sin(0.1*x))
 grid = pde.CartesianGrid(bounds=[(-half_support, half_support)], shape=points_x, periodic=False)
 x = np.linspace(-half_support, half_support, points_x) 
 ic = norm.pdf(x)

@@ -41,7 +41,7 @@ y0 = rng.normal(size=sample_paths)
 time_start = 0
 time_end = 1
 # Parameters to create fBm
-points_x = 2**12  # According to the lower bound in the paper
+points_x = 2**8  # According to the lower bound in the paper
 half_support = 10
 
 eta = 1/((hurst-1/2)**2 + 2 - hurst)
@@ -103,7 +103,7 @@ drift_array = dict(zip(keys, drift_tuple))
 
 
 def nonl(x):
-    return 5*np.sin(0.1*x - 10)
+    return np.sin(x)
 
 
 solution_tuple = tuple(
@@ -111,7 +111,7 @@ solution_tuple = tuple(
             lambda d, t: ds.solve_mv(
                 y0, d, noise,
                 time_start, time_end, t,
-                sample_paths, grid_x, half_support, 2**8, 10,
+                sample_paths, grid_x, half_support, points_x, 20,
                 nonl
                 ),
             drift_array.values(),
@@ -177,3 +177,10 @@ if saving:
     with open(dict_string, 'wb') as fp:
         pickle.dump(plot_dict, fp)
         print('Files saved succesfully')
+
+plt.hist(solution['real'][0][0], bins=100, density=True, label="SDE terminal density")
+plt.plot(grid_x, solution['real'][1][0], label="PDE density t = 0")
+plt.plot(grid_x, solution['real'][1][10], label="PDE density t = 1/2")
+plt.plot(grid_x, solution['real'][1][-1], label="PDE density t = 1")
+plt.legend()
+plt.show()
