@@ -1,15 +1,7 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-"""
-Created on Tue Jun 27 14:58:44 2023
-
-@author: lmcj
-"""
 import numpy as np
 from numpy.random import default_rng
 import matplotlib.pyplot as plt
 from scipy.stats import linregress
-import sys
 import pickle
 import time
 
@@ -103,7 +95,8 @@ drift_array = dict(zip(keys, drift_tuple))
 
 
 def nonl(x):
-    return np.sin(x)
+    return 5*np.sin(0.4*x)
+    #return 1
 
 
 solution_tuple = tuple(

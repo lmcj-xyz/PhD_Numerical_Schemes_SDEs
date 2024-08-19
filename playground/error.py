@@ -1,14 +1,6 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-"""
-Created on Tue Jun 27 14:58:44 2023
-
-@author: lmcj
-"""
 import numpy as np
 from numpy.random import default_rng
 import matplotlib.pyplot as plt
-import dsdes as ds
 from scipy.stats import linregress
 import pickle
 
@@ -30,7 +22,7 @@ time_steps = dict(zip(keys, time_steps_tuple))
 error_keys = ('e1', 'e2', 'e3', 'e4', 'e5')
 
 epsilon = 10e-6
-beta = 1/2
+beta = 1/2 - epsilon
 hurst = 1 - beta
 y0 = 1
 sample_paths = 10**4
@@ -148,7 +140,8 @@ ax.set_ylabel(r'$\log_{10}(\epsilon)$')
 ax.legend()
 plt.show()
 
-saving = input('Do you want to save to files the plot and its corresponding dictionary? (yes/no): ')
+saving = 'no'
+#saving = input('Do you want to save to files the plot and its corresponding dictionary? (yes/no): ')
 if saving == 'yes':
     fig.savefig('rate.pdf', dpi=200)
     with open('dict_plot.pkl', 'wb') as fp:
