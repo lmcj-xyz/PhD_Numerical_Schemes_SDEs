@@ -29,6 +29,7 @@ epsilon = 10e-6
 beta = 1/2 - epsilon
 hurst = 1 - beta
 sample_paths = 10**4
+#y0 = np.ones_like(sample_paths)
 y0 = rng.normal(size=sample_paths)
 time_start = 0
 time_end = 1
@@ -95,8 +96,16 @@ drift_array = dict(zip(keys, drift_tuple))
 
 
 def nonl(x):
-    return 5*np.sin(0.4*x)
-    #return 1
+    #return 5*np.sin(0.4*x)
+    return x**0
+
+
+#pde_solution_tuple = tuple(
+#        map(
+#            lambda d: ds.solve_fp(),
+#            drift_array.values()
+#            )
+#        )
 
 
 solution_tuple = tuple(
@@ -104,7 +113,7 @@ solution_tuple = tuple(
             lambda d, t: ds.solve_mv(
                 y0, d, noise,
                 time_start, time_end, t,
-                sample_paths, grid_x, half_support, points_x, 20,
+                sample_paths, grid_x, half_support, points_x, 2**5,
                 nonl
                 ),
             drift_array.values(),
@@ -157,7 +166,7 @@ if plot:
 
 end_time = time.time()
 running_time = end_time - start_time
-print(running_time)
+print("Running time is " + str(running_time) + " seconds")
 
 #%%
 #saving = input('Do you want to save to files the plot and its corresponding dictionary? (yes/no): ')
@@ -176,4 +185,21 @@ plt.plot(grid_x, solution['real'][1][0], label="PDE density t = 0")
 plt.plot(grid_x, solution['real'][1][10], label="PDE density t = 1/2")
 plt.plot(grid_x, solution['real'][1][-1], label="PDE density t = 1")
 plt.legend()
+plt.title("real solution")
+plt.show()
+
+plt.hist(solution['approx1'][0][0], bins=100, density=True, label="SDE terminal density")
+plt.plot(grid_x, solution['approx1'][1][0], label="PDE density t = 0")
+plt.plot(grid_x, solution['approx1'][1][10], label="PDE density t = 1/2")
+plt.plot(grid_x, solution['approx1'][1][-1], label="PDE density t = 1")
+plt.legend()
+plt.title("approx1 solution")
+plt.show()
+
+plt.hist(solution['approx3'][0][0], bins=100, density=True, label="SDE terminal density")
+plt.plot(grid_x, solution['approx3'][1][0], label="PDE density t = 0")
+plt.plot(grid_x, solution['approx3'][1][10], label="PDE density t = 1/2")
+plt.plot(grid_x, solution['approx3'][1][-1], label="PDE density t = 1")
+plt.legend()
+plt.title("approx3 solution")
 plt.show()

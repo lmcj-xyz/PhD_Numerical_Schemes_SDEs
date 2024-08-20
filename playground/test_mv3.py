@@ -65,8 +65,13 @@ drift_array = ds.create_drift_array(bridge_array, integral_grid)
 def drift_f(x: np.ndarray, drift_array=drift_array, grid=grid_x):
     return np.interp(x=x.data, xp=grid, fp=drift_array)
 
+
 # FP
-eq = ds.FokkerPlanckPDE(drift_f, lambda x: np.sin(0.1*x))
+def nonl(x):
+    return 10*np.sin(0.5*x)
+
+
+eq = ds.FokkerPlanckPDE(drift_f, nonl)
 grid = pde.CartesianGrid(bounds=[(-half_support, half_support)], shape=points_x, periodic=False)
 x = np.linspace(-half_support, half_support, points_x) 
 ic = norm.pdf(x)
@@ -77,11 +82,11 @@ eq.solve(state, t_range=(time_start, time_end), solver='scipy',
          tracker=storage.tracker(dt))
 
 # div
-div_array = np.multiply(drift_array, np.cos(0.1*np.array(storage.data)))
+div_array = np.multiply(drift_array, nonl(np.array(storage.data)))
 
 # plot
-#plt.plot(drift_array)
-#plt.plot(div_array[1])
-#plt.plot(div_array[10])
-#plt.plot(div_array[100])
-#plt.show()
+plt.plot(grid_x, drift_array)
+plt.plot(grid_x, div_array[1])
+plt.plot(grid_x, div_array[10])
+plt.plot(grid_x, div_array[100])
+plt.show()

@@ -88,8 +88,7 @@ def solve(y0: float,
           sample_paths: int,
           grid: np.ndarray,
           keep_paths: bool = False) -> np.ndarray:
-    # The keep_paths option keeps the entire array corresponding to the solutions
-    # Use with care because it will eat up your memory very quick
+    y = np.zeros(shape=(1, sample_paths))
     z_coarse = coarse_noise(z, time_steps, sample_paths)
     dt = (time_end - time_start)/(time_steps-1)
     if keep_paths:
@@ -100,7 +99,6 @@ def solve(y0: float,
                     + np.interp(x=y[i, :], xp=grid, fp=drift_array)*dt \
                     + z_coarse[i, :]
         return y
-    y = np.zeros(shape=(1, sample_paths))
     y[0, :] = y0
     for i in range(time_steps):
         y[0, :] = y[0, :] \
@@ -177,9 +175,9 @@ def solve_mv(y0: np.ndarray,
         ti += dt
         tti = np.repeat(ti, sample_paths)
         y[0, :] = y[0, :] + \
-            nl(interpn((tsde, xsde), rho_usable,
+            interpn((tsde, xsde), nl(rho_usable),
                        list(zip(tti, y[0, :])),
-                       'cubic', False, 1)) * \
+                       'linear', False, 1) * \
             np.interp(x=y[0, :], xp=grid, fp=drift_array)*dt + \
             z_coarse[i, :]
                 #interpn((tsde, xsde), drift, list(zip(tti, y[0, :])), 'cubic', False, 1) + \
