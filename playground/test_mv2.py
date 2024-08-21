@@ -9,9 +9,9 @@ import dsdes as ds
 
 
 rng = default_rng()
-time_steps = 2**8
+time_steps = 2**10
 epsilon = 10e-6
-beta = 1/4
+beta = 1/2 - epsilon
 hurst = 1 - beta
 sample_paths = 10**4
 y0 = rng.normal(size=sample_paths)

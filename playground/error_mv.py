@@ -20,7 +20,7 @@ plt.rcParams['figure.dpi'] = 200
 # Parameters for Euler scheme
 keys = ('real', 'approx1', 'approx2', 'approx3', 'approx4', 'approx5')
 
-time_steps_tuple = (2**11, 2**5, 2**6, 2**7, 2**8, 2**9)
+time_steps_tuple = (2**13, 2**6, 2**7, 2**8, 2**9, 2**10)
 time_steps = dict(zip(keys, time_steps_tuple))
 
 error_keys = ('e1', 'e2', 'e3', 'e4', 'e5')
@@ -34,7 +34,7 @@ y0 = rng.normal(size=sample_paths)
 time_start = 0
 time_end = 1
 # Parameters to create fBm
-points_x = 2**8  # According to the lower bound in the paper
+points_x = 2**10  # According to the lower bound in the paper
 half_support = 10
 
 eta = 1/((hurst-1/2)**2 + 2 - hurst)
@@ -180,10 +180,10 @@ if saving:
         pickle.dump(plot_dict, fp)
         print('Files saved succesfully')
 
-plt.hist(solution['real'][0][0], bins=100, density=True, label="SDE terminal density")
-plt.plot(grid_x, solution['real'][1][0], label="PDE density t = 0")
-plt.plot(grid_x, solution['real'][1][10], label="PDE density t = 1/2")
-plt.plot(grid_x, solution['real'][1][-1], label="PDE density t = 1")
+plt.hist(solution['real'][0][0, :], bins=100, density=True, label="SDE terminal density")
+plt.plot(grid_x, solution['real'][1][0, :], label="PDE density t = 0")
+plt.plot(grid_x, solution['real'][1][10, :], label="PDE density t = 1/2")
+plt.plot(grid_x, solution['real'][1][-1, :], label="PDE density t = 1")
 plt.legend()
 plt.title("real solution")
 plt.show()

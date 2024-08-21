@@ -169,19 +169,14 @@ def solve_mv(y0: np.ndarray,
     rho_usable = np.array(rho.data)
     tsde = np.linspace(time_start, time_end, tpde+1)
     xsde = np.linspace(-half_support, half_support, xpde)
-    #drift = np.multiply(drift_array, nl(rho_usable))
     ti = 0
     for i in range(time_steps):
         ti += dt
         tti = np.repeat(ti, sample_paths)
         y[0, :] = y[0, :] + \
             interpn((tsde, xsde), nl(rho_usable),
-                       list(zip(tti, y[0, :])),
-                       'linear', False, 1) * \
+                    list(zip(tti, y[0, :])),
+                    'linear', False, 1) * \
             np.interp(x=y[0, :], xp=grid, fp=drift_array)*dt + \
             z_coarse[i, :]
-                #interpn((tsde, xsde), drift, list(zip(tti, y[0, :])), 'cubic', False, 1) + \
-                #z_coarse[i, :]
-                #np.interp(x=y[0, :], xp=grid, fp=drift)*dt + \
-                #z_coarse[i, :]
     return y, rho_usable
