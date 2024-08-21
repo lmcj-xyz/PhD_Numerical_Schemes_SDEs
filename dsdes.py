@@ -175,7 +175,7 @@ def solve_mv(y0: np.ndarray,
         tti = np.repeat(ti, sample_paths)
         y[0, :] = y[0, :] + \
             interpn((tsde, xsde), nl(rho_usable),
-                    list(zip(tti, y[0, :])),
+                    np.array(list(zip(tti, y[0, :]))),
                     'linear', False, 1) * \
             np.interp(x=y[0, :], xp=grid, fp=drift_array)*dt + \
             z_coarse[i, :]

@@ -48,8 +48,10 @@ drift_array = ds.create_drift_array(bridge_array, integral_grid)
 
 
 # SDE solution
+def nonl(x):
+    return np.sin(x)
 
-y = ds.solve_mv(y0, drift_array, noise, time_start, time_end, time_steps, sample_paths, grid_x, half_support, points_x, 20, lambda x: np.sin(x))
+y = ds.solve_mv(y0, drift_array, noise, time_start, time_end, time_steps, sample_paths, grid_x, half_support, points_x, 20, nonl)
 
 plt.hist(y[0][0, :], bins=100, density=True, label="SDE terminal density")
 plt.plot(grid_x, y[1][0, :], label="PDE density t = 0")
