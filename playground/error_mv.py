@@ -15,7 +15,7 @@ start_time = time.time()
 
 rng = default_rng()
 
-plt.rcParams['figure.dpi'] = 200
+#plt.rcParams['figure.dpi'] = 200
 
 # Parameters for Euler scheme
 keys = ('real', 'approx1', 'approx2', 'approx3', 'approx4', 'approx5')
@@ -108,7 +108,7 @@ def nonl(x):
 #        )
 
 
-tpoints = 2**5
+points_t = 2**5
 solution_tuple = tuple(
         map(
             lambda d, t: ds.solve_mv(
@@ -183,7 +183,7 @@ if saving:
 
 plt.hist(solution['real'][0][0, :], bins=100, density=True, label="SDE terminal density")
 plt.plot(grid_x, solution['real'][1][0, :], label="PDE density t = 0")
-plt.plot(grid_x, solution['real'][1][int(tpoints/2), :], label="PDE density t = 1/2")
+plt.plot(grid_x, solution['real'][1][int(points_t/2), :], label="PDE density t = 1/2")
 plt.plot(grid_x, solution['real'][1][-1, :], label="PDE density t = 1")
 plt.legend()
 plt.title(r'Densities real solution with %d time steps for $\beta$=%f' % (time_steps['real'], beta))
@@ -191,7 +191,7 @@ plt.show()
 
 plt.hist(solution['approx1'][0][0, :], bins=100, density=True, label="SDE terminal density")
 plt.plot(grid_x, solution['approx1'][1][0, :], label="PDE density t = 0")
-plt.plot(grid_x, solution['approx1'][1][int(tpoints/2), :], label="PDE density t = 1/2")
+plt.plot(grid_x, solution['approx1'][1][int(points_t/2), :], label="PDE density t = 1/2")
 plt.plot(grid_x, solution['approx1'][1][-1, :], label="PDE density t = 1")
 plt.legend()
 plt.title(r'Densities approximation with %d time steps for $\beta$=%f' % (time_steps['approx1'], beta))
@@ -199,7 +199,7 @@ plt.show()
 
 plt.hist(solution['approx3'][0][0, :], bins=100, density=True, label="SDE terminal density")
 plt.plot(grid_x, solution['approx3'][1][0, :], label="PDE density t = 0")
-plt.plot(grid_x, solution['approx3'][1][int(tpoints/2), :], label="PDE density t = 1/2")
+plt.plot(grid_x, solution['approx3'][1][int(points_t/2), :], label="PDE density t = 1/2")
 plt.plot(grid_x, solution['approx3'][1][-1, :], label="PDE density t = 1")
 plt.legend()
 plt.title(r'Densities approximation with %d time steps for $\beta$=%f' % (time_steps['approx3'], beta))
