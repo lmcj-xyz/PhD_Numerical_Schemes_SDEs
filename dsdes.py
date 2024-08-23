@@ -117,7 +117,10 @@ class FokkerPlanckPDE(PDEBase):
     def evolution_rate(self, state, t=0):
         assert state.grid.dim == 1
         v = state
-        div = v * self.nonlinear(v) * self.drift(v)
+        x = np.linspace(state.grid.axes_bounds[0][0],
+                        state.grid.axes_bounds[0][1],
+                        state.grid.shape[0])
+        div = v * self.nonlinear(v) * self.drift(x)
         v_x = div.gradient(bc=self.bc)[0]
         v_xx = v.laplace(bc=self.bc)
         v_t = 0.5 * v_xx - v_x
@@ -126,12 +129,9 @@ class FokkerPlanckPDE(PDEBase):
 
 def solve_fp(drift_a, grid_a, limx=1, nonlinear_f=lambda x: np.sin(x),
              ts=0, te=1, xpoints=10, tpoints=2**8):
-    xn = xpoints
-    #x = np.linspace(norm.ppf(0.01), norm.ppf(0.99), xn)
-    x = np.linspace(-limx, limx, xn)
+    x = np.linspace(-limx, limx, xpoints)
     ic = norm.pdf(x)
-    grid_bounds = (-limx, limx)
-    grid = CartesianGrid(bounds=[grid_bounds], shape=xn, periodic=False)
+    grid = CartesianGrid(bounds=[(-limx, limx)], shape=xpoints, periodic=False)
     state = ScalarField(grid=grid, data=ic)
 
     def drift_f(x: np.ndarray, drift_array=drift_a, grid=grid_a):
@@ -139,15 +139,12 @@ def solve_fp(drift_a, grid_a, limx=1, nonlinear_f=lambda x: np.sin(x),
 
     eq = FokkerPlanckPDE(drift=drift_f, nonlinear=nonlinear_f)
     solver = ScipySolver(pde=eq)
-    time_steps = tpoints
-    dt = 1/time_steps
+    dt = 1/tpoints
     time_range = (ts, te)
     storage = MemoryStorage()
     cont = Controller(solver=solver, t_range=time_range,
                       tracker=storage.tracker(dt))
     soln = cont.run(state)
-    #eq.solve(state, t_range=time_range, solver='scipy',
-    #         tracker=storage.tracker(dt))
     return storage
 
 

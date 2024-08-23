@@ -26,7 +26,7 @@ time_steps = dict(zip(keys, time_steps_tuple))
 error_keys = ('e1', 'e2', 'e3', 'e4', 'e5')
 
 epsilon = 10e-6
-beta = 3/8
+beta = 1/2
 hurst = 1 - beta
 sample_paths = 10**4
 #y0 = np.ones_like(sample_paths)
@@ -108,12 +108,13 @@ def nonl(x):
 #        )
 
 
+tpoints = 2**5
 solution_tuple = tuple(
         map(
             lambda d, t: ds.solve_mv(
                 y0, d, noise,
                 time_start, time_end, t,
-                sample_paths, grid_x, half_support, points_x, 2**5,
+                sample_paths, grid_x, half_support, points_x, points_t,
                 nonl
                 ),
             drift_array.values(),
@@ -182,7 +183,7 @@ if saving:
 
 plt.hist(solution['real'][0][0, :], bins=100, density=True, label="SDE terminal density")
 plt.plot(grid_x, solution['real'][1][0, :], label="PDE density t = 0")
-plt.plot(grid_x, solution['real'][1][10, :], label="PDE density t = 1/2")
+plt.plot(grid_x, solution['real'][1][int(tpoints/2), :], label="PDE density t = 1/2")
 plt.plot(grid_x, solution['real'][1][-1, :], label="PDE density t = 1")
 plt.legend()
 plt.title(r'Densities real solution with %d time steps for $\beta$=%f' % (time_steps['real'], beta))
@@ -190,7 +191,7 @@ plt.show()
 
 plt.hist(solution['approx1'][0][0, :], bins=100, density=True, label="SDE terminal density")
 plt.plot(grid_x, solution['approx1'][1][0, :], label="PDE density t = 0")
-plt.plot(grid_x, solution['approx1'][1][10, :], label="PDE density t = 1/2")
+plt.plot(grid_x, solution['approx1'][1][int(tpoints/2), :], label="PDE density t = 1/2")
 plt.plot(grid_x, solution['approx1'][1][-1, :], label="PDE density t = 1")
 plt.legend()
 plt.title(r'Densities approximation with %d time steps for $\beta$=%f' % (time_steps['approx1'], beta))
@@ -198,7 +199,7 @@ plt.show()
 
 plt.hist(solution['approx3'][0][0, :], bins=100, density=True, label="SDE terminal density")
 plt.plot(grid_x, solution['approx3'][1][0, :], label="PDE density t = 0")
-plt.plot(grid_x, solution['approx3'][1][10, :], label="PDE density t = 1/2")
+plt.plot(grid_x, solution['approx3'][1][int(tpoints/2), :], label="PDE density t = 1/2")
 plt.plot(grid_x, solution['approx3'][1][-1, :], label="PDE density t = 1")
 plt.legend()
 plt.title(r'Densities approximation with %d time steps for $\beta$=%f' % (time_steps['approx3'], beta))
