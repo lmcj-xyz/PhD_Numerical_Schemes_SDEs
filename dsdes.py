@@ -1,25 +1,18 @@
+import math
 import numpy as np
-import math as m
 from scipy.integrate import quad_vec
-from numpy.random import default_rng
-from pde import CartesianGrid, \
-    ScalarField, \
-    VectorField, \
-    MemoryStorage, \
-    PDEBase, \
-    ScipySolver, \
-    Controller
 from scipy.stats import norm
 from scipy.interpolate import interpn
-import matplotlib.pyplot as plt
-
-rng = default_rng()
+from pde import CartesianGrid, ScalarField, MemoryStorage, \
+        PDEBase, ScipySolver, Controller
 
 
 # Fractional Brownian motion (fBm) creation function
-def fbm(hurst: float,
+def fbm(gaussian: np.ndarray,
+        hurst: float,
         points: int = 2**12,
         half_support: float = 10) -> np.ndarray:
+    assert gaussian.shape[0] == points
     fbm_grid = np.linspace(start=1/points, stop=2*half_support, num=points)
 
     xv, yv = np.meshgrid(fbm_grid, fbm_grid, sparse=False, indexing='ij')
@@ -28,9 +21,8 @@ def fbm(hurst: float,
                       np.abs(yv)**(2*hurst) -
                       np.abs(xv - yv)**(2*hurst))
 
-    g = rng.standard_normal(size=points)
     cholesky = np.linalg.cholesky(covariance)
-    fbm_array = np.matmul(cholesky, g)
+    fbm_array = np.matmul(cholesky, gaussian)
     return fbm_array
 
 
@@ -50,7 +42,7 @@ def integral_between_grid_points(heat_kernel_var: float,
                                  grid_x: np.ndarray,
                                  half_support: float) -> np.ndarray:
     points = len(grid_x)
-    heat_kernel_std = m.sqrt(heat_kernel_var)
+    heat_kernel_std = math.sqrt(heat_kernel_var)
     integral = np.zeros_like(grid_x)
     delta_half = half_support/(points)
     integral, error = quad_vec(lambda z:
@@ -65,6 +57,18 @@ def integral_between_grid_points(heat_kernel_var: float,
 def create_drift_array(rough_func: np.ndarray,
                        integral_on_grid: np.ndarray) -> np.ndarray:
     return -np.convolve(rough_func, integral_on_grid, 'same')
+
+
+def drift(gaussian: np.ndarray, hurst: float, points: int = 2**12, half_support: float = 10,
+          time_steps: int = 2**5):
+    grid = np.linspace(-half_support, half_support, points)
+    grid0 = np.linspace(0, 2*half_support, points)
+    fbm_array = fbm(gaussian, hurst, points, half_support)
+    fbb_array = bridge(fbm_array, grid0)
+    hk = heat_kernel_var(time_steps, hurst)
+    ig = integral_between_grid_points(hk, grid, half_support)
+    drift_array = create_drift_array(fbb_array, ig)
+    return drift_array, fbm_array, fbb_array, grid
 
 
 # Coarse noise

@@ -49,7 +49,8 @@ if (points_x <= lower_bound):
 delta_x = half_support/(points_x-1)
 grid_x = np.linspace(start=-half_support, stop=half_support, num=points_x)
 grid_x0 = np.linspace(start=0, stop=2*half_support, num=points_x)
-fbm_array = ds.fbm(hurst, points_x, half_support)
+gaussian_fbm = rng.standard_normal(size=points_x)
+fbm_array = ds.fbm(gaussian_fbm, hurst, points_x, half_support)
 bridge_array = ds.bridge(fbm_array, grid_x0)
 
 dt_tuple = tuple(
