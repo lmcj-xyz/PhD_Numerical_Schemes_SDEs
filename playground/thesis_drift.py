@@ -1,6 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from scipy.stats import norm
+import thesis_params
 
 import os
 import sys
@@ -17,10 +17,13 @@ half_support = 10
 gaussian = rng.standard_normal(points)
 bn, bH, bB, x = ds.drift(gaussian, hurst, points, half_support, time_steps)
 
-fig, ax = plt.subplots(figsize=(7, 7))
-ax.plot(x, bH, linewidth='1', color='orange', label=r'$B^H$')
-ax.plot(x, bB, linewidth='1', color='red', label=r'$B^H_b$')
-ax.plot(x, bn, color='blue', label=r'$b^N$')
-ax.grid(linestyle=':', color='green')
-ax.legend()
+fig, ax = plt.subplots()
+ax.plot(x, bH, linewidth='2', color='#2C9BE9', label=r'$B^H$', linestyle=':')
+ax.plot(x, bB, linewidth='2', color='#2C9BE9', label=r'$B^H_b$')
+ax.plot(x, bn, linewidth='2', color='#FFC622', label=r'$b^N$')
+legend = ax.legend()
+frame = legend.get_frame()
+frame.set_facecolor('lightgray')
+frame.set_edgecolor('lightgray')
+ax.grid()
 plt.show()
