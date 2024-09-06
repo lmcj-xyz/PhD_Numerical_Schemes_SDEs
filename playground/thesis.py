@@ -31,10 +31,10 @@ hurst = 0.76
 time_steps = 2**10
 dt = 1/time_steps
 
-points = 10**3
+points = 10**2
 half_support = 10
 
-sample_paths = 10**4
+sample_paths = 10**3
 y0 = rng.normal(size=sample_paths)
 time_start = 0
 time_end = 1
@@ -66,7 +66,7 @@ def plot_drift(drift, bridge, grid):
 
 def plot_law(soln, law, grid, title):
     fig, ax = plt.subplots()
-    ax.hist(soln[0, :], bins=250, density=True, color=lred, label='Empirical density')
+    ax.hist(soln[0, :], bins=50, density=True, color=lred, label='Empirical density')
     ax.plot(grid, np.array(law.data)[-1, :], color=lgreen, label='Fokker-Planck solution')
     ax.set_title(title)
     plt.show()

@@ -1,5 +1,4 @@
 import numpy as np
-from numpy.random import default_rng
 import matplotlib.pyplot as plt
 from scipy.stats import linregress
 import pickle
@@ -9,7 +8,7 @@ import sys
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 import dsdes as ds
 
-rng = default_rng()
+rng = np.random.default_rng(seed=1392917848)
 
 plt.rcParams['figure.dpi'] = 200
 
@@ -65,27 +64,10 @@ delta_x = half_support/(points_x-1)
 grid_x = np.linspace(start=-half_support, stop=half_support, num=points_x)
 grid_x0 = np.linspace(start=0, stop=2*half_support, num=points_x)
 gaussian_fbm = rng.standard_normal(size=points_x)
-fbm_array = ds.fbm(gaussian_fbm, hurst, points_x, half_support)
-bridge_array = ds.bridge(fbm_array, grid_x0)
-
-# Variance of heat kernel
-var_tuple = tuple(map(lambda t: ds.heat_kernel_var(t, hurst), time_steps.values()))
-var_heat_kernel = dict(zip(keys, var_tuple))
-
-# Integral between grid points
-integral_tuple = tuple(
-        map(
-            lambda t: ds.integral_between_grid_points(t, grid_x, half_support),
-            var_heat_kernel.values()
-            )
-        )
-integral_grid = dict(zip(keys, integral_tuple))
-
-# Drift creation
 drift_tuple = tuple(
         map(
-            lambda i: ds.create_drift_array(bridge_array, i),
-            integral_grid.values()
+            lambda t: ds.drift(gaussian_fbm, hurst, points_x, half_support, t)[0],
+            time_steps.values()
             )
         )
 drift_array = dict(zip(keys, drift_tuple))
@@ -125,6 +107,10 @@ plot_dict = {
         'error': plot_error,
         }
 
+lgreen = (0, 0.31, 0.18)
+lred = (0.77, 0.07, 0.19)
+lwhite = (0.96, 0.95, 0.89)
+
 fig, ax = plt.subplots()
 ax.set_title(
     r'Rate of convergence r = %f for $\beta$=%f' % (rate_strong, beta)
@@ -132,8 +118,9 @@ ax.set_title(
 ax.plot(plot_dt,
         plot_error,
         marker='o',
-        label='Strong error')
-ax.grid(which='both')
+        label='Strong error',
+        color=lgreen)
+ax.grid(which='both', linestyle='--')
 ax.set_yscale('log')
 ax.set_xscale('log')
 ax.set_xlabel(r'$\log_{10}(\Delta t)$')
