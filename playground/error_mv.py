@@ -10,6 +10,7 @@ import sys
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 import dsdes as ds
 
+tttttssss = time.time()
 # Graphical parameters
 params = {
    'axes.labelsize': 8,
@@ -186,3 +187,6 @@ for i in range(loopint):
         file.write(str(rate_strong))
         file.write("\n")
         file.close()
+
+ttttteeee = time.time()
+print("\n\nran for " + str(ttttteeee - tttttssss) + "seconds")
