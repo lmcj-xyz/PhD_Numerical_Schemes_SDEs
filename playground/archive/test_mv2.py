@@ -19,10 +19,6 @@ time_start = 0
 time_end = 1
 dt = (time_end - time_start)/(time_steps - 1)
 time_grid = np.linspace(time_start + dt, time_end, time_steps)
-noise = rng.normal(
-        loc=0.0, scale=np.sqrt(dt),
-        size=(time_steps, sample_paths)
-        )
 # Parameters to create fBm
 points_x = 2**9  # According to the lower bound in the paper
 half_support = 10
@@ -37,15 +33,12 @@ if (points_x <= lower_bound):
 delta_x = half_support/(points_x-1)
 grid_x = np.linspace(start=-half_support, stop=half_support, num=points_x)
 grid_x0 = np.linspace(start=0, stop=2*half_support, num=points_x)
-fbm_array = ds.fbm(hurst, points_x, half_support)
-bridge_array = ds.bridge(fbm_array, grid_x0)
-# Variance of heat kernel
-var_heat_kernel = ds.heat_kernel_var(time_steps, hurst)
-# Integral between grid points
-integral_grid = ds.integral_between_grid_points(var_heat_kernel, grid_x, half_support)
-# Drift creation
-drift_array = ds.create_drift_array(bridge_array, integral_grid)
-#drift_array = 5*np.sign(grid_x)
+gaussian_fbm = rng.standard_normal(size=points_x)
+drift_array = ds.drift(gaussian_fbm, hurst, points_x, half_support, time_steps)[0],
+noise = rng.normal(
+        loc=0.0, scale=np.sqrt(dt),
+        size=(time_steps, sample_paths)
+        )
 
 
 # SDE solution

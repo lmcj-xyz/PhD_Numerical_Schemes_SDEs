@@ -25,7 +25,9 @@ lred = (0.77, 0.07, 0.19)
 lwhite = (0.96, 0.95, 0.89)
 
 # Scheme parameters
-rng = np.random.default_rng(seed=1392917848)
+#theseed = 1392917848  # better rates
+theseed = 1334917848
+rng = np.random.default_rng(seed=theseed)
 
 hurst = 0.76
 time_steps = 2**10
@@ -49,7 +51,14 @@ bm1 = rng.normal(loc=0.0, scale=np.sqrt(dt),
 
 soln1 = ds.solve(y0, bn1, bm1, time_start, time_end, time_steps, sample_paths, x1)
 law1 = ds.solve_fp(bn1, x1, half_support, lambda x: x**0, time_start, time_end, points, time_steps)
-mvsoln1 = ds.solve_mv(y0, bn1, bm1, time_start, time_end, time_steps, sample_paths, x1, half_support, points, time_steps, lambda x: np.sin(x))
+
+
+def nonlinear(x):
+    return np.sin(x)
+
+
+mvlaw1 = ds.solve_fp(bn1, x1, half_support, nonlinear, time_start, time_end, points, time_steps)
+mvsoln1 = ds.solve_mv(y0, bn1, bm1, mvlaw1, time_start, time_end, time_steps, sample_paths, x1, half_support, points, time_steps, nonlinear)
 
 
 def plot_drift(drift, bridge, grid):

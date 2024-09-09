@@ -50,17 +50,9 @@ if (points_x <= lower_bound):
 delta_x = half_support/(points_x-1)
 grid_x = np.linspace(start=-half_support, stop=half_support, num=points_x)
 grid_x0 = np.linspace(start=0, stop=2*half_support, num=points_x)
-fbm_array = ds.fbm(hurst, points_x, half_support)
-bridge_array = ds.bridge(fbm_array, grid_x0)
+gaussian_fbm = rng.standard_normal(size=points_x)
 
-# Variance of heat kernel
-var_heat_kernel = ds.heat_kernel_var(time_steps, hurst)
-
-# Integral between grid points
-integral_grid = ds.integral_between_grid_points(var_heat_kernel, grid_x, half_support)
-
-# Drift creation
-drift_array = ds.create_drift_array(bridge_array, integral_grid)
+drift_array = ds.drift(gaussian_fbm, hurst, points_x, half_support, time_steps)[0]
 
 def drift_f(x: np.ndarray, drift_array=drift_array, grid=grid_x):
     return np.interp(x=x.data, xp=grid, fp=drift_array)

@@ -63,13 +63,6 @@ if (points_x <= lower_bound):
 delta_x = half_support/(points_x-1)
 grid_x = np.linspace(start=-half_support, stop=half_support, num=points_x)
 grid_x0 = np.linspace(start=0, stop=2*half_support, num=points_x)
-gaussian_fbm = rng.standard_normal(size=points_x)
-
-drift_tuple = tuple(map(
-    lambda t: ds.drift(gaussian_fbm, hurst, points_x, half_support, t)[0],
-    time_steps.values()
-    ))
-drift_array = dict(zip(keys, drift_tuple))
 # plt.plot(drift_array['real'])
 # plt.show()
 
@@ -90,20 +83,26 @@ def nonl(x):
 
 
 points_t = 2**5  # for the FP approx
-print("Solving PDE...")
-law_tuple = tuple(map(
-    lambda d: ds.solve_fp(d, grid_x, half_support, nonl, time_start, time_end, points_x, points_t),
-    drift_array.values(),
-    ))
-law = dict(zip(keys, law_tuple))
-ttttt1111 = time.time()
-print("PDE solved in " + str(ttttt1111 - tttttssss) + " seconds")
-
+noise = rng.normal(loc=0.0, scale=np.sqrt(dt['real']),
+                   size=(time_steps['real'], sample_paths))
 loopint = 40
 for i in range(loopint):
     # loop here?
-    noise = rng.normal(loc=0.0, scale=np.sqrt(dt['real']),
-                       size=(time_steps['real'], sample_paths))
+    gaussian_fbm = rng.standard_normal(size=points_x)
+    drift_tuple = tuple(map(
+        lambda t: ds.drift(gaussian_fbm, hurst, points_x, half_support, t)[0],
+        time_steps.values()
+        ))
+    drift_array = dict(zip(keys, drift_tuple))
+    print("Solving PDE...")
+    law_tuple = tuple(map(
+        lambda d: ds.solve_fp(d, grid_x, half_support, nonl, time_start, time_end, points_x, points_t),
+        drift_array.values(),
+        ))
+    law = dict(zip(keys, law_tuple))
+    ttttt1111 = time.time()
+    print("PDE solved in " + str(ttttt1111 - tttttssss) + " seconds")
+
     solution_tuple = tuple(map(
         lambda d, t, lw: ds.solve_mv(
             y0, d, noise, lw,

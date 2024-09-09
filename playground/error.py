@@ -27,7 +27,9 @@ lred = (0.77, 0.07, 0.19)
 lwhite = (0.96, 0.95, 0.89)
 
 # Code
-rng = np.random.default_rng(seed=1392917848)
+#theseed = 1392917848  # better rates
+theseed = 1334917848
+rng = np.random.default_rng(seed=theseed)
 
 # Parameters for Euler scheme
 keys = ('real', 'approx1', 'approx2', 'approx3', 'approx4', 'approx5')

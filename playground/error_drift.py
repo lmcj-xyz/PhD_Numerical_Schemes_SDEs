@@ -10,7 +10,6 @@ import sys
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 import dsdes as ds
 
-tttttssss = time.time()
 # Graphical parameters
 params = {
    'axes.labelsize': 8,
@@ -41,7 +40,7 @@ time_steps = dict(zip(keys, time_steps_tuple))
 error_keys = ('e1', 'e2', 'e3', 'e4', 'e5')
 
 epsilon = 10e-6
-beta = 1/2 - epsilon
+beta = epsilon
 hurst = 1 - beta
 sample_paths = 10**4
 y0 = rng.normal(size=sample_paths)
@@ -63,13 +62,6 @@ if (points_x <= lower_bound):
 delta_x = half_support/(points_x-1)
 grid_x = np.linspace(start=-half_support, stop=half_support, num=points_x)
 grid_x0 = np.linspace(start=0, stop=2*half_support, num=points_x)
-gaussian_fbm = rng.standard_normal(size=points_x)
-
-drift_tuple = tuple(map(
-    lambda t: ds.drift(gaussian_fbm, hurst, points_x, half_support, t)[0],
-    time_steps.values()
-    ))
-drift_array = dict(zip(keys, drift_tuple))
 # plt.plot(drift_array['real'])
 # plt.show()
 
@@ -78,51 +70,38 @@ dt_tuple = tuple(
         )
 dt = dict(zip(keys, dt_tuple))
 time_grid_tuple = tuple(map(
-    lambda d, t: np.linspace(time_start + d, time_end, t),
+    lambda dt, t: np.linspace(time_start + dt, time_end, t),
     dt.values(), time_steps.values()
     ))
 time_grid = dict(zip(keys, time_grid_tuple))
 
-
-# Nonlinear function
-def nonl(x):
-    return np.sin(x)
-
-
-points_t = 2**5  # for the FP approx
-print("Solving PDE...")
-law_tuple = tuple(map(
-    lambda d: ds.solve_fp(d, grid_x, half_support, nonl, time_start, time_end, points_x, points_t),
-    drift_array.values(),
-    ))
-law = dict(zip(keys, law_tuple))
-ttttt1111 = time.time()
-print("PDE solved in " + str(ttttt1111 - tttttssss) + " seconds")
-
 loopint = 40
+noise = rng.normal(loc=0.0, scale=np.sqrt(dt['real']),
+                   size=(time_steps['real'], sample_paths))
 for i in range(loopint):
     # loop here?
-    noise = rng.normal(loc=0.0, scale=np.sqrt(dt['real']),
-                       size=(time_steps['real'], sample_paths))
+    gaussian_fbm = rng.standard_normal(size=points_x)
+    drift_tuple = tuple(map(
+        lambda t: ds.drift(gaussian_fbm, hurst, points_x, half_support, t)[0],
+        time_steps.values()
+        ))
+    drift_array = dict(zip(keys, drift_tuple))
+
     solution_tuple = tuple(map(
-        lambda d, t, lw: ds.solve_mv(
-            y0, d, noise, lw,
-            time_start, time_end, t,
-            sample_paths, grid_x, half_support, points_x, points_t,
-            nonl
+        lambda d, t: ds.solve(
+            y0, d, noise, time_start, time_end, t, sample_paths, grid_x
             ),
         drift_array.values(),
         time_steps.values(),
-        law.values()
         ))
     solution = dict(zip(keys, solution_tuple))
 
     strong_error = dict.fromkeys(error_keys)
-    strong_error['e1'] = np.abs(solution['real'][0] - solution['approx1'][0])
-    strong_error['e2'] = np.abs(solution['real'][0] - solution['approx2'][0])
-    strong_error['e3'] = np.abs(solution['real'][0] - solution['approx3'][0])
-    strong_error['e4'] = np.abs(solution['real'][0] - solution['approx4'][0])
-    strong_error['e5'] = np.abs(solution['real'][0] - solution['approx5'][0])
+    strong_error['e1'] = np.abs(solution['real'] - solution['approx1'])
+    strong_error['e2'] = np.abs(solution['real'] - solution['approx2'])
+    strong_error['e3'] = np.abs(solution['real'] - solution['approx3'])
+    strong_error['e4'] = np.abs(solution['real'] - solution['approx4'])
+    strong_error['e5'] = np.abs(solution['real'] - solution['approx5'])
 
     plot_error = [np.mean(value) for key, value in strong_error.items()]
     plot_dt = [value for key, value in dt.items() if key not in 'real']
@@ -145,13 +124,14 @@ for i in range(loopint):
     if plot:
         fig, ax = plt.subplots()
         ax.set_title(
-            r'Rate of convergence r = %f for $\beta$=%f' % (rate_strong, beta)
-            )
+                r'Rate of convergence r = %f for $\beta$=%f' % (rate_strong, beta)
+                )
         ax.plot(plot_dt,
                 plot_error,
                 marker='o',
-                label='Strong error')
-        ax.grid(which='both')
+                label='Strong error',
+                color=lgreen)
+        ax.grid(which='both', linestyle='--')
         ax.set_yscale('log')
         ax.set_xscale('log')
         ax.set_xlabel(r'$\log_{10}(\Delta t)$')
@@ -163,41 +143,14 @@ for i in range(loopint):
     saving = False
     if saving:
         date_string = time.strftime("%Y-%m-%d-%H-%M")
-        fig.savefig(date_string + '-rate.pdf', dpi=200)
-        with open(date_string + '-dict_plot.pkl', 'wb') as fp:
+        fig.savefig(date_string + 'rate.pdf', dpi=200)
+        with open(date_string + 'dict_plot.pkl', 'wb') as fp:
             pickle.dump(plot_dict, fp)
             print('Files saved succesfully')
 
-    # plt.hist(solution['real'][0][0, :], bins=100, density=True, label="SDE terminal density")
-    # plt.plot(grid_x, solution['real'][1][0, :], label="PDE density t = 0")
-    # plt.plot(grid_x, solution['real'][1][int(points_t/2), :], label="PDE density t = 1/2")
-    # plt.plot(grid_x, solution['real'][1][-1, :], label="PDE density t = 1")
-    # plt.legend()
-    # plt.title(r'Densities real solution with %d time steps for $\beta$=%f' % (time_steps['real'], beta))
-    # plt.show()
-    #
-    # plt.hist(solution['approx1'][0][0, :], bins=100, density=True, label="SDE terminal density")
-    # plt.plot(grid_x, solution['approx1'][1][0, :], label="PDE density t = 0")
-    # plt.plot(grid_x, solution['approx1'][1][int(points_t/2), :], label="PDE density t = 1/2")
-    # plt.plot(grid_x, solution['approx1'][1][-1, :], label="PDE density t = 1")
-    # plt.legend()
-    # plt.title(r'Densities approximation with %d time steps for $\beta$=%f' % (time_steps['approx1'], beta))
-    # plt.show()
-    # 
-    # plt.hist(solution['approx3'][0][0, :], bins=100, density=True, label="SDE terminal density")
-    # plt.plot(grid_x, solution['approx3'][1][0, :], label="PDE density t = 0")
-    # plt.plot(grid_x, solution['approx3'][1][int(points_t/2), :], label="PDE density t = 1/2")
-    # plt.plot(grid_x, solution['approx3'][1][-1, :], label="PDE density t = 1")
-    # plt.legend()
-    # plt.title(r'Densities approximation with %d time steps for $\beta$=%f' % (time_steps['approx3'], beta))
-    # plt.show()
-
-    print('rate = ', rate_strong)
     if loopint == 40:
-        file = open("rates_mv.txt", "a")
+        print('rate = ', rate_strong)
+        file = open("rates_linear.txt", "a")
         file.write(str(rate_strong))
         file.write("\n")
         file.close()
-
-ttttteeee = time.time()
-print("\n\nran for " + str(ttttteeee - tttttssss) + " seconds")
