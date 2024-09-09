@@ -10,7 +10,7 @@ import sys
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 import dsdes as ds
 
-tttttssss = time.time()
+tses = time.time()
 # Graphical parameters
 params = {
    'axes.labelsize': 8,
@@ -95,13 +95,14 @@ for i in range(loopint):
         ))
     drift_array = dict(zip(keys, drift_tuple))
     print("Solving PDE...")
+    ttttt22222 = time.time()
     law_tuple = tuple(map(
         lambda d: ds.solve_fp(d, grid_x, half_support, nonl, time_start, time_end, points_x, points_t),
         drift_array.values(),
         ))
     law = dict(zip(keys, law_tuple))
     ttttt1111 = time.time()
-    print("PDE solved in " + str(ttttt1111 - tttttssss) + " seconds")
+    print("PDE solved in " + str(tepde - tspde) + " seconds")
 
     solution_tuple = tuple(map(
         lambda d, t, lw: ds.solve_mv(
@@ -193,10 +194,10 @@ for i in range(loopint):
 
     print('rate = ', rate_strong)
     if loopint == 40:
-        file = open("rates_mv.txt", "a")
+        file = open("rates_mv_drift.txt", "a")
         file.write(str(rate_strong))
         file.write("\n")
         file.close()
 
-ttttteeee = time.time()
-print("\n\nran for " + str(ttttteeee - tttttssss) + " seconds")
+tees = time.time()
+print("\n\nran for " + str(tees - tses) + " seconds")

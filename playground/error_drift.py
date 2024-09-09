@@ -40,7 +40,7 @@ time_steps = dict(zip(keys, time_steps_tuple))
 error_keys = ('e1', 'e2', 'e3', 'e4', 'e5')
 
 epsilon = 10e-6
-beta = epsilon
+beta = 3/8
 hurst = 1 - beta
 sample_paths = 10**4
 y0 = rng.normal(size=sample_paths)
@@ -150,7 +150,7 @@ for i in range(loopint):
 
     if loopint == 40:
         print('rate = ', rate_strong)
-        file = open("rates_linear.txt", "a")
+        file = open("rates_linear_drift.txt", "a")
         file.write(str(rate_strong))
         file.write("\n")
         file.close()
