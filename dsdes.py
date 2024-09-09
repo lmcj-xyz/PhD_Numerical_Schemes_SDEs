@@ -156,6 +156,7 @@ def solve_fp(drift_a, grid_a, limx=1, nonlinear_f=lambda x: np.sin(x),
 def solve_mv(y0: np.ndarray,
              drift_array: np.ndarray,
              z: np.ndarray,
+             law,
              time_start: float, time_end: float, time_steps: int,
              sample_paths: int,
              grid: np.ndarray,
@@ -165,10 +166,10 @@ def solve_mv(y0: np.ndarray,
     z_coarse = coarse_noise(z, time_steps, sample_paths)
     dt = (time_end - time_start)/(time_steps-1)
     y[0, :] = y0
-    rho = solve_fp(drift_a=drift_array, grid_a=grid, limx=half_support,
-                   nonlinear_f=nl, ts=time_start, te=time_end,
-                   xpoints=xpde, tpoints=tpde)
-    rho_usable = np.array(rho.data)
+    #rho = solve_fp(drift_a=drift_array, grid_a=grid, limx=half_support,
+    #               nonlinear_f=nl, ts=time_start, te=time_end,
+    #               xpoints=xpde, tpoints=tpde)
+    rho_usable = np.array(law.data)
     tsde = np.linspace(time_start, time_end, tpde+1)
     xsde = np.linspace(-half_support, half_support, xpde)
     ti = 0
