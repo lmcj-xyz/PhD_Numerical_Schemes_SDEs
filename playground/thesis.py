@@ -26,17 +26,18 @@ lwhite = (0.96, 0.95, 0.89)
 
 # Scheme parameters
 #theseed = 1392917848  # better rates
-theseed = 1334917848
+theseed = 4392327879
+#theseed = 1334917848 # the one Jan and Elena didn't like
 rng = np.random.default_rng(seed=theseed)
 
 hurst = 0.76
-time_steps = 2**10
+time_steps = 2**11
 dt = 1/time_steps
 
-points = 10**2
+points = 1 * 10**3
 half_support = 10
 
-sample_paths = 10**3
+sample_paths = 1 * 10**4
 y0 = rng.normal(size=sample_paths)
 time_start = 0
 time_end = 1
@@ -44,6 +45,7 @@ time_end = 1
 # Drift
 gaussian1 = rng.standard_normal(points)
 bn1, ibn1, bH1, bB1, x1 = ds.drift(gaussian1, hurst, points, half_support, time_steps)
+bn2, ibn2, bH2, bB2, x2 = ds.drift(gaussian1, hurst, points, half_support, time_steps**2)
 
 # Law
 bm1 = rng.normal(loc=0.0, scale=np.sqrt(dt),
@@ -61,10 +63,11 @@ mvlaw1 = ds.solve_fp(bn1, x1, half_support, nonlinear, time_start, time_end, poi
 mvsoln1 = ds.solve_mv(y0, bn1, bm1, mvlaw1, time_start, time_end, time_steps, sample_paths, x1, half_support, points, time_steps, nonlinear)
 
 
-def plot_drift(drift, bridge, grid):
+def plot_drift(drift1, drift2, bridge, grid):
     fig, ax = plt.subplots()
+    ax.plot(grid, drift2,  linewidth='1', color='gray', label=r'$b^N$')
     ax.plot(grid, bridge,  linewidth='1', color=lgreen, label=r'$B^H_b$')
-    ax.plot(grid, drift,  linewidth='1', color=lred, label=r'$b^N$')
+    ax.plot(grid, drift1,  linewidth='1', color=lred, label=r'$b^N$')
     legend = ax.legend(framealpha=1)
     frame = legend.get_frame()
     frame.set_facecolor(lwhite)
@@ -76,12 +79,17 @@ def plot_drift(drift, bridge, grid):
 def plot_law(soln, law, grid, title):
     fig, ax = plt.subplots()
     ax.hist(soln[0, :], bins=50, density=True, color=lred, label='Empirical density')
-    ax.plot(grid, np.array(law.data)[-1, :], color=lgreen, label='Fokker-Planck solution')
+    ax.plot(grid, np.array(law.data)[-1, :], color=lgreen, label='FP PDE solution')
     ax.set_title(title)
+    legend = ax.legend(framealpha=1)
+    frame = legend.get_frame()
+    frame.set_facecolor(lwhite)
+    frame.set_edgecolor(lwhite)
+    ax.grid(linestyle='--', linewidth='0.5', color='gray')
     plt.show()
 
 
 if __name__ == "__main__":
-    plot_drift(bn1, bB1, x1)
+    plot_drift(bn1, bn2, bB1, x1)
     plot_law(soln1, law1, x1, 'SDE densities')
     plot_law(mvsoln1[0], mvsoln1[1], x1, 'MVSDE densities')

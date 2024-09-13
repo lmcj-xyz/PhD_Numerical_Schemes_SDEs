@@ -40,7 +40,7 @@ time_steps = dict(zip(keys, time_steps_tuple))
 error_keys = ('e1', 'e2', 'e3', 'e4', 'e5')
 
 epsilon = 10e-6
-beta = 3/8
+beta = epsilon
 hurst = 1 - beta
 sample_paths = 10**4
 y0 = rng.normal(size=sample_paths)
