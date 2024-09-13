@@ -1,3 +1,4 @@
+*.ods
 session.vim
 *sync-conflict*
 pypde/tests
