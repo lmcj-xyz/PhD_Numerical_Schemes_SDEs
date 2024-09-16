@@ -41,7 +41,7 @@ time_steps = dict(zip(keys, time_steps_tuple))
 error_keys = ('e1', 'e2', 'e3', 'e4', 'e5')
 
 epsilon = 10e-6
-beta = epsilon
+beta = 1/4
 hurst = 1 - beta
 sample_paths = 10**4
 y0 = rng.normal(size=sample_paths)
@@ -94,7 +94,7 @@ for i in range(loopint):
         time_steps.values()
         ))
     drift_array = dict(zip(keys, drift_tuple))
-    print("Solving PDE...")
+    print("Solving PDE (" + str(i) + ")...")
     tspde = time.time()
     law_tuple = tuple(map(
         lambda d: ds.solve_fp(d, grid_x, half_support, nonl, time_start, time_end, points_x, points_t),
