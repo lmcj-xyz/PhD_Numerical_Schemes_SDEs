@@ -69,7 +69,7 @@ def drift(gaussian: np.ndarray, hurst: float, points: int = 2**12, half_support:
     ig = integral_between_grid_points(hk, grid, half_support)
     ill_drift_array = create_drift_array(fbm_array, ig)
     drift_array = create_drift_array(fbb_array, ig)
-    return drift_array, ill_drift_array, fbm_array, fbb_array, grid
+    return drift_array, ill_drift_array, fbm_array, fbb_array, grid, hk
 
 
 # Coarse noise
