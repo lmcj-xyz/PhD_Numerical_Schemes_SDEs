@@ -60,13 +60,14 @@ krate_title = r'$1/2 - \beta/2$'
 for ax, data, ci in zip([ax1, ax2, ax3, ax4],
                         [linear_data, linear_ddata, mckean_data, mckean_ddata],
                         [linear_ci, linear_cci, mckean_ci, mckean_cci]):
-    parts = ax.violinplot(data, positions=pos, points=20, widths=0.1)
+    parts = ax.violinplot(data, positions=pos, points=20, widths=0.1, showmeans=True)
     for pc in parts['bodies']:
         pc.set_facecolor('lightgray')
         pc.set_alpha(0.8)
     parts['cmaxes'].set_color(lblack)
     parts['cmins'].set_color(lblack)
     parts['cbars'].set_color(lblack)
+    parts['cmeans'].set_color(lblack)
     ax.set_xticks(pos)
     ax.plot(pos, [0.16, 0.1, 0.045, 0.01, 0],
             linestyle='--', marker='.', color=lred,
@@ -87,6 +88,42 @@ fig.suptitle('Rates of convergence', fontsize=14)
 fig.savefig('rates_violins.pdf', format='pdf')
 fig.savefig('rates_violins.png', format='png')
 fig.savefig('rates_violins.eps', format='eps')
+plt.show()
+
+fig, ax = plt.subplots()
+ax.plot(pos, [0.16, 0.1, 0.045, 0.01, 0],
+        linestyle='--', marker='.', color=lred,
+        label=trate_title)
+ax.plot(pos, [1/2 - b/2 for b in pos],
+        linestyle='dotted', marker='.', color=lgreen,
+        label=krate_title)
+ax.grid(linestyle='dashed')
+expect = np.mean(linear_data, axis=1)
+ax.plot(pos, expect, label='Empirical rate', color=lbrightred, linestyle='dashdot', marker='_')
+ax.fill_between(pos, expect + linear_ci, expect - linear_ci, alpha=0.15, label='95% CI', color=lcoral)
+ax.set_title('Linear SDE\nSingle (arbitrary) drift', fontsize=14)
+fig.legend()
+fig.savefig('rates_sde_sd.pdf', format='pdf')
+fig.savefig('rates_sde_sd.png', format='png')
+fig.savefig('rates_sde_sd.eps', format='eps')
+plt.show()
+
+fig, ax = plt.subplots()
+ax.plot(pos, [0.16, 0.1, 0.045, 0.01, 0],
+        linestyle='--', marker='.', color=lred,
+        label=trate_title)
+ax.plot(pos, [1/2 - b/2 for b in pos],
+        linestyle='dotted', marker='.', color=lgreen,
+        label=krate_title)
+ax.grid(linestyle='dashed')
+expect = np.mean(linear_ddata, axis=1)
+ax.plot(pos, expect, label='Empirical rate', color=lbrightred, linestyle='dashdot', marker='_')
+ax.fill_between(pos, expect + linear_cci, expect - linear_cci, alpha=0.15, label='95% CI', color=lcoral)
+ax.set_title('Linear SDE\nDifferent drifts', fontsize=14)
+fig.legend()
+fig.savefig('rates_sde_dd.pdf', format='pdf')
+fig.savefig('rates_sde_dd.png', format='png')
+fig.savefig('rates_sde_dd.eps', format='eps')
 plt.show()
 
 #fig, axs = plt.subplots(ncols=2, nrows=2)
