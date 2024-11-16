@@ -7,6 +7,20 @@ from pde import CartesianGrid, ScalarField, MemoryStorage, \
         PDEBase, ScipySolver, Controller
 
 
+# Weierstrass function
+def weierstrass(a: float = 1/3, b: int =23,
+                terms: int = 50,
+                points: int = 2**12,
+                half_support: float = 10) -> np.ndarray:
+    assert a > 0 and a < 1
+    assert a*b > 1 + 3*np.pi/2
+    grid = np.linspace(start=-half_support, stop=half_support, num=points)
+    w = np.zeros(points)
+    for k in range(terms):
+        w += a**k * np.cos(b**k * np.pi * grid)
+    return grid, w
+
+
 # Fractional Brownian motion (fBm) creation function
 def fbm(gaussian: np.ndarray,
         hurst: float,
