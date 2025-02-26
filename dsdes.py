@@ -11,7 +11,7 @@ from pde import CartesianGrid, ScalarField, MemoryStorage, \
 def weierstrass(a: float = 1/3, b: int =23,
                 terms: int = 50,
                 points: int = 2**12,
-                half_support: float = 10) -> np.ndarray:
+                half_support: float = 10) -> tuple[np.ndarray, np.ndarray]:
     assert a > 0 and a < 1
     assert a*b > 1 + 3*np.pi/2
     grid = np.linspace(start=-half_support, stop=half_support, num=points)
@@ -51,6 +51,11 @@ def heat_kernel_var(time_steps: int, hurst: float) -> float:
     variance = 1/(time_steps**eta)
     return variance
 
+def wheat_kernel_var(time_steps: int, beta: float) -> float:
+    eta = 1/(beta + 1 + 2*(0.5 - beta)**2)
+    variance = 1/(time_steps**eta)
+    return variance
+
 
 def integral_between_grid_points(heat_kernel_var: float,
                                  grid_x: np.ndarray,
@@ -73,8 +78,7 @@ def create_drift_array(rough_func: np.ndarray,
     return -np.convolve(rough_func, integral_on_grid, 'same')
 
 
-def drift(gaussian: np.ndarray, hurst: float, points: int = 2**12, half_support: float = 10,
-          time_steps: int = 2**5):
+def drift(gaussian: np.ndarray, hurst: float, points: int = 2**12, half_support: float = 10, time_steps: int = 2**5):
     grid = np.linspace(-half_support, half_support, points)
     grid0 = np.linspace(0, 2*half_support, points)
     fbm_array = fbm(gaussian, hurst, points, half_support)
@@ -85,6 +89,19 @@ def drift(gaussian: np.ndarray, hurst: float, points: int = 2**12, half_support:
     drift_array = create_drift_array(fbb_array, ig)
     return drift_array, ill_drift_array, fbm_array, fbb_array, grid, hk
 
+def wdrift(a: float = 1/2, b: int = 12, points: int = 2**12, half_support: float = 10, time_steps: int = 2**5):
+    alpha = -math.log(a)/math.log(b)
+    assert alpha > 0 and alpha < 1/2
+    #grid = np.linspace(-half_support, half_support, points)
+    w_grid, w_array = weierstrass(a=a, b=b, terms=30, points=points, half_support=half_support)
+    print("W created")
+    hk = wheat_kernel_var(time_steps, alpha - 1)
+    print("heat kernel")
+    ig = integral_between_grid_points(hk, w_grid, half_support)
+    print("integral")
+    drift_array = create_drift_array(w_array, ig)
+    print("drift")
+    return drift_array, w_array, w_grid, hk
 
 # Coarse noise
 def coarse_noise(z: np.ndarray,
