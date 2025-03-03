@@ -79,35 +79,40 @@ gaussian = rng.standard_normal(points)
 # drifts and generators
 rand_drift1, ibn1, bH1, brownian_bridge1, x1, var1 = ds.drift(gaussian, hurst, points, half_support, time_steps)
 rand_drift2, ibn2, bH2, brownian_bridge2, x2, var2 = ds.drift(gaussian, hurst, points, half_support, time_steps*extra_steps)
-weier_drift1, weier1, x3, var3 = ds.wdrift(alpha=hurst, points=points, half_support=half_support, time_steps=time_steps)
-weier_drift2, weier2, x4, var4 = ds.wdrift(alpha=hurst, points=points, half_support=half_support, time_steps=time_steps*extra_steps)
+#weier_drift1, weier1, x3, var3 = ds.wdrift(alpha=hurst, points=points, half_support=half_support, time_steps=time_steps)
+#weier_drift2, weier2, x4, var4 = ds.wdrift(alpha=hurst, points=points, half_support=half_support, time_steps=time_steps*extra_steps)
 
 # McKean
 ## Law and solution for equivalent of linear SDE?
 #soln1 = ds.solve(y0, bn1, bm1, time_start, time_end, time_steps, sample_paths, x1)
 #law1 = ds.solve_fp(bn1, x1, half_support, lambda x: x**0, time_start, time_end, points, time_steps)
 
-# ## Laws McKean
-# print('Obtaining MV law for random drift')
-# rand_mvlaw1 = ds.solve_fp(rand_drift1, x1, half_support, nonlinear1, time_start, time_end, points, time_steps)
-# print('Obtaining MV law for random drift')
-# rand_mvlaw2 = ds.solve_fp(rand_drift2, x2, half_support, nonlinear1, time_start, time_end, points, time_steps*extra_steps)
+##################
+# Nonlinear function change
+##################
+## Laws McKean
+print('Obtaining MV law for random drift')
+rand_mvlaw1 = ds.solve_fp(rand_drift1, x1, half_support, nonlinear1, time_start, time_end, points, time_steps)
+print('Obtaining MV law for random drift')
+rand_mvlaw2 = ds.solve_fp(rand_drift2, x2, half_support, nonlinear1, time_start, time_end, points, time_steps*extra_steps)
 # print('Obtaining MV law for deterministic drift')
 # weier_mvlaw1 = ds.solve_fp(weier_drift1, x3, half_support, nonlinear1, time_start, time_end, points, time_steps)
 # print('Obtaining MV law for deterministic drift')
 # weier_mvlaw2 = ds.solve_fp(weier_drift2, x4, half_support, nonlinear1, time_start, time_end, points, time_steps*extra_steps)
 #
 # ## Solutions McKean
-# print('Obtaining MV solution random drift')
-# rand_mvsoln1 = ds.solve_mv(y0, rand_drift1, bm, rand_mvlaw1, time_start, time_end, time_steps, sample_paths, x1, half_support, points, time_steps, nonlinear1)
-# print('Obtaining MV solution random drift')
-# rand_mvsoln2 = ds.solve_mv(y0, rand_drift2, bm, rand_mvlaw2, time_start, time_end, time_steps*extra_steps, sample_paths, x2, half_support, points, time_steps, nonlinear1)
+print('Obtaining MV solution random drift')
+rand_mvsoln1 = ds.solve_mv(y0, rand_drift1, bm, rand_mvlaw1, time_start, time_end, time_steps, sample_paths, x1, half_support, points, time_steps, nonlinear1)
+print('Obtaining MV solution random drift')
+rand_mvsoln2 = ds.solve_mv(y0, rand_drift2, bm, rand_mvlaw2, time_start, time_end, time_steps*extra_steps, sample_paths, x2, half_support, points, time_steps, nonlinear1)
 # print('Obtaining MV solution deterministic drift')
 # weier_mvsoln1 = ds.solve_mv(y0, weier_drift2, bm, weier_mvlaw2, time_start, time_end, time_steps, sample_paths, x2, half_support, points, time_steps, nonlinear1)
 # print('Obtaining MV solution deterministic drift')
 # weier_mvsoln2 = ds.solve_mv(y0, weier_drift2, bm, weier_mvlaw2, time_start, time_end, time_steps*extra_steps, sample_paths, x2, half_support, points, time_steps, nonlinear1)
 
-
+##################
+# Plot functions
+##################
 def plot_generators(gen1, gen2, grid):
     fig, ax = plt.subplots()
     ax.plot(grid, gen1,  linewidth='1', color=lgreent)
@@ -247,9 +252,9 @@ def plot_integral():
     #fig.savefig('integral_grid.eps')
 
 if __name__ == "__main__":
-    plot_drift(rand_drift1, rand_drift2, brownian_bridge1, x1)
-    plot_drift(weier_drift1, weier_drift2, weier1, x1)
-    #plot_mckean_drift(bn1, bn2, mvlaw5, mvlaw6, nonlinear3, x1)
+    #plot_drift(rand_drift1, rand_drift2, brownian_bridge1, x1)
+    #plot_drift(weier_drift1, weier_drift2, weier1, x1)
+    plot_mckean_drift(rand_drift1, rand_drift2, rand_mvlaw1, rand_mvlaw2, nonlinear1, x1)
     #plot_law(soln1, law1, x1)
     #plot_mckean_law(mvsoln5, mvsoln6, x1, r'$F(x) = sin(x)$', r'$F(x) = sin(10x)$')
     #plot_wdrift(bn3, w1, x3)

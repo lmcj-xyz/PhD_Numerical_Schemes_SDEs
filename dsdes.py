@@ -12,13 +12,10 @@ def weierstrass(alpha: float, b: int = 7,
                 terms: int = 50,
                 points: int = 2**12,
                 half_support: float = 10) -> tuple[np.ndarray, np.ndarray]:
-    #assert a > 0 and a < 1
-    #assert a*b > 1 + 3*np.pi/2
     grid = np.linspace(start=-half_support, stop=half_support, num=points)
     w = np.zeros(points)
     for k in range(terms):
         w += b**(-k*alpha) * np.cos(b**k * np.pi * grid)
-        #w += a**k * np.cos(b**k * np.pi * grid)
     return grid, w
 
 
@@ -92,27 +89,15 @@ def drift(gaussian: np.ndarray, hurst: float, points: int = 2**12, half_support:
     drift_array = create_drift_array(fbb_array, ig)
     return drift_array, ill_drift_array, fbm_array, fbb_array, grid, hk
 
-#import matplotlib.pyplot as plt
 def wdrift(alpha, b: int = 12, points: int = 2**12, half_support: float = 10, time_steps: int = 2**5):
-    #alpha = -math.log(a)/math.log(b)
     try:
         assert alpha < 1 and alpha > 1/2
     except AssertionError:
         raise(AssertionError('Ensure 1/2 < alpha < 1.'))
-    #print('regularity weier', alpha)
-    #grid = np.linspace(-half_support, half_support, points)
-    w_grid, w_array = weierstrass(alpha=alpha, b=b, terms=30, points=points, half_support=half_support)
-    #print('size weier', np.shape(w_array))
-    #print("W created")
-    #hk = wheat_kernel_var(time_steps, alpha - 1)
+    w_grid, w_array = weierstrass(alpha=alpha, b=b, terms=50, points=points, half_support=half_support)
     hk = heat_kernel_var(time_steps, alpha)
-    #print("heat kernel")
     ig = integral_between_grid_points(hk, w_grid, half_support)
-    #plt.plot(ig)
-    #plt.show()
-    #print("integral")
     drift_array = create_drift_array(w_array, ig)
-    #print("drift")
     return drift_array, w_array, w_grid, hk
 
 # Coarse noise
