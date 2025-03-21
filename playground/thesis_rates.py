@@ -23,10 +23,10 @@ lcream = '#f6eee5'
 lcoral = '#ff4a36'
 lblack = '#212121'
 
-linear_rates = np.genfromtxt('rates_linear.csv', delimiter=',')#, names=True)
-linear_drift = np.genfromtxt('rates_linear_drift.csv', delimiter=',')#, names=True)
-mckean_drift = np.genfromtxt('rates_mckean_drift.csv', delimiter=',')#, names=True)
-mckean_rates = np.genfromtxt('rates_mckean.csv', delimiter=',')#, names=True)
+linear_rates = np.genfromtxt('files_archive/rates_linear.csv', delimiter=',')#, names=True)
+linear_drift = np.genfromtxt('files_archive/rates_linear_drift.csv', delimiter=',')#, names=True)
+mckean_drift = np.genfromtxt('files_archive/rates_mckean_drift.csv', delimiter=',')#, names=True)
+mckean_rates = np.genfromtxt('files_archive/rates_mckean.csv', delimiter=',')#, names=True)
 
 epsilon = 10e-6
 pos = [epsilon, 1/8, 1/4, 3/8, 1/2 - epsilon]
@@ -40,6 +40,7 @@ mckean_ci = 1.96 * np.std(mckean_data, axis=1) / np.sqrt(np.shape(linear_data)[1
 mckean_ddata = [mckean_drift[:, i] for i in range(5)]
 mckean_cci = 1.96 * np.std(mckean_ddata, axis=1) / np.sqrt(np.shape(linear_data)[1])
 
+# Violin plot
 fig = plt.figure()
 ax1 = plt.subplot(221)
 ax1.set_title('Linear SDE')
@@ -85,11 +86,12 @@ fig.legend(handles, labels)
 fig.supxlabel(r'$\beta$')
 fig.supylabel('Rate of convergence')
 fig.suptitle('Rates of convergence', fontsize=14)
-fig.savefig('rates_violins.pdf', format='pdf')
-fig.savefig('rates_violins.png', format='png')
-fig.savefig('rates_violins.eps', format='eps')
+#fig.savefig('rates_violins.pdf', format='pdf')
+#fig.savefig('rates_violins.png', format='png')
+#fig.savefig('rates_violins.eps', format='eps')
 plt.show()
 
+# Linear rate
 fig, ax = plt.subplots()
 ax.plot(pos, [0.16, 0.1, 0.045, 0.01, 0],
         linestyle='--', marker='.', color=lred,
@@ -106,11 +108,34 @@ ax.set_xticks(pos)
 ax.fill_between(pos, expect + linear_ci, expect - linear_ci, alpha=0.15, label='95% CI', color=lcoral)
 ax.set_title('Linear SDE\nSingle (arbitrary) drift', fontsize=14)
 fig.legend()
-fig.savefig('rates_sde_sd.pdf', format='pdf')
-fig.savefig('rates_sde_sd.png', format='png')
-fig.savefig('rates_sde_sd.eps', format='eps')
+#fig.savefig('rates_sde_sd.pdf', format='pdf')
+#fig.savefig('rates_sde_sd.png', format='png')
+#fig.savefig('rates_sde_sd.eps', format='eps')
 plt.show()
 
+# Mckean rate
+fig, ax = plt.subplots()
+ax.plot(pos, [0.16, 0.1, 0.045, 0.01, 0],
+        linestyle='--', marker='.', color=lred,
+        label=trate_title)
+#ax.plot(pos, [1/2 - b/2 for b in pos],
+#        linestyle='dotted', marker='.', color=lgreen,
+#        label=krate_title)
+ax.grid(linestyle='dashed')
+expect = np.mean(mckean_data, axis=1)
+ax.plot(pos, expect, label='Empirical rate', color=lbrightred, linestyle='dashdot', marker='_')
+ax.set_xlabel(r'$\beta$')
+ax.set_ylabel('Rate of convergence')
+ax.set_xticks(pos)
+ax.fill_between(pos, expect + linear_ci, expect - linear_ci, alpha=0.15, label='95% CI', color=lcoral)
+ax.set_title('McKean SDE\nSingle (arbitrary) drift', fontsize=14)
+fig.legend()
+fig.savefig('rates_mckean_sd.pdf', format='pdf')
+fig.savefig('rates_mckean_sd.png', format='png')
+fig.savefig('rates_mckean_sd.eps', format='eps')
+plt.show()
+
+# Linear rate multiple drifts
 fig, ax = plt.subplots()
 ax.plot(pos, [0.16, 0.1, 0.045, 0.01, 0],
         linestyle='--', marker='.', color=lred,
@@ -127,9 +152,31 @@ ax.set_xticks(pos)
 ax.fill_between(pos, expect + linear_cci, expect - linear_cci, alpha=0.15, label='95% CI', color=lcoral)
 ax.set_title('Linear SDE\nDifferent drifts', fontsize=14)
 fig.legend()
-fig.savefig('rates_sde_dd.pdf', format='pdf')
-fig.savefig('rates_sde_dd.png', format='png')
-fig.savefig('rates_sde_dd.eps', format='eps')
+#fig.savefig('rates_sde_dd.pdf', format='pdf')
+#fig.savefig('rates_sde_dd.png', format='png')
+#fig.savefig('rates_sde_dd.eps', format='eps')
+plt.show()
+
+# Mckean rate different drifts
+fig, ax = plt.subplots()
+ax.plot(pos, [0.16, 0.1, 0.045, 0.01, 0],
+        linestyle='--', marker='.', color=lred,
+        label=trate_title)
+#ax.plot(pos, [1/2 - b/2 for b in pos],
+#        linestyle='dotted', marker='.', color=lgreen,
+#        label=krate_title)
+ax.grid(linestyle='dashed')
+expect = np.mean(mckean_ddata, axis=1)
+ax.plot(pos, expect, label='Empirical rate', color=lbrightred, linestyle='dashdot', marker='_')
+ax.set_xlabel(r'$\beta$')
+ax.set_ylabel('Rate of convergence')
+ax.set_xticks(pos)
+ax.fill_between(pos, expect + linear_cci, expect - linear_cci, alpha=0.15, label='95% CI', color=lcoral)
+ax.set_title('McKean SDE\nDifferent drifts', fontsize=14)
+fig.legend()
+fig.savefig('rates_mckean_dd.pdf', format='pdf')
+fig.savefig('rates_mckean_dd.png', format='png')
+fig.savefig('rates_mckean_dd.eps', format='eps')
 plt.show()
 
 #fig, axs = plt.subplots(ncols=2, nrows=2)

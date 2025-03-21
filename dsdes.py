@@ -11,11 +11,16 @@ from pde import CartesianGrid, ScalarField, MemoryStorage, \
 def weierstrass(alpha: float, b: int = 7,
                 terms: int = 50,
                 points: int = 2**12,
-                half_support: float = 10) -> tuple[np.ndarray, np.ndarray]:
+                half_support: float = 10,
+                rescale: float = 1) -> tuple[np.ndarray, np.ndarray]:
+    try:
+        assert b % 2 == 1 and b >= 7
+    except AssertionError:
+        raise(AssertionError('Ensure b >= 7 and is odd.'))
     grid = np.linspace(start=-half_support, stop=half_support, num=points)
     w = np.zeros(points)
     for k in range(terms):
-        w += b**(-k*alpha) * np.cos(b**k * np.pi * grid)
+        w += b**(-k*alpha) * np.cos(b**k * np.pi * grid/rescale)
     return grid, w
 
 
@@ -89,7 +94,7 @@ def drift(gaussian: np.ndarray, hurst: float, points: int = 2**12, half_support:
     drift_array = create_drift_array(fbb_array, ig)
     return drift_array, ill_drift_array, fbm_array, fbb_array, grid, hk
 
-def wdrift(alpha, b: int = 12, points: int = 2**12, half_support: float = 10, time_steps: int = 2**5):
+def wdrift(alpha, b: int = 13, points: int = 2**12, half_support: float = 10, time_steps: int = 2**5):
     try:
         assert alpha < 1 and alpha > 1/2
     except AssertionError:
@@ -106,6 +111,10 @@ def coarse_noise(z: np.ndarray,
                  sample_paths: int) -> np.ndarray:
     z_coarse = np.zeros(shape=(time_steps, sample_paths))
     q = int(np.shape(z)[0] / time_steps)
+    try:
+        assert q >= 1
+    except AssertionError:
+        raise(AssertionError('Ensure old time_steps <= original time_steps, you cannot lower the resolution if you have more time steps'))
     if q == 1:
         z_coarse = z
     else:
@@ -189,7 +198,7 @@ def solve_mv(y0: np.ndarray,
              sample_paths: int,
              grid: np.ndarray,
              half_support,
-             xpde, tpde, nl) -> np.ndarray:
+             xpde, tpde, nl) -> tuple[np.ndarray, np.ndarray]:
     y = np.zeros(shape=(1, sample_paths))
     z_coarse = coarse_noise(z, time_steps, sample_paths)
     dt = (time_end - time_start)/(time_steps-1)

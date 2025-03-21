@@ -2,6 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib import rcParams
 from math import floor, log, pi, exp
+import pickle
 
 import os
 import sys
@@ -40,10 +41,10 @@ rng = np.random.default_rng(seed=theseed)
 # Parameters to control
 hurst = 0.6
 time_steps = 2**11
-extra_steps = 2**4
+extra_steps = 2**6 # this cannot be used as I intended initially, it is being used differently
 dt = 1/time_steps
 
-points = 10**4
+points = 4 * 10**3
 half_support = 10
 
 sample_paths = 1 * 10**4
@@ -65,55 +66,177 @@ def nonlinear4(x):
     return np.cos(10*x)
 
 def nonlinear5(x):
-    return 1/(1 + np.exp(-100*x))
+    return 1/(1 + np.exp(-100*(x - 0.2)))
 
 def nonlinear6(x):
-    return 1/(1 + np.exp(100*x))
+    return 1/(1 + np.exp(100*(x - 0.2)))
 
 ## Brownian motion driver
-bm = rng.normal(loc=0.0, scale=np.sqrt(dt), size=(time_steps, sample_paths))
+#bm = rng.normal(loc=0.0, scale=np.sqrt(dt), size=(time_steps, sample_paths))
+bm = rng.normal(loc=0.0, scale=np.sqrt(dt), size=(time_steps*extra_steps, sample_paths))
 
 ## Gaussian for fBm and random drift
 gaussian = rng.standard_normal(points)
+with open('bm.pickle', 'wb') as f:
+    pickle.dump(bm, f)
+with open('gaussian.pickle', 'wb') as f:
+    pickle.dump(gaussian, f)
 
+print('Creating drifts')
 # drifts and generators
+## I require two different time steps so I can compare the variances
 rand_drift1, ibn1, bH1, brownian_bridge1, x1, var1 = ds.drift(gaussian, hurst, points, half_support, time_steps)
 rand_drift2, ibn2, bH2, brownian_bridge2, x2, var2 = ds.drift(gaussian, hurst, points, half_support, time_steps*extra_steps)
 #weier_drift1, weier1, x3, var3 = ds.wdrift(alpha=hurst, points=points, half_support=half_support, time_steps=time_steps)
 #weier_drift2, weier2, x4, var4 = ds.wdrift(alpha=hurst, points=points, half_support=half_support, time_steps=time_steps*extra_steps)
+with open('rand_drift1.pickle', 'wb') as f:
+    pickle.dump(rand_drift1, f)
+with open('rand_drift2.pickle', 'wb') as f:
+    pickle.dump(rand_drift2, f)
 
-# McKean
-## Law and solution for equivalent of linear SDE?
-#soln1 = ds.solve(y0, bn1, bm1, time_start, time_end, time_steps, sample_paths, x1)
-#law1 = ds.solve_fp(bn1, x1, half_support, lambda x: x**0, time_start, time_end, points, time_steps)
 
 ##################
 # Nonlinear function change
 ##################
 ## Laws McKean
-print('Obtaining MV law for random drift')
-rand_mvlaw1 = ds.solve_fp(rand_drift1, x1, half_support, nonlinear1, time_start, time_end, points, time_steps)
-print('Obtaining MV law for random drift')
-rand_mvlaw2 = ds.solve_fp(rand_drift2, x2, half_support, nonlinear1, time_start, time_end, points, time_steps*extra_steps)
-# print('Obtaining MV law for deterministic drift')
-# weier_mvlaw1 = ds.solve_fp(weier_drift1, x3, half_support, nonlinear1, time_start, time_end, points, time_steps)
-# print('Obtaining MV law for deterministic drift')
-# weier_mvlaw2 = ds.solve_fp(weier_drift2, x4, half_support, nonlinear1, time_start, time_end, points, time_steps*extra_steps)
-#
-# ## Solutions McKean
-print('Obtaining MV solution random drift')
-rand_mvsoln1 = ds.solve_mv(y0, rand_drift1, bm, rand_mvlaw1, time_start, time_end, time_steps, sample_paths, x1, half_support, points, time_steps, nonlinear1)
-print('Obtaining MV solution random drift')
-rand_mvsoln2 = ds.solve_mv(y0, rand_drift2, bm, rand_mvlaw2, time_start, time_end, time_steps*extra_steps, sample_paths, x2, half_support, points, time_steps, nonlinear1)
-# print('Obtaining MV solution deterministic drift')
-# weier_mvsoln1 = ds.solve_mv(y0, weier_drift2, bm, weier_mvlaw2, time_start, time_end, time_steps, sample_paths, x2, half_support, points, time_steps, nonlinear1)
-# print('Obtaining MV solution deterministic drift')
-# weier_mvsoln2 = ds.solve_mv(y0, weier_drift2, bm, weier_mvlaw2, time_start, time_end, time_steps*extra_steps, sample_paths, x2, half_support, points, time_steps, nonlinear1)
+print('Laws with sin(x)')
+rand_mvlaw1_1 = ds.solve_fp(drift_a=rand_drift1, grid_a=x1, limx=half_support, nonlinear_f=nonlinear1, ts=time_start, te=time_end, xpoints=points, tpoints=time_steps)
+print('Solutions with sin(x)')
+rand_mvsoln1_1 = ds.solve_mv(y0=y0, drift_array=rand_drift1, z=bm, law=rand_mvlaw1_1, time_start=time_start, time_end=time_end, time_steps=time_steps, sample_paths=sample_paths, grid=x1, half_support=half_support, xpde=points, tpde=time_steps, nl=nonlinear1)
+with open('rand_mvlaw1_1.pickle', 'wb') as f:
+    pickle.dump(rand_mvlaw1_1, f)
+del rand_mvlaw1_1
+with open('rand_mvsoln1_1.pickle', 'wb') as f:
+    pickle.dump(rand_mvsoln1_1, f)
+del rand_mvsoln1_1
+print('Laws with sin(x)')
+rand_mvlaw1_2 = ds.solve_fp(drift_a=rand_drift2, grid_a=x2, limx=half_support, nonlinear_f=nonlinear1, ts=time_start, te=time_end, xpoints=points, tpoints=time_steps*extra_steps)
+print('Solutions with sin(x)')
+rand_mvsoln1_2 = ds.solve_mv(y0=y0, drift_array=rand_drift2, z=bm, law=rand_mvlaw1_2, time_start=time_start, time_end=time_end, time_steps=time_steps, sample_paths=sample_paths, grid=x2, half_support=half_support, xpde=points, tpde=time_steps*extra_steps, nl=nonlinear1)
+with open('rand_mvlaw1_2.pickle', 'wb') as f:
+    pickle.dump(rand_mvlaw1_2, f)
+del rand_mvlaw1_2
+with open('rand_mvsoln1_2.pickle', 'wb') as f:
+    pickle.dump(rand_mvsoln1_2, f)
+del rand_mvsoln1_2
+
+print('Laws with cos(x)')
+rand_mvlaw2_1 = ds.solve_fp(drift_a=rand_drift1, grid_a=x1, limx=half_support, nonlinear_f=nonlinear2, ts=time_start, te=time_end, xpoints=points, tpoints=time_steps)
+print('Solutions with cos(x)')
+rand_mvsoln2_1 = ds.solve_mv(y0=y0, drift_array=rand_drift1, z=bm, law=rand_mvlaw2_1, time_start=time_start, time_end=time_end, time_steps=time_steps, sample_paths=sample_paths, grid=x1, half_support=half_support, xpde=points, tpde=time_steps, nl=nonlinear2)
+with open('rand_mvlaw2_1.pickle', 'wb') as f:
+    pickle.dump(rand_mvlaw2_1, f)
+del rand_mvlaw2_1
+with open('rand_mvsoln2_1.pickle', 'wb') as f:
+    pickle.dump(rand_mvsoln2_1, f)
+del rand_mvsoln2_1
+rand_mvlaw2_2 = ds.solve_fp(drift_a=rand_drift2, grid_a=x2, limx=half_support, nonlinear_f=nonlinear2, ts=time_start, te=time_end, xpoints=points, tpoints=time_steps*extra_steps)
+print('Solutions with cos(x)')
+rand_mvsoln2_2 = ds.solve_mv(y0=y0, drift_array=rand_drift2, z=bm, law=rand_mvlaw2_2, time_start=time_start, time_end=time_end, time_steps=time_steps, sample_paths=sample_paths, grid=x2, half_support=half_support, xpde=points, tpde=time_steps*extra_steps, nl=nonlinear2)
+with open('rand_mvlaw2_2.pickle', 'wb') as f:
+    pickle.dump(rand_mvlaw2_2, f)
+del rand_mvlaw2_2
+with open('rand_mvsoln2_2.pickle', 'wb') as f:
+    pickle.dump(rand_mvsoln2_2, f)
+del rand_mvsoln2_2
+
+print('Laws with sin(10x)')
+rand_mvlaw3_1 = ds.solve_fp(drift_a=rand_drift1, grid_a=x1, limx=half_support, nonlinear_f=nonlinear3, ts=time_start, te=time_end, xpoints=points, tpoints=time_steps)
+print('Solutions with sin(10x)')
+rand_mvsoln3_1 = ds.solve_mv(y0=y0, drift_array=rand_drift1, z=bm, law=rand_mvlaw3_1, time_start=time_start, time_end=time_end, time_steps=time_steps, sample_paths=sample_paths, grid=x1, half_support=half_support, xpde=points, tpde=time_steps, nl=nonlinear3)
+with open('rand_mvlaw3_1.pickle', 'wb') as f:
+    pickle.dump(rand_mvlaw3_1, f)
+del rand_mvlaw3_1
+with open('rand_mvsoln3_1.pickle', 'wb') as f:
+    pickle.dump(rand_mvsoln3_1, f)
+del rand_mvsoln3_1
+rand_mvlaw3_2 = ds.solve_fp(drift_a=rand_drift2, grid_a=x2, limx=half_support, nonlinear_f=nonlinear3, ts=time_start, te=time_end, xpoints=points, tpoints=time_steps*extra_steps)
+print('Solutions with sin(10x)')
+rand_mvsoln3_2 = ds.solve_mv(y0=y0, drift_array=rand_drift2, z=bm, law=rand_mvlaw3_2, time_start=time_start, time_end=time_end, time_steps=time_steps, sample_paths=sample_paths, grid=x2, half_support=half_support, xpde=points, tpde=time_steps*extra_steps, nl=nonlinear3)
+with open('rand_mvlaw3_2.pickle', 'wb') as f:
+    pickle.dump(rand_mvlaw3_2, f)
+del rand_mvlaw3_2
+with open('rand_mvsoln3_2.pickle', 'wb') as f:
+    pickle.dump(rand_mvsoln3_2, f)
+del rand_mvsoln3_2
+
+print('Laws with cos(10x)')
+rand_mvlaw4_1 = ds.solve_fp(drift_a=rand_drift1, grid_a=x1, limx=half_support, nonlinear_f=nonlinear4, ts=time_start, te=time_end, xpoints=points, tpoints=time_steps)
+print('Solutions with cos(10x)')
+rand_mvsoln4_1 = ds.solve_mv(y0=y0, drift_array=rand_drift1, z=bm, law=rand_mvlaw4_1, time_start=time_start, time_end=time_end, time_steps=time_steps, sample_paths=sample_paths, grid=x1, half_support=half_support, xpde=points, tpde=time_steps, nl=nonlinear4)
+with open('rand_mvlaw4_1.pickle', 'wb') as f:
+    pickle.dump(rand_mvlaw4_1, f)
+del rand_mvlaw4_1
+with open('rand_mvsoln4_1.pickle', 'wb') as f:
+    pickle.dump(rand_mvsoln4_1, f)
+del rand_mvsoln4_1
+rand_mvlaw4_2 = ds.solve_fp(drift_a=rand_drift2, grid_a=x2, limx=half_support, nonlinear_f=nonlinear4, ts=time_start, te=time_end, xpoints=points, tpoints=time_steps*extra_steps)
+print('Solutions with cos(10x)')
+rand_mvsoln4_2 = ds.solve_mv(y0=y0, drift_array=rand_drift2, z=bm, law=rand_mvlaw4_2, time_start=time_start, time_end=time_end, time_steps=time_steps, sample_paths=sample_paths, grid=x2, half_support=half_support, xpde=points, tpde=time_steps*extra_steps, nl=nonlinear4)
+with open('rand_mvlaw4_2.pickle', 'wb') as f:
+    pickle.dump(rand_mvlaw4_2, f)
+del rand_mvlaw4_2
+with open('rand_mvsoln4_2.pickle', 'wb') as f:
+    pickle.dump(rand_mvsoln4_2, f)
+del rand_mvsoln4_2
+
+print('Laws with -sigmoid(x)')
+rand_mvlaw5_1 = ds.solve_fp(drift_a=rand_drift1, grid_a=x1, limx=half_support, nonlinear_f=nonlinear5, ts=time_start, te=time_end, xpoints=points, tpoints=time_steps)
+print('Solutions with -sigmoid(x)')
+rand_mvsoln5_1 = ds.solve_mv(y0=y0, drift_array=rand_drift1, z=bm, law=rand_mvlaw5_1, time_start=time_start, time_end=time_end, time_steps=time_steps, sample_paths=sample_paths, grid=x1, half_support=half_support, xpde=points, tpde=time_steps, nl=nonlinear5)
+with open('rand_mvlaw5_1.pickle', 'wb') as f:
+    pickle.dump(rand_mvlaw5_1, f)
+del rand_mvlaw5_1
+with open('rand_mvsoln5_1.pickle', 'wb') as f:
+    pickle.dump(rand_mvsoln5_1, f)
+del rand_mvsoln5_1
+rand_mvlaw5_2 = ds.solve_fp(drift_a=rand_drift2, grid_a=x2, limx=half_support, nonlinear_f=nonlinear5, ts=time_start, te=time_end, xpoints=points, tpoints=time_steps*extra_steps)
+print('Solutions with -sigmoid(x)')
+rand_mvsoln5_2 = ds.solve_mv(y0=y0, drift_array=rand_drift2, z=bm, law=rand_mvlaw5_2, time_start=time_start, time_end=time_end, time_steps=time_steps, sample_paths=sample_paths, grid=x2, half_support=half_support, xpde=points, tpde=time_steps*extra_steps, nl=nonlinear5)
+with open('rand_mvlaw5_2.pickle', 'wb') as f:
+    pickle.dump(rand_mvlaw5_2, f)
+del rand_mvlaw5_2
+with open('rand_mvsoln5_2.pickle', 'wb') as f:
+    pickle.dump(rand_mvsoln5_2, f)
+del rand_mvsoln5_2
+
+print('Laws with sigmoid(x)')
+rand_mvlaw6_1 = ds.solve_fp(drift_a=rand_drift1, grid_a=x1, limx=half_support, nonlinear_f=nonlinear6, ts=time_start, te=time_end, xpoints=points, tpoints=time_steps)
+print('Solutions with sigmoid(x)')
+rand_mvsoln6_1 = ds.solve_mv(y0=y0, drift_array=rand_drift1, z=bm, law=rand_mvlaw6_1, time_start=time_start, time_end=time_end, time_steps=time_steps, sample_paths=sample_paths, grid=x1, half_support=half_support, xpde=points, tpde=time_steps, nl=nonlinear6)
+with open('rand_mvlaw6_1.pickle', 'wb') as f:
+    pickle.dump(rand_mvlaw6_1, f)
+del rand_mvlaw6_1
+with open('rand_mvsoln6_1.pickle', 'wb') as f:
+    pickle.dump(rand_mvsoln6_1, f)
+del rand_mvsoln6_1
+rand_mvlaw6_2 = ds.solve_fp(drift_a=rand_drift2, grid_a=x2, limx=half_support, nonlinear_f=nonlinear6, ts=time_start, te=time_end, xpoints=points, tpoints=time_steps*extra_steps)
+print('Solutions with sigmoid(x)')
+rand_mvsoln6_2 = ds.solve_mv(y0=y0, drift_array=rand_drift2, z=bm, law=rand_mvlaw6_2, time_start=time_start, time_end=time_end, time_steps=time_steps, sample_paths=sample_paths, grid=x2, half_support=half_support, xpde=points, tpde=time_steps*extra_steps, nl=nonlinear6)
+with open('rand_mvlaw6_2.pickle', 'wb') as f:
+    pickle.dump(rand_mvlaw6_2, f)
+del rand_mvlaw6_2
+with open('rand_mvsoln6_2.pickle', 'wb') as f:
+    pickle.dump(rand_mvsoln6_2, f)
+del rand_mvsoln6_2
+
+###############
+# This is not possible because of the resolution change, do not multiply time_steps*extra steps
+# Rather create first the big one and then divide
+###############
+# rand_mvsoln2 = ds.solve_mv(y0=y0, drift_array=rand_drift2, z=bm, law=rand_mvlaw2,
+#                            time_start=time_start, time_end=time_end, time_steps=time_steps*extra_steps,
+#                            sample_paths=sample_paths, grid=x2, half_support=half_support,
+#                            xpde=points, tpde=time_steps, nl=nonlinear1)
+# But we can use a different nonlinear function
 
 ##################
 # Plot functions
 ##################
-def plot_generators(gen1, gen2, grid):
+def plot_generators(gen1, gen2, grid, save=False):
+    """
+    Plots the generators of the drift, either Weierstrass or fBm
+    """
     fig, ax = plt.subplots()
     ax.plot(grid, gen1,  linewidth='1', color=lgreent)
     ax.plot(grid, gen2,  linewidth='1', color=lred)
@@ -122,12 +245,20 @@ def plot_generators(gen1, gen2, grid):
     frame.set_facecolor(lcream)
     frame.set_edgecolor(lcream)
     ax.grid(linestyle='--', linewidth='0.5', color='gray')
-    #fig.savefig('sde_drift.png')
-    #fig.savefig('sde_drift.pdf')
-    #fig.savefig('sde_drift.eps')
+    if save:
+        fig.savefig(f'sde_gen_{save}.png')
+        fig.savefig(f'sde_gen_{save}.pdf')
+        fig.savefig(f'sde_gen_{save}.eps')
     plt.show()
 
-def plot_drift(drift1, drift2, bridge, grid):
+def plot_drift(drift1, drift2, bridge, grid, save=False, name=''):
+    """
+    Plot drifts (drift1 and drift2) generated with different variances
+    and compares them with their generator (bridge)
+
+    Optionally saves the figure if save=True
+    and appends an identifier to the file name using 'name'
+    """
     fig, ax = plt.subplots()
     ax.plot(grid, drift2,  linewidth='1', color=lgreent, label=r'$b^N$ for $N=$' + str(floor(1/var2)))
     ax.plot(grid, drift1,  linewidth='1', color=lred, label=r'$b^N$ for $N=$' + str(floor(1/var1)))
@@ -137,13 +268,28 @@ def plot_drift(drift1, drift2, bridge, grid):
     frame.set_facecolor(lcream)
     frame.set_edgecolor(lcream)
     ax.grid(linestyle='--', linewidth='0.5', color='gray')
-    #fig.savefig('sde_drift.png')
-    #fig.savefig('sde_drift.pdf')
-    #fig.savefig('sde_drift.eps')
+    if save:
+        fig.savefig(f'sde_drift_{name}.png')
+        fig.savefig(f'sde_drift_{name}.pdf')
+        fig.savefig(f'sde_drift_{name}.eps')
     plt.show()
 
 
-def plot_mckean_drift(drift1, drift2, law1, law2, nl, grid):
+def plot_mckean_drift(drift1, drift2, law1, law2, nl, grid, save=False, name=''):
+    """
+    Plots the three row figure for the McKean drift
+
+    Plots:
+    - the drifts drift1 and drift2
+    - its laws law1 and law2
+    - and finally the product
+
+    The nonlinear function nl is applied to the given laws to plot
+    both in the second and third row
+
+    Optionally saves the figure if save=True
+    and appends an identifier to the file name using 'name'
+    """
     fig, axs = plt.subplots(3, 1)
     axs[0].set_title(r'Function $b^N$')
     axs[0].plot(grid, drift2,  linewidth='1', label=r'$b^N$ for $N=$' + str(floor(1/var2)), color=lcoral, alpha=0.7)
@@ -161,13 +307,21 @@ def plot_mckean_drift(drift1, drift2, law1, law2, nl, grid):
         frame.set_edgecolor(lcream)
         ax.grid(linestyle='--', linewidth='0.5', color='gray')
     fig.suptitle(r'Action of $F(v^N)$ on $b^N$', fontsize=14)
-    #fig.savefig('mckean_drift.png')
-    #fig.savefig('mckean_drift.pdf')
-    #fig.savefig('mckean_drift.eps')
+    if save:
+        fig.savefig(f'mckean_drift_{name}.png')
+        fig.savefig(f'mckean_drift_{name}.pdf')
+        fig.savefig(f'mckean_drift_{name}.eps')
     plt.show()
 
 
-def plot_law(soln, law, grid):
+def plot_law(soln, law, grid, save=False, name=''):
+    """
+    Plots the empirical density of the SDE at terminal time and compares it
+    with the obtained by solving the Fokker-Planck PDE
+
+    Optionally saves the figure if save=True
+    and appends an identifier to the file name using 'name'
+    """
     fig, ax = plt.subplots()
     ax.hist(soln[0, :], bins=100, density=True, color=lred, alpha=0.85, label='Empirical density')
     ax.plot(grid, np.array(law.data)[-1, :], color=lgreen, label='FP PDE solution')
@@ -177,13 +331,24 @@ def plot_law(soln, law, grid):
     frame.set_facecolor(lcream)
     frame.set_edgecolor(lcream)
     ax.grid(linestyle='--', linewidth='0.5', color='gray')
-    #fig.savefig('sde_law.png')
-    #fig.savefig('sde_law.pdf')
-    #fig.savefig('sde_law.eps')
+    if save:
+        fig.savefig(f'sde_law_{name}.png')
+        fig.savefig(f'sde_law_{name}.pdf')
+        fig.savefig(f'sde_law_{name}.eps')
     plt.show()
 
 
-def plot_mckean_law(soln1, soln2, grid, t1, t2):
+def plot_mckean_law(soln1, soln2, grid, t1, t2, save=False, name=''):
+    """
+    Plots the empirical density of the McKean SDE at terminal time and compares it
+    with the obtained by solving the Fokker-Planck PDE
+
+    ¡¡¡¡¡¡¡¡¡This is needed because the solution of a McKean SDE and the solver of a linear
+    SDE have different return values!!!!!!!!!!!!!!!
+
+    Optionally saves the figure if save=True
+    and appends an identifier to the file name using 'name'
+    """
     fig, axs = plt.subplots(2, 1)
     axs[0].set_title(t1)
     axs[0].hist(soln1[0][0, :], bins=100, density=True, color=lred, alpha=0.85, label='Empirical density')
@@ -198,13 +363,14 @@ def plot_mckean_law(soln1, soln2, grid, t1, t2):
         frame.set_facecolor(lcream)
         frame.set_edgecolor(lcream)
         ax.grid(linestyle='--', linewidth='0.5', color='gray')
-    #fig.savefig('mckean_law.png')
-    #fig.savefig('mckean_law.pdf')
-    #fig.savefig('mckean_law.eps')
+    if save:
+        fig.savefig(f'mckean_law_{name}.png')
+        fig.savefig(f'mckean_law_{name}.pdf')
+        fig.savefig(f'mckean_law_{name}.eps')
     plt.show()
 
 
-def plot_wdrift(drift, weier, grid):
+def plot_wdrift(drift, weier, grid, save=False, name=''):
     fig, ax = plt.subplots()
     ax.plot(grid, drift,  linewidth='1', color=lred, label=r'$b^N$ for $N=$' + str(floor(1/var3)))
     ax.plot(grid, weier,  linewidth='1', color=lgreen, label=r'$W_\alpha$')
@@ -218,7 +384,14 @@ def plot_wdrift(drift, weier, grid):
     #fig.savefig('sde_drift.eps')
     plt.show()
 
-def plot_integral():
+def plot_integral(save=False, name=''):
+    """
+    Plots the heat kernel generated integrals that are used in the convolution
+    to create the drift
+
+    Optionally saves the figure if save=True
+    and appends an identifier to the file name using 'name'
+    """
     hs = 5
     grid = np.linspace(-hs, hs, 10000)
     
@@ -247,16 +420,19 @@ def plot_integral():
     axs[1].set_xticks(ticks1)
     axs[1].grid()
     plt.show()
-    #fig.savefig('integral_grid.png')
-    #fig.savefig('integral_grid.pdf')
-    #fig.savefig('integral_grid.eps')
+    if save:
+        fig.savefig('integral_grid.png')
+        fig.savefig('integral_grid.pdf')
+        fig.savefig('integral_grid.eps')
 
 if __name__ == "__main__":
-    #plot_drift(rand_drift1, rand_drift2, brownian_bridge1, x1)
-    #plot_drift(weier_drift1, weier_drift2, weier1, x1)
+    plot_drift(rand_drift1, rand_drift2, brownian_bridge1, x1)
     plot_mckean_drift(rand_drift1, rand_drift2, rand_mvlaw1, rand_mvlaw2, nonlinear1, x1)
-    #plot_law(soln1, law1, x1)
-    #plot_mckean_law(mvsoln5, mvsoln6, x1, r'$F(x) = sin(x)$', r'$F(x) = sin(10x)$')
+    plot_law(rand_mvsoln1[0], rand_mvlaw1, x1)
+    plot_law(rand_mvsoln2[0], rand_mvlaw2, x2)
+    plot_law(rand_mvsoln3[0], rand_mvlaw3, x2)
+    plot_mckean_law(rand_mvsoln1, rand_mvsoln2, x1, r'$F(x) = sin(x)$', r'$F(x) = sin(10x)$')
     #plot_wdrift(bn3, w1, x3)
     #plot_generators(bB1, w1, x3)
     #plot_integral()
+    #pass

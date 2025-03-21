@@ -9,6 +9,7 @@ old_ss/
 session.vim
 *sync-conflict*
 pypde/tests
+*.pickle
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

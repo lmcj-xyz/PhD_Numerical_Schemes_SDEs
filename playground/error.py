@@ -35,12 +35,13 @@ rng = np.random.default_rng(seed=theseed)
 keys = ('real', 'approx1', 'approx2', 'approx3', 'approx4', 'approx5')
 
 time_steps_tuple = (2**13, 2**6, 2**7, 2**8, 2**9, 2**10)
+#time_steps_tuple = (2**21, 2**6, 2**7, 2**8, 2**9, 2**19)
 time_steps = dict(zip(keys, time_steps_tuple))
 
 error_keys = ('e1', 'e2', 'e3', 'e4', 'e5')
 
 epsilon = 10e-6
-beta = 1/4
+beta = 1/2 - epsilon
 hurst = 1 - beta
 sample_paths = 10**4
 y0 = rng.normal(size=sample_paths)
@@ -48,6 +49,7 @@ time_start = 0
 time_end = 1
 # Parameters to create fBm
 points_x = 2**10  # According to the lower bound in the paper
+#points_x = 10**4  # According to the lower bound in the paper
 half_support = 10
 
 eta = 1/((hurst-1/2)**2 + 2 - hurst)
@@ -66,11 +68,15 @@ gaussian_fbm = rng.standard_normal(size=points_x)
 
 drift_tuple = tuple(map(
     lambda t: ds.drift(gaussian_fbm, hurst, points_x, half_support, t)[0],
+    #lambda t: ds.wdrift(alpha=hurst, b=12, points=points_x, half_support=half_support, time_steps=t)[0],
     time_steps.values()
     ))
 drift_array = dict(zip(keys, drift_tuple))
-# plt.plot(drift_array['real'])
-# plt.show()
+plt.plot(drift_array['real'], label=f'{beta}')
+plt.plot(drift_array['approx5'], label=f'{beta}')
+#plt.ylim([-5, 5])
+plt.legend()
+plt.show()
 
 dt_tuple = tuple(
         map(lambda t: (time_end - time_start)/(t - 1), time_steps.values())
@@ -89,9 +95,7 @@ for i in range(loopint):
                        size=(time_steps['real'], sample_paths))
 
     solution_tuple = tuple(map(
-        lambda d, t: ds.solve(
-            y0, d, noise, time_start, time_end, t, sample_paths, grid_x
-            ),
+        lambda d, t: ds.solve(y0, d, noise, time_start, time_end, t, sample_paths, grid_x),
         drift_array.values(),
         time_steps.values(),
         ))
